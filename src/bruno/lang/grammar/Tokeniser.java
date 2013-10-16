@@ -4,6 +4,8 @@ import static bruno.lang.grammar.Grammar.in;
 import static bruno.lang.grammar.Grammar.not;
 import static bruno.lang.grammar.Grammar.or;
 import static bruno.lang.grammar.Grammar.set;
+import static bruno.lang.grammar.Grammar.Rule.decision;
+import static bruno.lang.grammar.Grammar.Rule.group;
 import static bruno.lang.grammar.Grammar.Rule.link;
 import static bruno.lang.grammar.Grammar.Rule.rule;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
@@ -31,25 +33,26 @@ public class Tokeniser {
 		Rule name = token("name", terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus());
 		Rule not = token("not", terminal("!"), link("atom"));
 		Rule any = token("any", terminal("."));
-		Rule atom = rule("atom", not, any, range, terminal, name).decision();
+		Rule atom = decision("atom", not, any, range, terminal, name);
 
 		Rule qmark = token("qmark", terminal("?"));
 		Rule star = token("star", terminal("*"));
-		Rule plus = token("plus", terminal("+")); 
+		Rule plus = token("plus", terminal("+"));
+		Rule ellipsis  = token("ellipsis", terminal(".."));
 		Rule digit = token("digit", terminal(set('0', '9')));
 		Rule num = token("num", digit.plus());
 		Rule minmax = token("minmax", terminal("{"), num, terminal(","), num, terminal("}") );
-		Rule occurrence = rule("occurrence", minmax, qmark, star, plus).decision();
+		Rule occurrence = decision("occurrence", minmax, qmark, star, plus, ellipsis);
 		
 		Rule _parts = link("parts");
 		Rule token = rule("token", terminal("["), _parts, terminal("]"));
 		Rule group = rule("group", terminal("("), _parts, terminal(")"));
-		Rule part = rule("part", group, token, atom).decision();
-		Rule parts = rule("parts", part, occurrence.qmark(), rule("", terminal("|").qmark(), _parts).qmark());
+		Rule part = decision("part", group, token, atom);
+		Rule parts = rule("parts", part, occurrence.qmark(), group(terminal("|").qmark(), _parts).qmark());
 		Rule rule = rule("rule", name,  terminal(":"), parts, terminal(";"));
 		
 		Rule comment = rule("comment", terminal("%"), terminal(not('\n')).plus());
-		Rule member = rule("member", comment, rule).decision();
+		Rule member = decision("member", comment, rule);
 		Rule grammar = rule("grammar", member.plus());
 		grammarGrammar = new Grammar(grammar, member, comment, rule, name, parts, atom, digit, terminal,
 				range, token, group, qmark, star, plus, num, minmax,
@@ -75,6 +78,7 @@ public class Tokeniser {
 		if (name.isEmpty()) {
 			name = ":"+rule.type.code;
 		}
+		//System.out.println(index +" "+input.charAt(index));
 		if (type == RuleType.SYMBOL) {
 			if (index >= input.length())
 				return null;

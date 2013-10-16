@@ -1,9 +1,10 @@
+% this grammar is the grammar's grammar
 grammar    : member+;
 member     : comment
            | rule;
 comment    : '%' !LF;
 rule       : name ':' parts ';';
-parts      : part occurrence? ('|'? parts)?; 
+parts      : [ part occurrence? ] ('|'? parts)?; 
 part       : group
            | token
            | atom;
@@ -20,14 +21,16 @@ range      : terminal '-' terminal;
 occurrence : [ '{' num ',' num '}' ]
            | qmark
            | star
-           | plus;
+           | plus
+           | ellipsis;
 num        : digit+;
 digit      : '0' - '9';
 qmark      : '?';
 star       : '*';
 plus       : '+';
+ellipsis   : '..';
 any        : '.';
 character  : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 name       : [ character+ ];
-% this grammar is the grammar's grammar
 % rep is never named (can be stripped)
+test       : more..;

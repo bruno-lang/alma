@@ -194,8 +194,6 @@ group          : '(' expression ')'
 invoke         : expression Space ( Operator | Function ) ( expression.. )?
 specialisation : expression '=>' ( Type | Operation )
 
-list           : '[' expression.. ']' 
-               | '[]' 
-set            : '{' expression.. '}'
-               | '{}'
-tuple          : '(' expression.. ')'
+list           : '[]' | '[' expression.. ']' 
+set            : '{}' | '{' expression.. '}'
+tuple          : '()' | '(' expression.. ')'

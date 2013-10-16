@@ -1,6 +1,7 @@
 package bruno.lang.grammar;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 
@@ -165,20 +166,28 @@ public final class Grammar {
 		return String.valueOf(c).getBytes()[0];
 	}
 	
-	static enum RuleType {
+	public static enum RuleType {
 		SYMBOL("sym"), TOKEN("tok"), REPETITION("rep"), SEQUENCE("seq"), DECISION("dec"), LINK("lnk");
+		
 		public final String code;
 
 		private RuleType(String code) {
 			this.code = code;
 		}
-		
 	}
 
 	public static class Rule {
 		
 		public static Rule link(String name) {
 			return new Rule(RuleType.LINK, name, new Rule[0], once, null);
+		}
+		
+		public static Rule group(Rule...elements) {
+			return rule("", elements);
+		}
+		
+		public static Rule decision(String name, Rule...elements) {
+			return new Rule(RuleType.DECISION, name, elements, once, null);
 		}
 		
 		public static Rule rule(String name, Rule...elements) {
@@ -217,6 +226,7 @@ public final class Grammar {
 		public final Rule[] elements;
 		public final Occur occur;
 		public final Symbol symbol;
+		public final boolean mixed;
 		
 		public Rule(RuleType type, String name, Rule[] elements,
 				Occur occur, Symbol symbol) {
@@ -226,10 +236,17 @@ public final class Grammar {
 			this.elements = elements;
 			this.occur = occur;
 			this.symbol = symbol;
+			this.mixed = mixed(elements);
 		}
 		
-		public Rule decision() {
-			return new Rule(RuleType.DECISION, name, elements, occur, symbol);
+		private static boolean mixed(Rule[] elements) {
+			if (elements.length < 2)
+				return false;
+			EnumSet<RuleType> types = EnumSet.noneOf(RuleType.class);
+			for (int i = 0; i < elements.length; i++) {
+				types.add(elements[i].type);
+			}
+			return (types.contains(RuleType.SYMBOL) || types.contains(RuleType.TOKEN)) && types.contains(RuleType.SEQUENCE);
 		}
 
 		public Rule plus() {
