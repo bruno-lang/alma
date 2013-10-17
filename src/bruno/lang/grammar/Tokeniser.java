@@ -149,14 +149,10 @@ public class Tokeniser {
 		return index;
 	}
 	
-	public static void main(String[] args) throws IOException {
+	public static Token tokenise(String filename) throws IOException {
 		Tokeniser t = new Tokeniser(grammarGrammar);
-		
-		String file = readFile("etc/grammar.grammar", Charset.forName("UTF-8"));
-		Token root = t.tokenise("grammar", file);
-		System.out.println("=============================");
-		System.out.println(root);
-		System.out.println(file.length());
+		String file = readFile(filename, Charset.forName("UTF-8"));
+		return t.tokenise("grammar", file);
 	}
 
 	static String readFile(String path, Charset encoding) throws IOException {
