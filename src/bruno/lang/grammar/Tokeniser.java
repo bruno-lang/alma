@@ -48,7 +48,7 @@ public class Tokeniser {
 		Rule token = rule("token", terminal("["), _parts, terminal("]"));
 		Rule group = rule("group", terminal("("), _parts, terminal(")"));
 		Rule part = decision("part", group, token, atom);
-		Rule parts = rule("parts", part, occurrence.qmark(), group(terminal("|").qmark(), _parts).qmark());
+		Rule parts = rule("parts", token("", part, occurrence.qmark() ), group(terminal("|").qmark(), _parts).qmark());
 		Rule rule = rule("rule", name,  terminal(":"), parts, terminal(";"));
 		
 		Rule comment = rule("comment", terminal("%"), terminal(not('\n')).plus());
@@ -71,6 +71,9 @@ public class Tokeniser {
 		Token t = tokenise(r, input, 0, true);
 		return t;
 	}
+	
+	// create a state object - "internally" an array could be used to hold the type/start/length int values
+	// in a case of an symbol the length (of the parent) could just be incremented 
 
 	public Token tokenise(Rule rule, String input, int index, boolean gobbleWhitespace) {
 		RuleType type = rule.type;
@@ -78,14 +81,15 @@ public class Tokeniser {
 		if (name.isEmpty()) {
 			name = ":"+rule.type.code;
 		}
-		//System.out.println(index +" "+input.charAt(index));
 		if (type == RuleType.SYMBOL) {
 			if (index >= input.length())
 				return null;
+			//System.out.println(input.charAt(index)+"\t"+rule.symbol);
 			char c = input.charAt(index);
 			boolean matches = rule.symbol.matches(Grammar.toByte(c));
 			return matches ? new Token(name, index, index+1) : null; 
 		}
+		//System.out.println(rule);
 		if (type == RuleType.TOKEN) {
 			Token child = tokenise(rule.elements[0], input, index, false);
 			if (child != null) {
@@ -121,7 +125,7 @@ public class Tokeniser {
 			for (int i = 0; i < rule.elements.length; i++) {
 				end = scanWhitespace(input, end, gobbleWhitespace);
 				Rule r = rule.elements[i];
-				Token t = tokenise(r, input, end, gobbleWhitespace);
+				Token t = tokenise(r, input, end, gobbleWhitespace || !r.token);
 				if (t == null) {
 					return null;
 				}
@@ -160,4 +164,12 @@ public class Tokeniser {
 		return encoding.decode(ByteBuffer.wrap(encoded)).toString();
 	}
 
+	public static void main(String[] args) throws IOException {
+		Tokeniser t = new Tokeniser(grammarGrammar);
+		String file = readFile("etc/grammar.grammar", Charset.forName("UTF-8"));
+		Token root = t.tokenise("grammar", file);
+		System.out.println(root);
+		System.out.println(file.length() +" / "+ root.end);
+		
+	}
 }

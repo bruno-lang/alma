@@ -32,5 +32,3 @@ ellipsis   : '..';
 any        : '.';
 character  : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 name       : [ character+ ];
-% rep is never named (can be stripped)
-test       : more..;

@@ -1,7 +1,6 @@
 package bruno.lang.grammar;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 
@@ -226,7 +225,7 @@ public final class Grammar {
 		public final Rule[] elements;
 		public final Occur occur;
 		public final Symbol symbol;
-		public final boolean mixed;
+		public final boolean token;
 		
 		public Rule(RuleType type, String name, Rule[] elements,
 				Occur occur, Symbol symbol) {
@@ -236,17 +235,20 @@ public final class Grammar {
 			this.elements = elements;
 			this.occur = occur;
 			this.symbol = symbol;
-			this.mixed = mixed(elements);
+			this.token = token(this);
 		}
 		
-		private static boolean mixed(Rule[] elements) {
-			if (elements.length < 2)
-				return false;
-			EnumSet<RuleType> types = EnumSet.noneOf(RuleType.class);
-			for (int i = 0; i < elements.length; i++) {
-				types.add(elements[i].type);
+		private static boolean token(Rule r) {
+			return r.type == RuleType.TOKEN || r.type == RuleType.SYMBOL 
+					|| (r.type != RuleType.SEQUENCE && token(r.elements));
+		}
+		
+		private static boolean token(Rule[] elements) {
+			for (Rule e : elements) {
+				if (!token(e))
+					return false;
 			}
-			return (types.contains(RuleType.SYMBOL) || types.contains(RuleType.TOKEN)) && types.contains(RuleType.SEQUENCE);
+			return true;
 		}
 
 		public Rule plus() {
