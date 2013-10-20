@@ -1,16 +1,5 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.in;
-import static bruno.lang.grammar.Grammar.not;
-import static bruno.lang.grammar.Grammar.or;
-import static bruno.lang.grammar.Grammar.set;
-import static bruno.lang.grammar.Grammar.Rule.decision;
-import static bruno.lang.grammar.Grammar.Rule.group;
-import static bruno.lang.grammar.Grammar.Rule.link;
-import static bruno.lang.grammar.Grammar.Rule.rule;
-import static bruno.lang.grammar.Grammar.Rule.terminal;
-import static bruno.lang.grammar.Grammar.Rule.token;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -25,40 +14,6 @@ import bruno.lang.grammar.Grammar.RuleType;
 
 public class Tokeniser {
 
-	static Grammar grammarGrammar;
-	
-	static {
-		Rule terminal = token("terminal", terminal("'"), terminal(Grammar.any), terminal(not('\'')).star(), terminal("'"));
-		Rule range = rule("range", terminal, terminal("-"), terminal);
-		Rule name = token("name", terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus());
-		Rule not = token("not", terminal("!"), link("atom"));
-		Rule any = token("any", terminal("."));
-		Rule atom = decision("atom", not, any, range, terminal, name);
-
-		Rule qmark = token("qmark", terminal("?"));
-		Rule star = token("star", terminal("*"));
-		Rule plus = token("plus", terminal("+"));
-		Rule ellipsis  = token("ellipsis", terminal(".."));
-		Rule digit = token("digit", terminal(set('0', '9')));
-		Rule num = token("num", digit.plus());
-		Rule minmax = token("minmax", terminal("{"), num, terminal(","), num, terminal("}") );
-		Rule occurrence = decision("occurrence", minmax, qmark, star, plus, ellipsis);
-		
-		Rule _parts = link("parts");
-		Rule token = rule("token", terminal("["), _parts, terminal("]"));
-		Rule group = rule("group", terminal("("), _parts, terminal(")"));
-		Rule part = decision("part", group, token, atom);
-		Rule parts = rule("parts", token("", part, occurrence.qmark() ), group(terminal("|").qmark(), _parts).qmark());
-		Rule rule = rule("rule", name,  terminal(":"), parts, terminal(";"));
-		
-		Rule comment = rule("comment", terminal("%"), terminal(not('\n')).plus());
-		Rule member = decision("member", comment, rule);
-		Rule grammar = rule("grammar", member.plus());
-		grammarGrammar = new Grammar(grammar, member, comment, rule, name, parts, atom, digit, terminal,
-				range, token, group, qmark, star, plus, num, minmax,
-				occurrence, not, part, any);
-	}
-	
 	private final Grammar grammar;
 
 	public Tokeniser(Grammar grammar) {
@@ -97,7 +52,7 @@ public class Tokeniser {
 			}
 			return child;
 		}
-		if (type == RuleType.REPETITION) {
+		if (type == RuleType.ITERATION) {
 			int end = index;
 			int c = 0;
 			List<Token> rep = new ArrayList<>();
@@ -134,7 +89,7 @@ public class Tokeniser {
 			}
 			return new Token(name, index, end, seq);
 		}
-		if (type == RuleType.DECISION) {
+		if (type == RuleType.SELECTION) {
 			for (Rule r : rule.elements) {
 				Token t = tokenise(r, input, index, gobbleWhitespace);
 				if (t != null) {
@@ -154,7 +109,7 @@ public class Tokeniser {
 	}
 	
 	public static Token tokenise(String filename) throws IOException {
-		Tokeniser t = new Tokeniser(grammarGrammar);
+		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
 		String file = readFile(filename, Charset.forName("UTF-8"));
 		return t.tokenise("grammar", file);
 	}
@@ -165,7 +120,7 @@ public class Tokeniser {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Tokeniser t = new Tokeniser(grammarGrammar);
+		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
 		String file = readFile("etc/grammar.grammar", Charset.forName("UTF-8"));
 		Token root = t.tokenise("grammar", file);
 		System.out.println(root);

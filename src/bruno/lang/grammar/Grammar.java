@@ -1,7 +1,7 @@
 package bruno.lang.grammar;
 
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.NoSuchElementException;
 
 
@@ -69,14 +69,24 @@ public final class Grammar {
 		boolean matches( byte c );
 	}
 	
-	public final Rule[] rules;
+	public final IdentityHashMap<String, Rule> rules;
 	
-	public Grammar(Rule... rules) {
+	public Grammar(Rule root) {
 		super();
-		this.rules = rules;
-		link(rules, new HashSet<String>());
+		this.rules = new IdentityHashMap<>();
+		init(root);
+		link(rules.values().toArray(new Rule[0]), new HashSet<String>());
 	}
 	
+	private void init(Rule rule) {
+		if (!rule.name.isEmpty() && rule.type != RuleType.LINK) {
+			rules.put(rule.name, rule);
+		}
+		for (Rule r : rule.elements) {
+			init(r);
+		}
+	}
+
 	private void link(Rule[] rules, java.util.Set<String> followed) {
 		for (int i = 0; i < rules.length; i++) {
 			link(rules[i], followed);
@@ -109,16 +119,15 @@ public final class Grammar {
 	}
 
 	public Rule rule(String name) {
-		for (Rule r : rules) {
-			if (r.name == name)
-				return r;
-		}
+		Rule r = rules.get(name);
+		if (r != null)
+			return r;
 		throw new NoSuchElementException("Missing rule: "+name);
 	}
 	
 	@Override
 	public String toString() {
-		return Arrays.toString(rules);
+		return rules.toString();
 	}
 
 	public static Symbol symbol( char s ) {
@@ -166,7 +175,7 @@ public final class Grammar {
 	}
 	
 	public static enum RuleType {
-		SYMBOL("sym"), TOKEN("tok"), REPETITION("rep"), SEQUENCE("seq"), DECISION("dec"), LINK("lnk");
+		SYMBOL("sym"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk");
 		
 		public final String code;
 
@@ -181,20 +190,16 @@ public final class Grammar {
 			return new Rule(RuleType.LINK, name, new Rule[0], once, null);
 		}
 		
-		public static Rule group(Rule...elements) {
-			return rule("", elements);
+		public static Rule selection(Rule...elements) {
+			return new Rule(RuleType.SELECTION, "", elements, once, null);
 		}
 		
-		public static Rule decision(String name, Rule...elements) {
-			return new Rule(RuleType.DECISION, name, elements, once, null);
+		public static Rule sequence(Rule...elements) {
+			return new Rule(RuleType.SEQUENCE, "", elements, once, null);
 		}
 		
-		public static Rule rule(String name, Rule...elements) {
-			return new Rule(RuleType.SEQUENCE, name, elements, once, null);
-		}
-		
-		public static Rule token(String name, Rule...elements) {
-			return new Rule(RuleType.TOKEN, name, elements.length == 1 ? elements : new Rule[] { rule("", elements) }, once, null);
+		public static Rule token(Rule...elements) {
+			return new Rule(RuleType.TOKEN, "", elements.length == 1 ? elements : new Rule[] { sequence(elements) }, once, null);
 		}
 		
 		public static Rule terminal(String symbols) {
@@ -213,7 +218,7 @@ public final class Grammar {
 			for (int i = 0; i < sequence.length; i++) {
 				sequence[i] = terminal(symbols[i]);
 			}
-			return token("", sequence);
+			return token(sequence);
 		}
 
 		private static Rule terminal(Symbol symbol) {
@@ -235,17 +240,21 @@ public final class Grammar {
 			this.elements = elements;
 			this.occur = occur;
 			this.symbol = symbol;
-			this.token = token(this);
+			this.token = tokenized(this);
 		}
 		
-		private static boolean token(Rule r) {
+		public Rule named(String name) {
+			return new Rule(type, name, elements, occur, symbol);
+		}
+		
+		private static boolean tokenized(Rule r) {
 			return r.type == RuleType.TOKEN || r.type == RuleType.SYMBOL 
-					|| (r.type != RuleType.SEQUENCE && token(r.elements));
+					|| (r.type != RuleType.SEQUENCE && tokenized(r.elements));
 		}
 		
-		private static boolean token(Rule[] elements) {
+		private static boolean tokenized(Rule[] elements) {
 			for (Rule e : elements) {
-				if (!token(e))
+				if (!e.token)
 					return false;
 			}
 			return true;
@@ -256,7 +265,7 @@ public final class Grammar {
 		}
 		
 		public Rule occur(Occur occur) {
-			return new Rule(RuleType.REPETITION, "", new Rule[] { this }, occur, null);
+			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null);
 		}
 		
 		@Override

@@ -1,10 +1,10 @@
-% this grammar is the grammar's grammar
+% this grammar is the grammar's grammar in BNF
 grammar    : member+;
 member     : comment
            | rule;
 comment    : '%' !LF;
 rule       : name ':' parts ';';
-parts      : [ part occurrence? ] ('|'? parts)?; 
+parts      : [ part occurrence? ] (else? parts)?; 
 part       : group
            | token
            | atom;
@@ -30,5 +30,6 @@ star       : '*';
 plus       : '+';
 ellipsis   : '..';
 any        : '.';
+else       : '|';
 character  : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 name       : [ character+ ];
