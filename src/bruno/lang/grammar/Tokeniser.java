@@ -23,25 +23,22 @@ public class Tokeniser {
 	
 	public Token tokenise(String start, String input) {
 		Rule r = grammar.rule(start.intern());
-		Token t = tokenise(r, input, 0, true);
+		Token t = tokenise(r, ByteBuffer.wrap(input.getBytes()), 0, true);
 		return t;
 	}
 	
-	// create a state object - "internally" an array could be used to hold the type/start/length int values
-	// in a case of an symbol the length (of the parent) could just be incremented 
-
-	public Token tokenise(Rule rule, String input, int index, boolean gobbleWhitespace) {
+	private Token tokenise(Rule rule, ByteBuffer input, int index, boolean gobbleWhitespace) {
 		RuleType type = rule.type;
 		String name = rule.name;
 		if (name.isEmpty()) {
 			name = ":"+rule.type.code;
 		}
 		if (type == RuleType.SYMBOL) {
-			if (index >= input.length())
+			if (index >= input.limit())
 				return null;
 			//System.out.println(input.charAt(index)+"\t"+rule.symbol);
-			char c = input.charAt(index);
-			boolean matches = rule.symbol.matches(Grammar.toByte(c));
+			byte c = input.get(index);
+			boolean matches = rule.symbol.matches(c);
 			return matches ? new Token(name, index, index+1) : null; 
 		}
 		//System.out.println(rule);
@@ -101,8 +98,8 @@ public class Tokeniser {
 		throw new IllegalArgumentException(rule+" has no proper type");
 	}
 	
-	public int scanWhitespace(String input, int index, boolean gobbleWhitespace) {
-		while (gobbleWhitespace && index < input.length() && Character.isWhitespace(input.charAt(index))) {
+	public int scanWhitespace(ByteBuffer input, int index, boolean gobbleWhitespace) {
+		while (gobbleWhitespace && index < input.limit() && Character.isWhitespace(input.get(index))) {
 			index++;
 		}
 		return index;
