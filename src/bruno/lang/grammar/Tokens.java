@@ -27,6 +27,10 @@ public final class Tokens {
 	private final long[] tokens = new long[1024];
 	private int current=1;
 	
+	public int length() {
+		return current;
+	}
+	
 	public int children(int index) {
 		return (int) ((tokens[++index] >> 16) & CHILDREN_MASK);
 	}
@@ -34,30 +38,42 @@ public final class Tokens {
 	/**
 	 * @return amount of bytes
 	 */
-	public int length(int no) {
-		return end(no) - start(no); // we use an "incomplete" token holding the start so length becomes computable for the "last" token as well.
+	public int bytes(int index) {
+		return endPosition(index) - startPosition(index); // we use an "incomplete" token holding the start so length becomes computable for the "last" token as well.
 	}
 	
 	/**
 	 * @return start byte position (inclusive)
 	 */
-	public int start(int no) {
-		return end(--no) ;
+	public int startPosition(int index) {
+		return endPosition(--index) ;
 	}
 	
 	/**
 	 * @return end byte position (exclusive)
 	 */
-	public int end(int no) {
-		return (int)(tokens[++no] & END_MASK);
+	public int endPosition(int index) {
+		return (int)(tokens[++index] & END_MASK);
 	}
 	
+	/**
+	 * This is used when the symbol itself isn't a named rule (a node on its own)
+	 */
 	public void symbol() {
 		tokens[current]++; // as the end index is on the lower 32bits we just increment the end position
 	}
 	
-	public void whitespace(int end) {
-		tokens[++current] = end;
+	public void whitespace(int endPosition) {
+		tokens[++current] = endPosition;
+	}
+	
+	/**
+	 * In case a path turned out to not match the tokens so far are "trashed" by
+	 * going back to the position before the path. The next path tried will than
+	 * override the obsolete tokens.
+	 */
+	public void reset(int index) {
+		current = index;
 	}
 	
 	//TODO make this usable as if one works with a tree of tokens 

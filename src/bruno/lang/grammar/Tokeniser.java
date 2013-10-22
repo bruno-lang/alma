@@ -23,11 +23,11 @@ public class Tokeniser {
 	
 	public Token tokenise(String start, String input) {
 		Rule r = grammar.rule(start.intern());
-		Token t = tokenise(r, ByteBuffer.wrap(input.getBytes()), 0, true);
+		Token t = tokenise(r, ByteBuffer.wrap(input.getBytes()), 0, true, new Tokens());
 		return t;
 	}
 	
-	private Token tokenise(Rule rule, ByteBuffer input, int index, boolean gobbleWhitespace) {
+	private Token tokenise(Rule rule, ByteBuffer input, int index, boolean gobbleWhitespace, Tokens tokens) {
 		RuleType type = rule.type;
 		String name = rule.name;
 		if (name.isEmpty()) {
@@ -43,7 +43,7 @@ public class Tokeniser {
 		}
 		//System.out.println(rule);
 		if (type == RuleType.TOKEN) {
-			Token child = tokenise(rule.elements[0], input, index, false);
+			Token child = tokenise(rule.elements[0], input, index, false, tokens);
 			if (child != null) {
 				return new Token(name, index, child.end, Collections.singletonList(child));
 			}
@@ -54,7 +54,7 @@ public class Tokeniser {
 			int c = 0;
 			List<Token> rep = new ArrayList<>();
 			while (c < rule.occur.max) {
-				Token t = tokenise(rule.elements[0], input, end, gobbleWhitespace);
+				Token t = tokenise(rule.elements[0], input, end, gobbleWhitespace, tokens);
 				if (t == null) {
 					if (c < rule.occur.min) {
 						return null;
@@ -77,7 +77,7 @@ public class Tokeniser {
 			for (int i = 0; i < rule.elements.length; i++) {
 				end = scanWhitespace(input, end, gobbleWhitespace);
 				Rule r = rule.elements[i];
-				Token t = tokenise(r, input, end, gobbleWhitespace || !r.token);
+				Token t = tokenise(r, input, end, gobbleWhitespace || !r.tokenish, tokens);
 				if (t == null) {
 					return null;
 				}
@@ -88,7 +88,7 @@ public class Tokeniser {
 		}
 		if (type == RuleType.SELECTION) {
 			for (Rule r : rule.elements) {
-				Token t = tokenise(r, input, index, gobbleWhitespace);
+				Token t = tokenise(r, input, index, gobbleWhitespace, tokens);
 				if (t != null) {
 					return new Token(name, index, t.end, Collections.singletonList(t));
 				}

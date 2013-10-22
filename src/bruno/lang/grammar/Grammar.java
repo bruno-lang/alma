@@ -1,7 +1,9 @@
 package bruno.lang.grammar;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 
@@ -69,21 +71,32 @@ public final class Grammar {
 		boolean matches( byte c );
 	}
 	
-	public final IdentityHashMap<String, Rule> rules;
+	private final IdentityHashMap<String, Rule> rulesByName;
+	private final Rule[] rulesById;
 	
 	public Grammar(Rule root) {
 		super();
-		this.rules = new IdentityHashMap<>();
-		init(root);
-		link(rules.values().toArray(new Rule[0]), new HashSet<String>());
+		this.rulesByName = new IdentityHashMap<>();
+		List<Rule> idOrder = new ArrayList<>();
+		idOrder.add(null); // zero index is unused
+		init(root, idOrder);
+		this.rulesById = idOrder.toArray(new Rule[idOrder.size()]);
+		link(rulesByName.values().toArray(new Rule[0]), new HashSet<String>());
 	}
 	
-	private void init(Rule rule) {
-		if (!rule.name.isEmpty() && rule.type != RuleType.LINK) {
-			rules.put(rule.name, rule);
+	private void init(Rule rule, List<Rule> idOrder) {
+		if (rule.type == RuleType.LINK) {
+			return;
+		}
+		if (!rule.name.isEmpty()) {
+			rulesByName.put(rule.name, rule);
+		}
+		if (rule.id() == 0) {
+			rule.id(idOrder.size());
+			idOrder.add(rule);
 		}
 		for (Rule r : rule.elements) {
-			init(r);
+			init(r, idOrder);
 		}
 	}
 
@@ -117,9 +130,13 @@ public final class Grammar {
 			}
 		}
 	}
+	
+	public Rule rule(int id) {
+		return rulesById[id];
+	}
 
 	public Rule rule(String name) {
-		Rule r = rules.get(name);
+		Rule r = rulesByName.get(name);
 		if (r != null)
 			return r;
 		throw new NoSuchElementException("Missing rule: "+name);
@@ -127,7 +144,7 @@ public final class Grammar {
 	
 	@Override
 	public String toString() {
-		return rules.toString();
+		return rulesByName.toString();
 	}
 
 	public static Symbol symbol( char s ) {
@@ -184,7 +201,7 @@ public final class Grammar {
 		}
 	}
 
-	public static class Rule {
+	public static final class Rule {
 		
 		public static Rule link(String name) {
 			return new Rule(RuleType.LINK, name, new Rule[0], once, null);
@@ -230,7 +247,8 @@ public final class Grammar {
 		public final Rule[] elements;
 		public final Occur occur;
 		public final Symbol symbol;
-		public final boolean token;
+		public final boolean tokenish;
+		private int id = 0;
 		
 		public Rule(RuleType type, String name, Rule[] elements,
 				Occur occur, Symbol symbol) {
@@ -240,21 +258,31 @@ public final class Grammar {
 			this.elements = elements;
 			this.occur = occur;
 			this.symbol = symbol;
-			this.token = tokenized(this);
+			this.tokenish = tokenish(this);
+		}
+		
+		public int id() {
+			return id;
+		}
+		
+		public void id(int id) {
+			if (this.id == 0) {
+				this.id = id;
+			}
 		}
 		
 		public Rule named(String name) {
 			return new Rule(type, name, elements, occur, symbol);
 		}
 		
-		private static boolean tokenized(Rule r) {
+		private static boolean tokenish(Rule r) {
 			return r.type == RuleType.TOKEN || r.type == RuleType.SYMBOL 
-					|| (r.type != RuleType.SEQUENCE && tokenized(r.elements));
+					|| (r.type != RuleType.SEQUENCE && tokenish(r.elements));
 		}
 		
-		private static boolean tokenized(Rule[] elements) {
+		private static boolean tokenish(Rule[] elements) {
 			for (Rule e : elements) {
-				if (!e.token)
+				if (!e.tokenish)
 					return false;
 			}
 			return true;
