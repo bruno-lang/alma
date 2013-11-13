@@ -1,5 +1,10 @@
 package bruno.lang.grammar;
 
+import java.util.Arrays;
+
+import bruno.lang.grammar.Grammar.Rule;
+
+
 /**
  * An abstract data type for a sequence of tokens for a particular
  * {@link Grammar}.
@@ -18,63 +23,59 @@ package bruno.lang.grammar;
  */
 public final class Tokens {
 
-	private static final long CHILDREN_MASK = 0x00FF0000;
-	private static final long END_MASK = 0x0000FFFF;
+	private final Rule[] rules;
+	private final int[] starts;
+	private final int[] ends;
+	private final int[] levels;
+	
+	private final int[] indexStack = new int[50];
+	
+	private int level = -1;
+	private int top = -1;
+	
+	public Tokens(int length) {
+		super();
+		this.rules = new Rule[length];
+		this.starts = new int[length];
+		this.ends = new int[length];
+		this.levels = new int[length];
+	}
 
-	/**
-	 * 16bit rule-id / 16bit children / 32bit end index 
-	 */
-	private final long[] tokens = new long[1024];
-	private int current=1;
-	
-	public int length() {
-		return current;
+	public void push(Rule rule, int start) {
+		starts[++top] = start;
+		ends[top] = start;
+		rules[top] = rule;
+		level++;
+		levels[top] = level;
+		indexStack[level] = top;
 	}
 	
-	public int children(int index) {
-		return (int) ((tokens[++index] >> 16) & CHILDREN_MASK);
+	public int end() {
+		return ends[0];
+	}
+
+	public void pop() {
+		top--;
+		level--;
+	}
+
+	public void done(int end) {
+		ends[indexStack[level]] = end;
+		level--;
 	}
 	
-	/**
-	 * @return amount of bytes
-	 */
-	public int bytes(int index) {
-		return endPosition(index) - startPosition(index); // we use an "incomplete" token holding the start so length becomes computable for the "last" token as well.
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i <= top; i++) {
+			toString(b, "", i, 0);
+		}
+		return b.toString();
 	}
 	
-	/**
-	 * @return start byte position (inclusive)
-	 */
-	public int startPosition(int index) {
-		return endPosition(--index) ;
+	private void toString(StringBuilder b, String indent, int index, int level) {
+		char[] ind = new char[levels[index]];
+		Arrays.fill(ind, ' ');
+		b.append(ind).append(rules[index].name).append(' ').append(starts[index]).append(':').append(ends[index]).append('\n');
 	}
-	
-	/**
-	 * @return end byte position (exclusive)
-	 */
-	public int endPosition(int index) {
-		return (int)(tokens[++index] & END_MASK);
-	}
-	
-	/**
-	 * This is used when the symbol itself isn't a named rule (a node on its own)
-	 */
-	public void symbol() {
-		tokens[current]++; // as the end index is on the lower 32bits we just increment the end position
-	}
-	
-	public void whitespace(int endPosition) {
-		tokens[++current] = endPosition;
-	}
-	
-	/**
-	 * In case a path turned out to not match the tokens so far are "trashed" by
-	 * going back to the position before the path. The next path tried will than
-	 * override the obsolete tokens.
-	 */
-	public void reset(int index) {
-		current = index;
-	}
-	
-	//TODO make this usable as if one works with a tree of tokens 
 }

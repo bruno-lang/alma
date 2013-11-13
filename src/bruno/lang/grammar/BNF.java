@@ -22,32 +22,33 @@ public final class BNF {
 	static final Grammar GRAMMAR;
 	
 	static {
-		Rule terminal = token(terminal("'"), terminal(Grammar.any), terminal(not('\'')).star(), terminal("'")).named("terminal");
-		Rule range = sequence(terminal, terminal("-"), terminal).named("range");
-		Rule name = token(terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus()).named("name");
-		Rule not = token(terminal("!"), link("atom")).named("not");
-		Rule any = terminal(".").named("any");
-		Rule atom = selection(not, any, range, terminal, name).named("atom");
+		Rule terminal = token(terminal("'"), terminal(Grammar.any), terminal(not('\'')).star(), terminal("'")).as("terminal");
+		Rule range = sequence(terminal, terminal("-"), terminal).as("range");
+		Rule name = token(terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus()).as("name");
+		Rule not = token(terminal("!"), link("atom")).as("not");
+		Rule any = terminal(".").as("any");
+		Rule whitespace = terminal("_").as("whitespace");
+		Rule atom = selection(not, any, whitespace, range, terminal, name).as("atom");
 
-		Rule qmark = terminal("?").named("qmark");
-		Rule star = terminal("*").named("star");
-		Rule plus = terminal("+").named("plus");
-		Rule ellipsis  = terminal("..").named("ellipsis");
-		Rule digit = terminal(set('0', '9')).named("digit");
-		Rule num = digit.plus().named("num");
-		Rule minmax = token(terminal("{"), num, terminal(","), num, terminal("}")).named("minmax");
-		Rule occurrence = selection(minmax, qmark, star, plus, ellipsis).named("occurrence");
+		Rule qmark = terminal("?").as("qmark");
+		Rule star = terminal("*").as("star");
+		Rule plus = terminal("+").as("plus");
+		Rule ellipsis  = terminal("..").as("ellipsis");
+		Rule digit = terminal(set('0', '9')).as("digit");
+		Rule num = digit.plus().as("num");
+		Rule minmax = token(terminal("{"), num, terminal(","), num, terminal("}")).as("minmax");
+		Rule occurrence = selection(minmax, qmark, star, plus, ellipsis).as("occurrence");
 		
 		Rule _parts = link("parts");
-		Rule token = sequence(terminal("["), _parts, terminal("]")).named("token");
-		Rule group = sequence(terminal("("), _parts, terminal(")")).named("group");
-		Rule part = selection(group, token, atom).named("part");
-		Rule parts = sequence(token(part, occurrence.qmark() ), sequence(terminal("|").named("else").qmark(), _parts).qmark()).named("parts");
-		Rule rule = sequence(name,  terminal(":"), parts, terminal(";")).named("rule");
+		Rule token = sequence(terminal("["), _parts, terminal("]")).as("token");
+		Rule group = sequence(terminal("("), _parts, terminal(")")).as("group");
+		Rule part = selection(group, token, atom).as("part");
+		Rule parts = sequence(token(part, occurrence.qmark() ), sequence(terminal("|").as("else").qmark(), _parts).qmark()).as("parts");
+		Rule rule = sequence(name,  terminal(":"), parts, terminal(";")).as("rule");
 		
-		Rule comment = sequence(terminal("%"), terminal(not('\n')).plus().named("text")).named("comment");
-		Rule member = selection(comment, rule).named("member");
-		Rule grammar = member.plus().named("grammar");
+		Rule comment = sequence(terminal("%"), terminal(not('\n')).plus().as("text")).as("comment");
+		Rule member = selection(comment, rule).as("member");
+		Rule grammar = member.plus().as("grammar");
 		GRAMMAR = new Grammar(grammar);
 	}
 }

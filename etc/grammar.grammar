@@ -12,6 +12,7 @@ token      : '[' parts ']';
 group      : '(' parts ')';
 atom       : not 
            | any
+           | whitespace
            | range
            | terminal
            | name;
@@ -30,6 +31,7 @@ star       : '*';
 plus       : '+';
 ellipsis   : '..';
 any        : '.';
+whitespace : '_';
 else       : '|';
 character  : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 name       : [ character+ ];

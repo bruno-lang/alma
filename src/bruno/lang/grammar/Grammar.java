@@ -110,8 +110,10 @@ public final class Grammar {
 		Rule[] elements = rule.elements;
 		if (elements.length > 0) { 
 			if (!followed.contains(rule.name)) {
-				followed = new HashSet<>(followed);
-				followed.add(rule.name);
+				if (!rule.name.isEmpty()) {
+					followed = new HashSet<>(followed);
+					followed.add(rule.name);
+				}
 				for (int i = 0; i < elements.length; i++) {
 					Rule e = elements[i];
 					if (e.type == RuleType.LINK) {
@@ -192,7 +194,7 @@ public final class Grammar {
 	}
 	
 	public static enum RuleType {
-		SYMBOL("sym"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk");
+		SYMBOL("sym"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
 		
 		public final String code;
 
@@ -271,8 +273,8 @@ public final class Grammar {
 			}
 		}
 		
-		public Rule named(String name) {
-			return new Rule(type, name, elements, occur, symbol);
+		public Rule as(String name) {
+			return new Rule(RuleType.CAPTURE, name, new Rule[] { this }, Grammar.once, null);
 		}
 		
 		private static boolean tokenish(Rule r) {
