@@ -10,19 +10,27 @@ public class TestTokeniser {
 
 	@Test
 	public void thatToyGrammarCanBeTokenised() throws IOException {
-		Tokens tree = Tokeniser.tokenise("etc/toy.grammar");
-		assertEquals(41, tree.end());
+		Tokens tokens = Tokeniser.tokenise("etc/toy.grammar");
+		assertEquals(53, tokens.end());
 	}
 	
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
-		Tokens tree = Tokeniser.tokenise("etc/bruno.grammar");
-		assertEquals(6402, tree.end());
+		Tokens tokens = Tokeniser.tokenise("etc/bruno.grammar");
+		assertEquals(6402, tokens.end());
+		assertEquals(2606, tokens.count());
 	}
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
-		Tokens tree = Tokeniser.tokenise("etc/grammar.grammar");
-		assertEquals(908, tree.end());
+		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar");
+		assertEquals(929, tokens.end());
 	}
+	
+	@Test
+	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
+		Tokens tokens = Tokeniser.tokenise("etc/test.grammar");
+		System.out.println(tokens);
+	}
+
 }

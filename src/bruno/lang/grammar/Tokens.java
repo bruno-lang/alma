@@ -1,5 +1,6 @@
 package bruno.lang.grammar;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 
 import bruno.lang.grammar.Grammar.Rule;
@@ -53,9 +54,13 @@ public final class Tokens {
 	public int end() {
 		return ends[0];
 	}
+	
+	public int count() {
+		return top;
+	}
 
 	public void pop() {
-		top--;
+		top = indexStack[level]-1;
 		level--;
 	}
 
@@ -66,16 +71,33 @@ public final class Tokens {
 	
 	@Override
 	public String toString() {
+		if (top < 0)
+			return "(empty)";
 		StringBuilder b = new StringBuilder();
 		for (int i = 0; i <= top; i++) {
-			toString(b, "", i, 0);
+			toString(b, "", i);
 		}
 		return b.toString();
 	}
 	
-	private void toString(StringBuilder b, String indent, int index, int level) {
+	private void toString(StringBuilder b, String indent, int index) {
 		char[] ind = new char[levels[index]];
 		Arrays.fill(ind, ' ');
 		b.append(ind).append(rules[index].name).append(' ').append(starts[index]).append(':').append(ends[index]).append('\n');
+	}
+	
+	public void print(int position, PrintStream out) {
+		int index = tokenIndexFor(position);
+		StringBuilder b = new StringBuilder();
+		toString(b, "", index);
+		out.println(b);
+	}
+
+	private int tokenIndexFor(int position) {
+		int index = Math.abs(Arrays.binarySearch(starts, 0, top, position));
+		while (index > 0 && starts[index] > position) {
+			index--;
+		}
+		return index;
 	}
 }

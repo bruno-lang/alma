@@ -1,2 +1,2 @@
 % this is just to trigger classloading...
-foo : bar+
+foo : bar+;

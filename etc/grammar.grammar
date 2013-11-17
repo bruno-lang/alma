@@ -2,7 +2,7 @@
 grammar    : member+;
 member     : comment
            | rule;
-comment    : '%' !LF;
+comment    : '%' !$;
 rule       : name ':' parts ';';
 parts      : [ part occurrence? ] (else? parts)?; 
 part       : group
@@ -17,7 +17,7 @@ atom       : not
            | terminal
            | name;
 not        : [ '!' atom ];
-terminal   : [ ''' .+ ''' ];
+terminal   : [ ''' . !''' ''' ];
 range      : terminal '-' terminal;
 occurrence : [ '{' num ',' num '}' ]
            | qmark
@@ -32,6 +32,7 @@ plus       : '+';
 ellipsis   : '..';
 any        : '.';
 whitespace : '_';
+eol        : '$';
 else       : '|';
 character  : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 name       : [ character+ ];

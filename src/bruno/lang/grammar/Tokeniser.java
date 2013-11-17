@@ -21,6 +21,7 @@ public class Tokeniser {
 		Rule r = grammar.rule(start.intern());
 		Tokens tokens = new Tokens(8000);
 		int t = tokenise(r, ByteBuffer.wrap(input.getBytes()), 0, true, tokens);
+		//TODO verify and visualize errors
 		return tokens;
 	}
 	
@@ -37,25 +38,30 @@ public class Tokeniser {
 		case SELECTION:
 			return selection(rule, input, position, gobbleWhitespace, tokens);
 		case CAPTURE:
-			tokens.push(rule, position);
-			int end = tokenise(rule.elements[0], input, position, gobbleWhitespace, tokens);
-			if (end >= 0) {
-				tokens.done(end);
-				return end;
-			}
-			tokens.pop();
-			return -1;
+			return capture(rule, input, position, gobbleWhitespace, tokens);
 		default:
 			throw new IllegalArgumentException("`"+rule+"` has no proper type: "+rule.type);
 		}
 	}
 
+	private static int capture(Rule rule, ByteBuffer input, int position,
+			boolean gobbleWhitespace, Tokens tokens) {
+		tokens.push(rule, position);
+		int end = tokenise(rule.elements[0], input, position, gobbleWhitespace, tokens);
+		if (end > position) {
+			tokens.done(end);
+		} else {
+			tokens.pop();
+		}
+		return end;
+	}
+
 	private static int selection(Rule rule, ByteBuffer input, int position,
 			boolean gobbleWhitespace, Tokens tokens) {
 		for (Rule r : rule.elements) {
-			int endPosition = tokenise(r, input, position, gobbleWhitespace, tokens);
-			if (endPosition >= 0) {
-				return endPosition;
+			int end = tokenise(r, input, position, gobbleWhitespace, tokens);
+			if (end >= 0) {
+				return end;
 			}
 		}
 		return -1;
@@ -97,11 +103,7 @@ public class Tokeniser {
 
 	private static int token(Rule rule, ByteBuffer input, int position,
 			Tokens tokens) {
-		int endPosition = tokenise(rule.elements[0], input, position, false, tokens);
-		if (endPosition >= 0) {
-			return endPosition;
-		}
-		return -1;
+		return tokenise(rule.elements[0], input, position, false, tokens);
 	}
 
 	private static int symbol(Rule rule, ByteBuffer input, int position) {
@@ -111,7 +113,10 @@ public class Tokeniser {
 		if (!rule.symbol.matches(c)) {
 			return -1;
 		}
-		return position+1;
+		if (c >= 0)
+			return position+1;
+		while (input.get(++position) < 0) { ; }
+		return position;
 	}
 	
 	private static int scanWhitespace(ByteBuffer input, int index, boolean gobbleWhitespace) {
@@ -132,12 +137,4 @@ public class Tokeniser {
 		return encoding.decode(ByteBuffer.wrap(encoded)).toString();
 	}
 
-	public static void main(String[] args) throws IOException {
-		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
-		String file = readFile("etc/grammar.grammar", Charset.forName("UTF-8"));
-		Tokens root = t.tokenise("grammar", file);
-		System.out.println(root);
-		System.out.println(file.length() +" / "+ root.end());
-		
-	}
 }

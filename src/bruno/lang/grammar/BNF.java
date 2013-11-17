@@ -28,7 +28,8 @@ public final class BNF {
 		Rule not = token(terminal("!"), link("atom")).as("not");
 		Rule any = terminal(".").as("any");
 		Rule whitespace = terminal("_").as("whitespace");
-		Rule atom = selection(not, any, whitespace, range, terminal, name).as("atom");
+		Rule eol = terminal("$").as("eol");
+		Rule atom = selection(not, any, whitespace, eol, range, terminal, name).as("atom");
 
 		Rule qmark = terminal("?").as("qmark");
 		Rule star = terminal("*").as("star");
