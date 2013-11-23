@@ -64,12 +64,14 @@ public final class Grammar {
 
 	}
 	
-	public static final Symbol any = new Any();
+	public static final Terminal any = new Any();
 
-	public static interface Symbol {
+	public static interface Terminal {
 
 		boolean matches( byte c );
 	}
+	
+	private static final int NO_CHARACTER = -1;
 	
 	private final IdentityHashMap<String, Rule> rulesByName;
 	private final Rule[] rulesById;
@@ -149,39 +151,35 @@ public final class Grammar {
 		return rulesByName.toString();
 	}
 
-	public static Symbol symbol( char s ) {
-		return new Is(toByte(s));
-	}
-
-	public static Symbol not( Symbol excluded ) {
+	public static Terminal not( Terminal excluded ) {
 		return new Not(excluded);
 	}
 
-	public static Symbol not( char s ) {
-		return not(symbol(s));
+	public static Terminal not( char s ) {
+		return not(new Is(toByte(s)));
 	}
 
-	public static Symbol or( Symbol s, Symbol... more ) {
-		Symbol or = s;
-		for ( Symbol m : more ) {
+	public static Terminal or( Terminal s, Terminal... more ) {
+		Terminal or = s;
+		for ( Terminal m : more ) {
 			or = or(or , m);
 		}
 		return or;
 	}
 
-	public static Symbol or( Symbol a, Symbol b ) {
+	public static Terminal or( Terminal a, Terminal b ) {
 		return new Or(a, b);
 	}
 
-	public static Symbol set( char low, char high ) {
+	public static Terminal set( char low, char high ) {
 		return set(toByte(low) , toByte(high));
 	}
 
-	public static Symbol set( byte low, byte high ) {
+	public static Terminal set( byte low, byte high ) {
 		return new Set(low, high);
 	}
 
-	public static Symbol in( char... cs ) {
+	public static Terminal in( char... cs ) {
 		byte[] bs = new byte[cs.length];
 		for ( int i = 0; i < bs.length; i++ ) {
 			bs[i] = toByte(cs[i]);
@@ -194,7 +192,7 @@ public final class Grammar {
 	}
 	
 	public static enum RuleType {
-		SYMBOL("sym"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
+		CHARACTER("chr"), TERMINAL("trm"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
 		
 		public final String code;
 
@@ -206,60 +204,69 @@ public final class Grammar {
 	public static final class Rule {
 		
 		public static Rule link(String name) {
-			return new Rule(RuleType.LINK, name, new Rule[0], once, null);
+			return new Rule(RuleType.LINK, name, new Rule[0], once, null, NO_CHARACTER);
 		}
 		
 		public static Rule selection(Rule...elements) {
-			return new Rule(RuleType.SELECTION, "", elements, once, null);
+			return new Rule(RuleType.SELECTION, "", elements, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule sequence(Rule...elements) {
-			return new Rule(RuleType.SEQUENCE, "", elements, once, null);
+			return new Rule(RuleType.SEQUENCE, "", elements, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule token(Rule...elements) {
-			return new Rule(RuleType.TOKEN, "", elements.length == 1 ? elements : new Rule[] { sequence(elements) }, once, null);
+			return new Rule(RuleType.TOKEN, "", elements.length == 1 ? elements : new Rule[] { sequence(elements) }, once, null, NO_CHARACTER);
 		}
 		
-		public static Rule terminal(String symbols) {
-			Symbol[] sequence = new Symbol[symbols.length()];
-			for (int i = 0; i < sequence.length; i++) {
-				sequence[i] = symbol(symbols.charAt(i));
-			}
-			return terminal(sequence);
+		public static Rule character( char s ) {
+			return new Rule(RuleType.CHARACTER, "", new Rule[0], once, null, s);
 		}
 		
-		public static Rule terminal(Symbol...symbols) {
-			if (symbols.length == 1) {
-				return terminal(symbols[0]);
+		public static Rule string(String seq) {
+			if (seq.length() == 1) {
+				return character(seq.charAt(0));
 			}
-			Rule[] sequence = new Rule[symbols.length];
+			Rule[] sequence = new Rule[seq.length()];
 			for (int i = 0; i < sequence.length; i++) {
-				sequence[i] = terminal(symbols[i]);
+				sequence[i] = character(seq.charAt(i));
+			}
+			return token(sequence);
+		}
+		
+		public static Rule terminal(Terminal...seq) {
+			if (seq.length == 1) {
+				return terminal(seq[0]);
+			}
+			Rule[] sequence = new Rule[seq.length];
+			for (int i = 0; i < sequence.length; i++) {
+				sequence[i] = terminal(seq[i]);
 			}
 			return token(sequence);
 		}
 
-		private static Rule terminal(Symbol symbol) {
-			return new Rule(RuleType.SYMBOL, "", new Rule[0], once, symbol);
+		private static Rule terminal(Terminal terminal) {
+			return new Rule(RuleType.TERMINAL, "", new Rule[0], once, terminal, NO_CHARACTER);
 		}
 		
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
 		public final Occur occur;
-		public final Symbol symbol;
+		public final Terminal terminal;
+		public final int character;
 		public final boolean tokenish;
 		private int id = 0;
 		
 		public Rule(RuleType type, String name, Rule[] elements,
-				Occur occur, Symbol symbol) {
+				Occur occur, Terminal symbol, int character) {
 			super();
 			this.type = type;
 			this.name = name.intern();
 			this.elements = elements;
 			this.occur = occur;
-			this.symbol = symbol;
+			this.terminal = symbol;
+			this.character = character;
 			this.tokenish = tokenish(this);
 		}
 		
@@ -274,11 +281,11 @@ public final class Grammar {
 		}
 		
 		public Rule as(String name) {
-			return new Rule(RuleType.CAPTURE, name, new Rule[] { this }, Grammar.once, null);
+			return new Rule(RuleType.CAPTURE, name, new Rule[] { this }, Grammar.once, null, NO_CHARACTER);
 		}
 		
 		private static boolean tokenish(Rule r) {
-			return r.type == RuleType.TOKEN || r.type == RuleType.SYMBOL 
+			return r.type == RuleType.TOKEN || r.type == RuleType.TERMINAL 
 					|| (r.type != RuleType.SEQUENCE && tokenish(r.elements));
 		}
 		
@@ -295,12 +302,12 @@ public final class Grammar {
 		}
 		
 		public Rule occur(Occur occur) {
-			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null);
+			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null, NO_CHARACTER);
 		}
 		
 		@Override
 		public String toString() {
-			return type == RuleType.SYMBOL ? symbol.toString() : name;
+			return type == RuleType.TERMINAL ? terminal.toString() : name;
 		}
 
 		public Rule star() {
@@ -317,7 +324,7 @@ public final class Grammar {
 		return "'" + Character.valueOf((char) character) + "'";
 	}
 
-	private static final class Any implements Symbol {
+	private static final class Any implements Terminal {
 		@Override
 		public boolean matches(byte c) {
 			return true;
@@ -330,7 +337,7 @@ public final class Grammar {
 	}
 	
 	private static final class Set
-			implements Symbol {
+			implements Terminal {
 
 		final byte low;
 		final byte high;
@@ -353,11 +360,11 @@ public final class Grammar {
 	}
 
 	private static final class Not
-			implements Symbol {
+			implements Terminal {
 
-		private final Symbol excluded;
+		private final Terminal excluded;
 
-		Not( Symbol excluded ) {
+		Not( Terminal excluded ) {
 			super();
 			this.excluded = excluded;
 		}
@@ -374,7 +381,7 @@ public final class Grammar {
 	}
 
 	private static final class In
-			implements Symbol {
+			implements Terminal {
 
 		private final byte[] members;
 
@@ -404,12 +411,12 @@ public final class Grammar {
 	}
 
 	private static final class Or
-			implements Symbol {
+			implements Terminal {
 
-		private final Symbol a;
-		private final Symbol b;
+		private final Terminal a;
+		private final Terminal b;
 
-		Or( Symbol a, Symbol b ) {
+		Or( Terminal a, Terminal b ) {
 			super();
 			this.a = a;
 			this.b = b;
@@ -428,7 +435,7 @@ public final class Grammar {
 	}
 
 	private static final class Is
-			implements Symbol {
+			implements Terminal {
 
 		private final byte s;
 

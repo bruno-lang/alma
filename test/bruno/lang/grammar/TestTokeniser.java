@@ -24,13 +24,14 @@ public class TestTokeniser {
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar");
-		assertEquals(929, tokens.end());
+		assertEquals(930, tokens.end());
 	}
 	
 	@Test
 	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/test.grammar");
-		System.out.println(tokens);
+		assertEquals(8, tokens.end());
+		assertEquals("terminal", tokens.rule(7).name);
 	}
 
 }

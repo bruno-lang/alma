@@ -17,7 +17,7 @@ atom       : not
            | terminal
            | name;
 not        : [ '!' atom ];
-terminal   : [ ''' . !''' ''' ];
+terminal   : [ ''' . !'''* ''' ];
 range      : terminal '-' terminal;
 occurrence : [ '{' num ',' num '}' ]
            | qmark

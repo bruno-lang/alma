@@ -10,16 +10,6 @@ import bruno.lang.grammar.Grammar.Rule;
  * An abstract data type for a sequence of tokens for a particular
  * {@link Grammar}.
  * 
- * Each token is represented as a single long value that refers to the kind of
- * token (rule's name), the amount of child tokens and the end position in the
- * input stream of the token. The start position of a token is the end position
- * of the previous token. In that regard whitespace becomes a token as well.
- * 
- * Why long arrays? 
- * 1) a very compact memory representation of an token tree
- * 2) use one block of memory, co-location gives efficient read/writes
- * 3) the most often performed computations actually became very cheap ones
- * 
  * @author jan
  */
 public final class Tokens {
@@ -99,5 +89,9 @@ public final class Tokens {
 			index--;
 		}
 		return index;
+	}
+
+	public Rule rule(int index) {
+		return rules[index];
 	}
 }

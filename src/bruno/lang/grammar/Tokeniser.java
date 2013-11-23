@@ -2,13 +2,12 @@ package bruno.lang.grammar;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import bruno.lang.grammar.Grammar.Rule;
 
-public class Tokeniser {
+public final class Tokeniser {
 
 	private final Grammar grammar;
 
@@ -16,19 +15,21 @@ public class Tokeniser {
 		super();
 		this.grammar = grammar;
 	}
-	
-	public Tokens tokenise(String start, String input) {
+
+	public Tokens tokenise(String start, byte[] input) {
 		Rule r = grammar.rule(start.intern());
 		Tokens tokens = new Tokens(8000);
-		int t = tokenise(r, ByteBuffer.wrap(input.getBytes()), 0, true, tokens);
+		int t = tokenise(r, ByteBuffer.wrap(input), 0, true, tokens);
 		//TODO verify and visualize errors
 		return tokens;
 	}
 	
 	private static int tokenise(Rule rule, ByteBuffer input, int position, boolean gobbleWhitespace, Tokens tokens) {
 		switch (rule.type) {
-		case SYMBOL:
-			return symbol(rule, input, position); 
+		case CHARACTER:
+			return character(rule, input, position);
+		case TERMINAL:
+			return terminal(rule, input, position); 
 		case TOKEN:
 			return token(rule, input, position, tokens);
 		case ITERATION:
@@ -42,6 +43,16 @@ public class Tokeniser {
 		default:
 			throw new IllegalArgumentException("`"+rule+"` has no proper type: "+rule.type);
 		}
+	}
+
+	private static int character(Rule rule, ByteBuffer input, int position) {
+		if (position >= input.limit())
+			return -1;
+		byte c = input.get(position);
+		if (rule.character != c) {
+			return -1;
+		}
+		return position+1;
 	}
 
 	private static int capture(Rule rule, ByteBuffer input, int position,
@@ -106,11 +117,11 @@ public class Tokeniser {
 		return tokenise(rule.elements[0], input, position, false, tokens);
 	}
 
-	private static int symbol(Rule rule, ByteBuffer input, int position) {
+	private static int terminal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return -1;
 		byte c = input.get(position);
-		if (!rule.symbol.matches(c)) {
+		if (!rule.terminal.matches(c)) {
 			return -1;
 		}
 		if (c >= 0)
@@ -128,13 +139,11 @@ public class Tokeniser {
 	
 	public static Tokens tokenise(String filename) throws IOException {
 		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
-		String file = readFile(filename, Charset.forName("UTF-8"));
-		return t.tokenise("grammar", file);
+		return t.tokenise("grammar", readFile(filename));
 	}
 
-	static String readFile(String path, Charset encoding) throws IOException {
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return encoding.decode(ByteBuffer.wrap(encoded)).toString();
+	static byte[] readFile(String path) throws IOException {
+		return Files.readAllBytes(Paths.get(path));
 	}
 
 }
