@@ -1,5 +1,6 @@
 package bruno.lang.grammar;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -78,8 +79,7 @@ public final class Grammar {
 
 	public static interface Terminal {
 
-		// maybe like this: int matching(ByteBuffer input, int position); // returns the number of bytes that matches from the starting pos passed.
-		boolean matches( byte c );
+		int matching(ByteBuffer input, int position);
 	}
 	
 	private static final int NO_CHARACTER = -1;
@@ -319,12 +319,22 @@ public final class Grammar {
 	static String print( byte character ) {
 		return "'" + Character.valueOf((char) character) + "'";
 	}
+	
+	public static int length(ByteBuffer input, int position) {
+		byte b = input.get(position);
+		if (b >= 0)
+			return 1;
+		int p = position;
+		while (input.get(++p) < 0) { ; }
+		return p - position;
+		
+	}
 
 	private static final class Whitespace implements Terminal {
 
 		@Override
-		public boolean matches(byte c) {
-			return Character.isWhitespace(c);
+		public int matching(ByteBuffer input, int position) {
+			return Character.isWhitespace(input.get(position)) ? 1 : 0;
 		}
 		
 		@Override
@@ -336,10 +346,10 @@ public final class Grammar {
 	
 	private static final class Any implements Terminal {
 		@Override
-		public boolean matches(byte c) {
-			return true;
+		public int matching(ByteBuffer input, int position) {
+			return length(input, position);
 		}
-		
+
 		@Override
 		public String toString() {
 			return ".";
@@ -357,10 +367,11 @@ public final class Grammar {
 			this.low = low;
 			this.high = high;
 		}
-
+		
 		@Override
-		public boolean matches( byte c ) {
-			return c >= low && c <= high;
+		public int matching(ByteBuffer input, int position) {
+			int c = input.get(position);
+			return c >= low && c <= high ? 1 : 0;
 		}
 		
 		@Override
@@ -380,8 +391,9 @@ public final class Grammar {
 		}
 
 		@Override
-		public boolean matches( byte c ) {
-			return !excluded.matches(c);
+		public int matching(ByteBuffer input, int position) {
+			int l = excluded.matching(input, position);
+			return l > 0 ? 0 : length(input, position);
 		}
 
 		@Override
@@ -401,13 +413,14 @@ public final class Grammar {
 		}
 
 		@Override
-		public boolean matches( byte c ) {
+		public int matching(ByteBuffer input, int position) {
+			byte c = input.get(position);
 			for ( int i = 0; i < members.length; i++ ) {
 				if ( members[i] == c ) {
-					return true;
+					return 1;
 				}
 			}
-			return false;
+			return 0;
 		}
 
 		@Override
@@ -431,10 +444,10 @@ public final class Grammar {
 			this.a = a;
 			this.b = b;
 		}
-
+		
 		@Override
-		public boolean matches( byte c ) {
-			return a.matches(c) || b.matches(c);
+		public int matching(ByteBuffer input, int position) {
+			return Math.max(a.matching(input, position), b.matching(input, position));
 		}
 
 		@Override
@@ -455,8 +468,8 @@ public final class Grammar {
 		}
 
 		@Override
-		public boolean matches( byte c ) {
-			return c == s;
+		public int matching(ByteBuffer input, int position) {
+			return input.get(position) == s ? 1 : 0;
 		}
 		
 		@Override

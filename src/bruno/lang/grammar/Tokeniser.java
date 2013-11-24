@@ -122,14 +122,8 @@ public final class Tokeniser {
 	private static int terminal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return -1;
-		byte c = input.get(position);
-		if (!rule.terminal.matches(c)) {
-			return -1;
-		}
-		if (c >= 0)
-			return position+1;
-		while (input.get(++position) < 0) { ; }
-		return position;
+		final int l = rule.terminal.matching(input, position);
+		return l == 0 ? -1 : position + l;
 	}
 	
 	static final Rule GOBBLE_WHITESPACE = Rule.terminal(whitespace).occur(star);

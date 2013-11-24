@@ -1,6 +1,8 @@
 package bruno.lang.grammar;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
+import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
@@ -8,8 +10,8 @@ public class TestGrammar {
 
 	@Test
 	public void thatWhitespaceMatches() {
-		assertTrue(Grammar.whitespace.matches((byte) ' '));
-		assertTrue(Grammar.whitespace.matches((byte) '\t'));
-		assertTrue(Grammar.whitespace.matches((byte) '\n'));
+		assertEquals(1, Grammar.whitespace.matching(ByteBuffer.wrap(" ".getBytes()), 0));
+		assertEquals(1, Grammar.whitespace.matching(ByteBuffer.wrap("\t".getBytes()), 0));
+		assertEquals(1, Grammar.whitespace.matching(ByteBuffer.wrap("\n".getBytes()), 0));
 	}
 }
