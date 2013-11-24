@@ -27,7 +27,7 @@ public final class Tokeniser {
 		return tokens;
 	}
 	
-	private static int tokenise(Rule rule, ByteBuffer input, int position, Rule seperator, Tokens tokens) {
+	private static int tokenise(Rule rule, ByteBuffer input, int position, Rule separator, Tokens tokens) {
 		switch (rule.type) {
 		case CHARACTER:
 			return character(rule, input, position);
@@ -36,13 +36,13 @@ public final class Tokeniser {
 		case TOKEN:
 			return token(rule, input, position, tokens);
 		case ITERATION:
-			return iteration(rule, input, position, seperator, tokens);
+			return iteration(rule, input, position, separator, tokens);
 		case SEQUENCE:
-			return sequence(rule, input, position, seperator, tokens);
+			return sequence(rule, input, position, separator, tokens);
 		case SELECTION:
-			return selection(rule, input, position, seperator, tokens);
+			return selection(rule, input, position, separator, tokens);
 		case CAPTURE:
-			return capture(rule, input, position, seperator, tokens);
+			return capture(rule, input, position, separator, tokens);
 		default:
 			throw new IllegalArgumentException("`"+rule+"` has no proper type: "+rule.type);
 		}
@@ -59,9 +59,9 @@ public final class Tokeniser {
 	}
 
 	private static int capture(Rule rule, ByteBuffer input, int position,
-			Rule seperator, Tokens tokens) {
+			Rule separator, Tokens tokens) {
 		tokens.push(rule, position);
-		int end = tokenise(rule.elements[0], input, position, seperator, tokens);
+		int end = tokenise(rule.elements[0], input, position, separator, tokens);
 		if (end > position) {
 			tokens.done(end);
 		} else {
@@ -71,9 +71,9 @@ public final class Tokeniser {
 	}
 
 	private static int selection(Rule rule, ByteBuffer input, int position,
-			Rule seperator, Tokens tokens) {
+			Rule separator, Tokens tokens) {
 		for (Rule r : rule.elements) {
-			int end = tokenise(r, input, position, seperator, tokens);
+			int end = tokenise(r, input, position, separator, tokens);
 			if (end >= 0) {
 				return end;
 			}
@@ -82,12 +82,12 @@ public final class Tokeniser {
 	}
 
 	private static int sequence(Rule rule, ByteBuffer input, int position,
-			Rule seperator, Tokens tokens) {
+			Rule separator, Tokens tokens) {
 		int end = position;
 		for (int i = 0; i < rule.elements.length; i++) {
-			end = tokenise(seperator, input, end, NOTHING, tokens);
+			end = tokenise(separator, input, end, NOTHING, tokens);
 			Rule r = rule.elements[i];
-			int endPosition = tokenise(r, input, end, seperator, tokens);
+			int endPosition = tokenise(r, input, end, separator, tokens);
 			if (endPosition == -1) {
 				return -1;
 			}
@@ -97,11 +97,11 @@ public final class Tokeniser {
 	}
 
 	private static int iteration(Rule rule, ByteBuffer input, int position,
-			Rule seperator, Tokens tokens) {
+			Rule separator, Tokens tokens) {
 		int end = position;
 		int c = 0;
 		while (c < rule.occur.max) {
-			int endPosition = tokenise(rule.elements[0], input, end, seperator, tokens);
+			int endPosition = tokenise(rule.elements[0], input, end, separator, tokens);
 			if (endPosition == -1) {
 				if (c < rule.occur.min) {
 					return -1;
@@ -115,8 +115,7 @@ public final class Tokeniser {
 		return end;
 	}
 
-	private static int token(Rule rule, ByteBuffer input, int position,
-			Tokens tokens) {
+	private static int token(Rule rule, ByteBuffer input, int position, Tokens tokens) {
 		return tokenise(rule.elements[0], input, position, NOTHING, tokens);
 	}
 
