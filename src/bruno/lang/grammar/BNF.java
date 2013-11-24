@@ -45,7 +45,9 @@ public final class BNF {
 		Rule token = sequence(string("["), _parts, string("]")).as("token");
 		Rule group = sequence(string("("), _parts, string(")")).as("group");
 		Rule part = selection(group, token, atom).as("part");
-		Rule parts = sequence(token(part, occurrence.qmark() ), sequence(string("|").as("else").qmark(), _parts).qmark()).as("parts");
+		//TODO way to describe that 2 rules in a sequence should stick together (control the separator)
+		//Rule parts = sequence(token(part, occurrence.qmark() ), sequence(string("|").as("else").qmark(), _parts).qmark()).as("parts");
+		Rule parts = sequence(part, occurrence.qmark(), sequence(string("|").as("else").qmark(), _parts).qmark()).as("parts");
 		Rule rule = sequence(name,  string(":"), parts, string(";")).as("rule");
 		
 		Rule comment = sequence(string("%"), terminal(not('\n')).plus().as("text")).as("comment");

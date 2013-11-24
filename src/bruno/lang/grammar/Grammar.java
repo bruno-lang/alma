@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
  */
 public final class Grammar {
 
+
 	/**
 	 * <pre>
 	 * { min, max }
@@ -23,6 +24,9 @@ public final class Grammar {
 		return new Occur(min, max);
 	}
 
+	public static final Occur never = occur(0, 0);
+	
+	
 	/**
 	 * <pre>
 	 * *
@@ -61,13 +65,20 @@ public final class Grammar {
 			this.min = min;
 			this.max = max;
 		}
+		
+		@Override
+		public String toString() {
+			return "{"+min+":"+max+"}";
+		}
 
 	}
 	
 	public static final Terminal any = new Any();
+	public static final Terminal whitespace = new Whitespace();
 
 	public static interface Terminal {
 
+		// maybe like this: int matching(ByteBuffer input, int position); // returns the number of bytes that matches from the starting pos passed.
 		boolean matches( byte c );
 	}
 	
@@ -255,7 +266,6 @@ public final class Grammar {
 		public final Occur occur;
 		public final Terminal terminal;
 		public final int character;
-		public final boolean tokenish;
 		private int id = 0;
 		
 		public Rule(RuleType type, String name, Rule[] elements,
@@ -267,7 +277,6 @@ public final class Grammar {
 			this.occur = occur;
 			this.terminal = symbol;
 			this.character = character;
-			this.tokenish = tokenish(this);
 		}
 		
 		public int id() {
@@ -284,19 +293,6 @@ public final class Grammar {
 			return new Rule(RuleType.CAPTURE, name, new Rule[] { this }, Grammar.once, null, NO_CHARACTER);
 		}
 		
-		private static boolean tokenish(Rule r) {
-			return r.type == RuleType.TOKEN || r.type == RuleType.TERMINAL 
-					|| (r.type != RuleType.SEQUENCE && tokenish(r.elements));
-		}
-		
-		private static boolean tokenish(Rule[] elements) {
-			for (Rule e : elements) {
-				if (!e.tokenish)
-					return false;
-			}
-			return true;
-		}
-
 		public Rule plus() {
 			return occur(plus);
 		}
@@ -324,6 +320,20 @@ public final class Grammar {
 		return "'" + Character.valueOf((char) character) + "'";
 	}
 
+	private static final class Whitespace implements Terminal {
+
+		@Override
+		public boolean matches(byte c) {
+			return Character.isWhitespace(c);
+		}
+		
+		@Override
+		public String toString() {
+			return "(whitespace)";
+		}
+		
+	}
+	
 	private static final class Any implements Terminal {
 		@Override
 		public boolean matches(byte c) {
