@@ -238,11 +238,7 @@ public final class Grammar {
 			if (seq.length() == 1) {
 				return character(seq.charAt(0));
 			}
-			Rule[] sequence = new Rule[seq.length()];
-			for (int i = 0; i < sequence.length; i++) {
-				sequence[i] = character(seq.charAt(i));
-			}
-			return token(sequence);
+			return terminal(new Are(seq.getBytes()));
 		}
 		
 		public static Rule terminal(Terminal...seq) {
@@ -455,6 +451,27 @@ public final class Grammar {
 			return a + " | " + b;
 		}
 
+	}
+	
+	private static final class Are implements Terminal {
+
+		private final byte[] string;
+		
+		Are(byte[] string) {
+			super();
+			this.string = string;
+		}
+
+		@Override
+		public int matching(ByteBuffer input, int position) {
+			for (int i = 0; i < string.length; i++) {
+				if (string[i] != input.get(position+i)) {
+					return 0;
+				}
+			}
+			return string.length;
+		}
+		
 	}
 
 	private static final class Is
