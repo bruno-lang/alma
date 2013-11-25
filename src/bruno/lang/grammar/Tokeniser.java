@@ -29,7 +29,7 @@ public final class Tokeniser {
 	
 	private static int tokenise(Rule rule, ByteBuffer input, int position, Rule separator, Tokens tokens) {
 		switch (rule.type) {
-		case CHARACTER:
+		case LITERAL:
 			return character(rule, input, position);
 		case TERMINAL:
 			return terminal(rule, input, position); 
@@ -51,11 +51,12 @@ public final class Tokeniser {
 	private static int character(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return -1;
-		byte c = input.get(position);
-		if (rule.character != c) {
-			return -1;
+		final byte[] l = rule.literal;
+		for (int i = 0; i < l.length; i++) {
+			if (input.get(position) != l[i])
+				return -1;
 		}
-		return position+1;
+		return position+l.length;
 	}
 
 	private static int capture(Rule rule, ByteBuffer input, int position,
@@ -127,7 +128,7 @@ public final class Tokeniser {
 	}
 	
 	static final Rule GOBBLE_WHITESPACE = Rule.terminal(whitespace).occur(star);
-	static final Rule NOTHING = Rule.character('$').occur(Grammar.never);
+	static final Rule NOTHING = Rule.literal('$').occur(Grammar.never);
 	
 	public static Tokens tokenise(String filename) throws IOException {
 		Tokeniser t = new Tokeniser(BNF.GRAMMAR);

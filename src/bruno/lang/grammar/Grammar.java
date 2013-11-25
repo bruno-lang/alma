@@ -82,7 +82,7 @@ public final class Grammar {
 		int matching(ByteBuffer input, int position);
 	}
 	
-	private static final int NO_CHARACTER = -1;
+	private static final byte[] NO_CHARACTER = new byte[0];
 	
 	private final IdentityHashMap<String, Rule> rulesByName;
 	private final Rule[] rulesById;
@@ -203,7 +203,7 @@ public final class Grammar {
 	}
 	
 	public static enum RuleType {
-		CHARACTER("chr"), TERMINAL("trm"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
+		LITERAL("lit"), TERMINAL("trm"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
 		
 		public final String code;
 
@@ -230,15 +230,12 @@ public final class Grammar {
 			return new Rule(RuleType.TOKEN, "", elements.length == 1 ? elements : new Rule[] { sequence(elements) }, once, null, NO_CHARACTER);
 		}
 		
-		public static Rule character( char s ) {
-			return new Rule(RuleType.CHARACTER, "", new Rule[0], once, null, s);
+		public static Rule literal( char l ) {
+			return literal(String.valueOf(l));
 		}
 		
-		public static Rule string(String seq) {
-			if (seq.length() == 1) {
-				return character(seq.charAt(0));
-			}
-			return terminal(new Are(seq.getBytes()));
+		public static Rule literal(String l) {
+			return new Rule(RuleType.LITERAL, "", new Rule[0], once, null, l.getBytes());
 		}
 		
 		public static Rule terminal(Terminal...seq) {
@@ -261,18 +258,18 @@ public final class Grammar {
 		public final Rule[] elements;
 		public final Occur occur;
 		public final Terminal terminal;
-		public final int character;
+		public final byte[] literal;
 		private int id = 0;
 		
 		public Rule(RuleType type, String name, Rule[] elements,
-				Occur occur, Terminal symbol, int character) {
+				Occur occur, Terminal symbol, byte[] literal) {
 			super();
 			this.type = type;
 			this.name = name.intern();
 			this.elements = elements;
 			this.occur = occur;
 			this.terminal = symbol;
-			this.character = character;
+			this.literal = literal;
 		}
 		
 		public int id() {
