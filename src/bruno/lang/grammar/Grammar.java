@@ -2,6 +2,7 @@ package bruno.lang.grammar;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -203,7 +204,7 @@ public final class Grammar {
 	}
 	
 	public static enum RuleType {
-		LITERAL("lit"), TERMINAL("trm"), TOKEN("tok"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
+		LITERAL("lit"), TERMINAL("trm"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
 		
 		public final String code;
 
@@ -214,20 +215,23 @@ public final class Grammar {
 
 	public static final class Rule {
 		
+		public static final Rule ANY_WHITESPACE = Rule.terminal(whitespace).occur(star);
+		public static final Rule EMPTY_STRING = Rule.literal('$').occur(Grammar.never);
+		
 		public static Rule link(String name) {
-			return new Rule(RuleType.LINK, name, new Rule[0], once, null, NO_CHARACTER);
+			return new Rule(RuleType.LINK, name, new Rule[0], ANY_WHITESPACE, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule selection(Rule...elements) {
-			return new Rule(RuleType.SELECTION, "", elements, once, null, NO_CHARACTER);
+			return new Rule(RuleType.SELECTION, "", elements, ANY_WHITESPACE, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule sequence(Rule...elements) {
-			return new Rule(RuleType.SEQUENCE, "", elements, once, null, NO_CHARACTER);
+			return new Rule(RuleType.SEQUENCE, "", elements, ANY_WHITESPACE, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule token(Rule...elements) {
-			return new Rule(RuleType.TOKEN, "", elements.length == 1 ? elements : new Rule[] { sequence(elements) }, once, null, NO_CHARACTER);
+			return sequence(elements).separate(EMPTY_STRING);
 		}
 		
 		public static Rule literal( char l ) {
@@ -235,7 +239,7 @@ public final class Grammar {
 		}
 		
 		public static Rule literal(String l) {
-			return new Rule(RuleType.LITERAL, "", new Rule[0], once, null, l.getBytes());
+			return new Rule(RuleType.LITERAL, "", new Rule[0], EMPTY_STRING, once, null, l.getBytes());
 		}
 		
 		public static Rule terminal(Terminal...seq) {
@@ -250,25 +254,27 @@ public final class Grammar {
 		}
 
 		private static Rule terminal(Terminal terminal) {
-			return new Rule(RuleType.TERMINAL, "", new Rule[0], once, terminal, NO_CHARACTER);
+			return new Rule(RuleType.TERMINAL, "", new Rule[0], EMPTY_STRING,  once, terminal, NO_CHARACTER);
 		}
 		
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
+		public final Rule separation;
 		public final Occur occur;
 		public final Terminal terminal;
 		public final byte[] literal;
 		private int id = 0;
 		
-		public Rule(RuleType type, String name, Rule[] elements,
-				Occur occur, Terminal symbol, byte[] literal) {
+		public Rule(RuleType type, String name, Rule[] elements, Rule separation,
+				Occur occur, Terminal terminal, byte[] literal) {
 			super();
 			this.type = type;
 			this.name = name.intern();
 			this.elements = elements;
+			this.separation = separation;
 			this.occur = occur;
-			this.terminal = symbol;
+			this.terminal = terminal;
 			this.literal = literal;
 		}
 		
@@ -283,7 +289,7 @@ public final class Grammar {
 		}
 		
 		public Rule as(String name) {
-			return new Rule(RuleType.CAPTURE, name, new Rule[] { this }, Grammar.once, null, NO_CHARACTER);
+			return new Rule(RuleType.CAPTURE, name, new Rule[] { this }, separation, Grammar.once, null, NO_CHARACTER);
 		}
 		
 		public Rule plus() {
@@ -291,12 +297,28 @@ public final class Grammar {
 		}
 		
 		public Rule occur(Occur occur) {
-			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null, NO_CHARACTER);
+			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, separation, occur, null, NO_CHARACTER);
+		}
+		
+		public Rule separate(Rule separation) {
+			return new Rule(type, name, elements, separation, occur, terminal, literal);
 		}
 		
 		@Override
 		public String toString() {
-			return type == RuleType.TERMINAL ? terminal.toString() : name;
+			if (type == RuleType.TERMINAL) {
+				return terminal.toString();
+			}
+			if (type == RuleType.CAPTURE) {
+				return name;
+			}
+			if (type == RuleType.LITERAL) {
+				return new String(literal);
+			}
+			if (type == RuleType.LINK) {
+				return "@"+name;
+			}
+			return type+" "+Arrays.toString(elements);
 		}
 
 		public Rule star() {
@@ -306,6 +328,7 @@ public final class Grammar {
 		public Rule qmark() {
 			return occur(qmark);
 		}
+
 	}
 
 

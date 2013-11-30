@@ -1,8 +1,5 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.star;
-import static bruno.lang.grammar.Grammar.whitespace;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -22,7 +19,7 @@ public final class Tokeniser {
 	public Tokens tokenise(String start, byte[] input) {
 		Rule r = grammar.rule(start.intern());
 		Tokens tokens = new Tokens(8000);
-		int t = tokenise(r, ByteBuffer.wrap(input), 0, GOBBLE_WHITESPACE, tokens);
+		int t = tokenise(r, ByteBuffer.wrap(input), 0, Rule.ANY_WHITESPACE, tokens);
 		//TODO verify and visualize errors
 		return tokens;
 	}
@@ -33,8 +30,6 @@ public final class Tokeniser {
 			return character(rule, input, position);
 		case TERMINAL:
 			return terminal(rule, input, position); 
-		case TOKEN:
-			return token(rule, input, position, tokens);
 		case ITERATION:
 			return iteration(rule, input, position, separator, tokens);
 		case SEQUENCE:
@@ -86,7 +81,7 @@ public final class Tokeniser {
 			Rule separator, Tokens tokens) {
 		int end = position;
 		for (int i = 0; i < rule.elements.length; i++) {
-			end = tokenise(separator, input, end, NOTHING, tokens);
+			end = tokenise(rule.separation, input, end, Rule.EMPTY_STRING, tokens);
 			Rule r = rule.elements[i];
 			int endPosition = tokenise(r, input, end, separator, tokens);
 			if (endPosition == -1) {
@@ -116,19 +111,12 @@ public final class Tokeniser {
 		return end;
 	}
 
-	private static int token(Rule rule, ByteBuffer input, int position, Tokens tokens) {
-		return tokenise(rule.elements[0], input, position, NOTHING, tokens);
-	}
-
 	private static int terminal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return -1;
 		final int l = rule.terminal.matching(input, position);
 		return l == 0 ? -1 : position + l;
 	}
-	
-	static final Rule GOBBLE_WHITESPACE = Rule.terminal(whitespace).occur(star);
-	static final Rule NOTHING = Rule.literal('$').occur(Grammar.never);
 	
 	public static Tokens tokenise(String filename) throws IOException {
 		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
