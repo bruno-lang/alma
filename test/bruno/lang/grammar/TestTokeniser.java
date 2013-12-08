@@ -11,13 +11,13 @@ public class TestTokeniser {
 	@Test
 	public void thatToyGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/toy.grammar");
-		assertEquals(70, tokens.end());
+		assertEquals(90, tokens.end());
 	}
 	
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/bruno.grammar");
-		assertEquals(6274, tokens.end());
+		assertEquals(6254, tokens.end());
 		assertEquals(2306, tokens.count());
 	}
 	

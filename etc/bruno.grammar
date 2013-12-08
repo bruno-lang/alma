@@ -167,8 +167,7 @@ fault          : 'fault' Fault '::' Value Range?;
 
 notation       : 'notation' Notation '::' Type? ( '=' '{' Type.. '}' )?;
 
-fn             : 'fn' Function operator? '::' signature 
-                   conditional* return ( 'where' term+ )?;
+fn             : 'fn' Function operator? '::' signature conditional* return ( 'where' term+ )?;
 [] operator    : '[' Operator ']';
 [] signature   : signature' | '(' signature' ')'; 
 signature'     : parameter '->' ( parameter '->' )* Type;

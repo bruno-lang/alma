@@ -19,7 +19,11 @@ public final class Tokeniser {
 	public Tokens tokenise(String start, byte[] input) {
 		Rule r = grammar.rule(start.intern());
 		Tokens tokens = new Tokens(8000);
-		int t = tokenise(r, ByteBuffer.wrap(input), 0, Rule.ANY_WHITESPACE, tokens);
+		try {
+			int t = tokenise(r, ByteBuffer.wrap(input), 0, Rule.ANY_WHITESPACE, tokens);
+		} catch (Exception e) {
+			System.err.println(tokens);
+		}
 		if (tokens.end() != input.length) {
 			System.err.println("Failed to parse:");
 			System.out.println(new String(input, tokens.end(), 60));
@@ -109,6 +113,9 @@ public final class Tokeniser {
 				return end;
 			} else {
 				end = endPosition;
+				if (rule.separation != null) {
+					end = tokenise(rule.separation, input, end, Rule.EMPTY_STRING, tokens);
+				}
 				c++;
 			}
 		}

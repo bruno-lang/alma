@@ -4,7 +4,7 @@ member        : comment | rule;
 comment       : '%' !eol;
 rule          : separation? name ':' selection ';';
 selection     : parts ( '|' parts )*;
-parts         : part+;
+[indent] parts: part+;
 [] part       : (group | terminals | atom) occurrence?;
 group         : '(' selection ')';
 terminals     : '[' terminal+ ']';
