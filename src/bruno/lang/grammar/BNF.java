@@ -42,13 +42,14 @@ public final class BNF {
 		Rule occurrence = selection(minmax, qmark, star, plus, ellipsis).as("occurrence");
 		
 		Rule _parts = link("parts");
-		Rule token = sequence(literal("["), _parts, literal("]")).as("token");
 		Rule group = sequence(literal("("), _parts, literal(")")).as("group");
-		Rule part = selection(group, token, atom).as("part");
+		Rule terminals = sequence(literal('['), sequence(terminal).plus(), literal(']')).as("terminals");
+		Rule part = sequence(selection(group, terminals, atom), occurrence.qmark()).as("part");
 		//TODO way to describe that 2 rules in a sequence should stick together (control the separator)
 		//Rule parts = sequence(token(part, occurrence.qmark() ), sequence(string("|").as("else").qmark(), _parts).qmark()).as("parts");
-		Rule parts = sequence(part, occurrence.qmark(), sequence(literal("|").as("else").qmark(), _parts).qmark()).as("parts");
-		Rule rule = sequence(name,  literal(":"), parts, literal(";")).as("rule");
+		Rule parts = sequence(part, sequence(literal("|").as("else").qmark(), _parts).qmark()).as("parts");
+		Rule separation = sequence(literal('['), name.qmark(), literal(']')).as("separation");
+		Rule rule = sequence(separation.qmark(), name,  literal(":"), parts, literal(";")).as("rule");
 		
 		Rule comment = sequence(literal("%"), terminal(not('\n')).plus().as("text")).as("comment");
 		Rule member = selection(comment, rule).as("member");

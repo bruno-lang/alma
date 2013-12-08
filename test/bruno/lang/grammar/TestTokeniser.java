@@ -11,20 +11,20 @@ public class TestTokeniser {
 	@Test
 	public void thatToyGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/toy.grammar");
-		assertEquals(53, tokens.end());
+		assertEquals(70, tokens.end());
 	}
 	
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/bruno.grammar");
-		assertEquals(6402, tokens.end());
-		assertEquals(2606, tokens.count());
+		assertEquals(6274, tokens.end());
+		assertEquals(2470, tokens.count());
 	}
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar");
-		assertEquals(930, tokens.end());
+		assertEquals(926, tokens.end());
 	}
 	
 	@Test

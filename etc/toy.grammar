@@ -1,2 +1,3 @@
+x : [ 'a' 'b' ];
 foo : bar+;
 % this is just to trigger classloading...

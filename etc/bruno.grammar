@@ -10,23 +10,23 @@ Quote          : '"';
 Space          : ' ';
 
 Pad            : Space?;
-Dashed         : [ [ '-' | Letter | Digit]* [ Letter | Digit ]]?;
-Verb           : [ Letter Dashed ];
-Noun           : [ LETTER [ Letter | '-' ] [ Letter | '-' | LETTER | Digit ]* ];
+[] Dashed      : ( '-' | Letter | Digit )* ( Letter | Digit )?;
+[] Verb        : ( Letter Dashed );
+[] Noun        : ( LETTER ( Letter | '-' ) ( Letter | '-' | LETTER | Digit )* );
 
 % Identifiers
-Field          : [ [ Letter | Digit ] Dashed ];
-Constant       : [ ':' Field ];
-Variable       : [ Field Apostrophe* ];
+[] Field       : ( Letter | Digit ) Dashed;
+[] Constant    : ':' Field;
+[] Variable    : Field Apostrophe*;
 
-Operation      : [ Verb '?'? ];
-Function       : [ Verb '?'? Apostrophe* ];
+[] Operation   : Verb '?'?;
+[] Function    : Verb '?'? Apostrophe*;
 Module         : Verb;
 Library        : Verb;
 Namespace      : Verb;
-Fault          : [ Verb '!' ];
+[] Fault       : Verb '!';
 
-TypeVariable   : [ LETTER Digit? ];
+[] TypeVariable: LETTER Digit?;
 Protocol       : Noun;
 Data           : Noun;
 Unit           : Noun;
@@ -42,25 +42,25 @@ Value          : Simple
 
 % Operators
 Operator       : OperatorSymbol{1,3};
-OperatorSymbol : [ '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' ';' '^' ];
+[] OperatorSymbol : [ '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' ';' '^' ];
 
 % Symbols
-Measure        : [ LETTER | Letter | UnitSymbol ]+;
-UnitSymbol     : [ Apostrophe '%' '$' '€' '@' '/' '°' '"' ];
+[] Measure     : ( LETTER | Letter | UnitSymbol )+;
+UnitSymbol     : [''' '%' '$' '€' '@' '/' '°' '"' ];
 
 % Literals
 Literal        : LiteralLogic 
                | LiteralText 
                | LiteralBinay;
-LiteralLogic   : [ Apostrophe !Space+ Quantity ];
-LiteralText    : [ Quote !Quote* Quote ];
-LiteralBinary  : [ '#' ['b' Binary+ | 'o' Octal+ | 'd' Digit+ | 'x' Hex+ ]];
+[] LiteralLogic : Apostrophe !Space+ Quantity;
+[] LiteralText  : Quote !Quote* Quote;
+[] LiteralBinary: '#' ('b' Binary+ | 'o' Octal+ | 'd' Digit+ | 'x' Hex+ );
 
 Range          : RangeLiteral 
                | RangeConstant;
-RangeLiteral   : [ Literal [ Pad '..' Pad Literal ]? | '..' Pad Literal ];
-RangeSet       : [ '{' Pad Literal Pad [',' Pad Literal Pad ]* '}' ];
-RangeConstant  : [ Constant ( Pad '..' Pad Constant )? | '..' Pad Constant ];
+[] RangeLiteral  : Literal ( Pad '..' Pad Literal )? | '..' Pad Literal;
+[] RangeSet      : '{' Pad Literal Pad (',' Pad Literal Pad )* '}';
+[] RangeConstant : Constant ( Pad '..' Pad Constant )? | '..' Pad Constant;
 
 % References		
 Reference      : Variable 
@@ -68,7 +68,7 @@ Reference      : Variable
                | Literal;
 
 % Types
-Type           : [ TypeBasic TypeVariant? ];
+[] Type        : TypeBasic TypeVariant?;
 TypeVariant    : [ '!' '?' '~' '*' ];
 TypeBasic      : TypeVariable 
                | Value 
@@ -77,17 +77,17 @@ TypeBasic      : TypeVariable
                | TypeSet 
                | TypeTuple 
                | TypeFn;
-TypeArray      : [ TypeBasic '[' Digit* ']' ];
-TypeList       : [ '[' TypeBasic ']' ];
-TypeSet        : [ '{' TypeBasic '}' ];
-TypePad        : [ Pad Type Pad ];
-TypeTuple      : [ '(' [ TypePad [ ',' TypePad ]* ]? ')' ];
-TypeFn         : [ '(' TypePad '->' [ TypePad '->' ]* TypePad ')' ];
-TypeOp         : [ Operation TypeFn ];
+[] TypeArray   : TypeBasic '[' Digit* ']';
+[] TypeList    : '[' TypeBasic ']';
+[] TypeSet     : '{' TypeBasic '}';
+[] TypePad     : Pad Type Pad;
+[] TypeTuple   : '(' ( TypePad ( ',' TypePad )* )? ')';
+[] TypeFn      : '(' TypePad '->' ( TypePad '->' )* TypePad ')';
+[] TypeOp      : Operation TypeFn;
 
 % Type Variables
 instances      : 'instances' TypeVariable '::' Operation* InstType;
-InstType       : [ InstBasic TypeVariant? ];
+[] InstType    : InstBasic TypeVariant?;
 InstBasic      : '_'
                | TypeBasic 
                | InstArray 
@@ -96,14 +96,14 @@ InstBasic      : '_'
                | InstTuple 
                | InstFn 
                | InstOp; 
-InstArray      : [ InstBasic '[' Digit* [ '-' Digit* ]? ']' ];
-InstList       : [ '[' InstBasic ']' ];
-InstSet        : [ '{' InstBasic '}' ];
-InstPad        : [ Pad InstType Pad ];
-InstElement    : [ Pad '..' Pad | InstPad ];
-InstTuple      : [ '(,)' | '(' [ InstElement [ ',' InstElement ]* ]?  ')' ];
-InstFn         : [ '(->)' | '(' InstPad '->' [ InstPad '->' ]* InstPad ')' ];
-InstOp         : [[ Operation | '_' ] InstFn ];
+[] InstArray   : InstBasic '[' Digit* ( '-' Digit* )? ']';
+[] InstList    : '[' InstBasic ']';
+[] InstSet     : '{' InstBasic '}';
+[] InstPad     : Pad InstType Pad;
+[] InstElement : Pad '..' Pad | InstPad;
+[] InstTuple   : '(,)' | '(' ( InstElement ( ',' InstElement )* )?  ')';
+[] InstFn      : '(->)' | '(' InstPad '->' ( InstPad '->' )* InstPad ')';
+[] InstOp      : ( Operation | '_' ) InstFn;
 
 % Modularisation
 file           : library 
@@ -156,7 +156,7 @@ dimension      : 'dimension' simple enumeration?;
 unit           : 'unit' simple;
 
 simple         : Simple measure? '::' Simple Range? format*;
-measure        : [ '[' Measure ']' ];
+[] measure     : '[' Measure ']';
 
 system         : 'unit' 'system' System '::' '{' ratio+ '}';
 
@@ -169,8 +169,8 @@ notation       : 'notation' Notation '::' Type? ( '=' '{' Type.. '}' )?;
 
 fn             : 'fn' Function operator? '::' signature 
                    conditional* return ( 'where' term+ )?;
-operator       : [ '[' Operator ']' ];
-signature      : signature' | [ '(' signature' ')' ]; 
+[] operator    : '[' Operator ']';
+[] signature   : signature' | '(' signature' ')'; 
 signature'     : parameter '->' ( parameter '->' )* Type;
 parameter      : Type Variable?;
 conditional    : '=' expression '?' expression;

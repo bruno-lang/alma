@@ -289,7 +289,8 @@ public final class Grammar {
 		}
 		
 		public Rule as(String name) {
-			return new Rule(RuleType.CAPTURE, name, new Rule[] { this }, separation, Grammar.once, null, NO_CHARACTER);
+			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
+			return new Rule(RuleType.CAPTURE, name, elems, separation, Grammar.once, null, NO_CHARACTER);
 		}
 		
 		public Rule plus() {
