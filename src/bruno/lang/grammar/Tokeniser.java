@@ -20,6 +20,10 @@ public final class Tokeniser {
 		Rule r = grammar.rule(start.intern());
 		Tokens tokens = new Tokens(8000);
 		int t = tokenise(r, ByteBuffer.wrap(input), 0, Rule.ANY_WHITESPACE, tokens);
+		if (tokens.end() != input.length) {
+			System.err.println("Failed to parse:");
+			System.out.println(new String(input, tokens.end(), 60));
+		}
 		//TODO verify and visualize errors
 		return tokens;
 	}

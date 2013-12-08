@@ -2,10 +2,11 @@
 grammar       : member+;
 member        : comment | rule;
 comment       : '%' !eol;
-rule          : separation? name ':' parts ';';
-parts         : part (else? parts)?;
+rule          : separation? name ':' selection ';';
+selection     : parts ( '|' parts )*;
+parts         : part+;
 [] part       : (group | terminals | atom) occurrence?;
-group         : '(' parts ')';
+group         : '(' selection ')';
 terminals     : '[' terminal+ ']';
 atom          : not | any | whitespace | eol | range | terminal | name;
 [] not        : '!' atom;
