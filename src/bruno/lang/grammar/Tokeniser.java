@@ -26,7 +26,7 @@ public final class Tokeniser {
 		}
 		if (tokens.end() != input.length) {
 			System.err.println("Failed to parse:");
-			System.out.println(new String(input, tokens.end(), 60));
+			System.out.println(new String(input, tokens.end(), Math.min(60, input.length - tokens.end())));
 		}
 		//TODO verify and visualize errors
 		return tokens;

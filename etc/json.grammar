@@ -1,0 +1,13 @@
+json : object | array | string | number | bool | null
+object : '{' members '}'
+[comma] members : member*
+member : name ':' json
+array : '[' elements ']'
+[comma] elements : json*
+string : '"' .* '"'
+number : digit (digit | '.')*
+bool : 'true' | 'false'
+null : 'null'
+name : '"' text '"'
+text : ( letter | digit | '_' | '-' )+
+comma : ','

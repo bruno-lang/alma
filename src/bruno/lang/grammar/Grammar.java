@@ -223,7 +223,7 @@ public final class Grammar {
 		}
 		
 		public static Rule selection(Rule...elements) {
-			return new Rule(RuleType.SELECTION, "", elements, ANY_WHITESPACE, once, null, NO_CHARACTER);
+			return new Rule(RuleType.SELECTION, "", elements, EMPTY_STRING, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule sequence(Rule...elements) {

@@ -33,5 +33,11 @@ public class TestTokeniser {
 		assertEquals(8, tokens.end());
 		assertEquals("terminal", tokens.rule(8).name);
 	}
+	
+	@Test
+	public void thatJSONGrammarCanBeTokenised() throws IOException {
+		Tokens tokens = Tokeniser.tokenise("etc/json.grammar");
+		assertEquals(336, tokens.end());
+	}
 
 }
