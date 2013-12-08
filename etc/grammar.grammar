@@ -2,7 +2,7 @@
 grammar       : member+;
 member        : comment | rule;
 comment       : '%' !eol;
-rule          : separation? name ':' selection ';';
+rule          : separation? name ':' ':'? '='? selection ';';
 selection     : parts ( '|' parts )*;
 [indent] parts: part+;
 [] part       : (group | terminals | atom) occurrence?;

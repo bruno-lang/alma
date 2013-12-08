@@ -24,7 +24,7 @@ public class TestTokeniser {
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar");
-		assertEquals(958, tokens.end());
+		assertEquals(968, tokens.end());
 	}
 	
 	@Test
@@ -37,7 +37,7 @@ public class TestTokeniser {
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/json.grammar");
-		assertEquals(336, tokens.end());
+		assertEquals(362, tokens.end());
 	}
 
 }
