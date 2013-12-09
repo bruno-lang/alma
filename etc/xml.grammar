@@ -1,0 +1,10 @@
+document = doctype root
+root = node
+doctype = '<?xml' attribute* '?>'
+node = element | text 
+element = open attribute* '>' node* close
+[] open = '<' name
+[] close = '</' name '>'
+[] attribute = name '=' '"' value '"'
+text = !'<'
+value = !'"'

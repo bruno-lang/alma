@@ -39,5 +39,11 @@ public class TestTokeniser {
 		Tokens tokens = Tokeniser.tokenise("etc/json.grammar");
 		assertEquals(362, tokens.end());
 	}
+	
+	@Test
+	public void thatXMLGrammarCanBeTokenised() throws IOException {
+		Tokens tokens = Tokeniser.tokenise("etc/xml.grammar");
+		assertEquals(242, tokens.end());
+	}
 
 }
