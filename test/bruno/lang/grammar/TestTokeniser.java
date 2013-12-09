@@ -24,7 +24,7 @@ public class TestTokeniser {
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar");
-		assertEquals(968, tokens.end());
+		assertEquals(977, tokens.end());
 	}
 	
 	@Test

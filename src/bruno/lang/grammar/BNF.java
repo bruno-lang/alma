@@ -49,7 +49,9 @@ public final class BNF {
 		Rule selection = sequence(parts, sequence(literal('|'), parts).star()).as("selection"); 
 		Rule separation = sequence(literal('['), name.qmark(), literal(']')).as("separation");
 		Rule colon = literal(":");
-		Rule rule = sequence(separation.qmark(), name,  colon, colon.qmark(), literal('=').qmark(), selection, literal(";").qmark()).as("rule");
+		Rule equal = literal('=');
+		Rule definedAs = selection(equal, sequence(colon, colon.qmark(), equal.qmark()));
+		Rule rule = sequence(separation.qmark(), name,  definedAs, selection, literal(";").qmark()).as("rule");
 		
 		Rule comment = sequence(literal("%"), terminal(not('\n')).plus().as("text")).as("comment");
 		Rule member = selection(comment, rule).as("member");
