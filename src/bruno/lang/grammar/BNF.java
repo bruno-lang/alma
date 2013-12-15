@@ -36,7 +36,7 @@ public final class BNF {
 		Rule star = literal("*").as("star");
 		Rule plus = literal("+").as("plus");
 		Rule ellipsis  = literal("..").as("ellipsis");
-		Rule digit = terminal(set('0', '9')).as("digit");
+		Rule digit = terminal(set('0', '9')).as("-digit");
 		Rule num = digit.plus().as("num");
 		Rule minmax = token(literal("{"), num, literal(","), num, literal("}")).as("minmax");
 		Rule occurrence = selection(minmax, qmark, star, plus, ellipsis).as("occurrence");

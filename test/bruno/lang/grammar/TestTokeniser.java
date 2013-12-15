@@ -18,13 +18,13 @@ public class TestTokeniser {
 	public void thatBrunoLangCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/bruno.grammar");
 		assertEquals(6254, tokens.end());
-		assertEquals(2306, tokens.count());
+		assertEquals(2304, tokens.count());
 	}
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar");
-		assertEquals(977, tokens.end());
+		assertEquals(979, tokens.end());
 	}
 	
 	@Test

@@ -24,6 +24,6 @@ any           : '.';
 whitespace    : '_';
 eol           : '$';
 else          : '|';
-character     : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
-[] name       : character+;
+-character     : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
+[] name       : -character+;
 separation    : '[' name? ']';

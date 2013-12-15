@@ -88,7 +88,7 @@ public final class Grammar {
 	private final IdentityHashMap<String, Rule> rulesByName;
 	private final Rule[] rulesById;
 	
-	public Grammar(Rule root) {
+	public Grammar(Rule root) { //OPEN maybe we need other starting points because of links
 		super();
 		this.rulesByName = new IdentityHashMap<>();
 		List<Rule> idOrder = new ArrayList<>();
@@ -155,6 +155,9 @@ public final class Grammar {
 		Rule r = rulesByName.get(name);
 		if (r != null)
 			return r;
+		if (name.startsWith("-")) {
+			return rule(name.substring(1));
+		}
 		throw new NoSuchElementException("Missing rule: "+name);
 	}
 	
@@ -215,8 +218,8 @@ public final class Grammar {
 
 	public static final class Rule {
 		
-		public static final Rule ANY_WHITESPACE = Rule.terminal(whitespace).occur(star);
-		public static final Rule EMPTY_STRING = Rule.literal('$').occur(Grammar.never);
+		public static final Rule ANY_WHITESPACE = terminal(whitespace).occurs(star);
+		public static final Rule EMPTY_STRING = literal('$').occurs(never);
 		
 		public static Rule link(String name) {
 			return new Rule(RuleType.LINK, name, new Rule[0], ANY_WHITESPACE, once, null, NO_CHARACTER);
@@ -289,15 +292,18 @@ public final class Grammar {
 		}
 		
 		public Rule as(String name) {
+			if (name.length() > 0 && name.charAt(0) == '-') {
+				return new Rule(type, name, elements, separation, occur, terminal, literal);
+			}
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
 			return new Rule(RuleType.CAPTURE, name, elems, separation, Grammar.once, null, NO_CHARACTER);
 		}
 		
 		public Rule plus() {
-			return occur(plus);
+			return occurs(plus);
 		}
 		
-		public Rule occur(Occur occur) {
+		public Rule occurs(Occur occur) {
 			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, separation, occur, null, NO_CHARACTER);
 		}
 		
@@ -323,11 +329,11 @@ public final class Grammar {
 		}
 
 		public Rule star() {
-			return occur(star);
+			return occurs(star);
 		}
 
 		public Rule qmark() {
-			return occur(qmark);
+			return occurs(qmark);
 		}
 
 	}
