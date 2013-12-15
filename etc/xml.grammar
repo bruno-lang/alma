@@ -1,10 +1,12 @@
 document = doctype root
 root = node
 doctype = '<?xml' attribute* '?>'
-node = element | text 
+node = element | comment | cdata | text 
 element = open attribute* '>' node* close
 [] open = '<' name
 [] close = '</' name '>'
 [] attribute = name '=' '"' value '"'
 text = !'<'
 value = !'"'
+cdata = '<![CDATA[' data ']]>'
+comment = '<!--' info '-->'

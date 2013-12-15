@@ -43,7 +43,7 @@ public class TestTokeniser {
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/xml.grammar");
-		assertEquals(242, tokens.end());
+		assertEquals(318, tokens.end());
 	}
 
 }

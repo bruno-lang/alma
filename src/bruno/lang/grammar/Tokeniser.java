@@ -18,7 +18,7 @@ public final class Tokeniser {
 
 	public Tokens tokenise(String start, byte[] input) {
 		Rule r = grammar.rule(start.intern());
-		Tokens tokens = new Tokens(8000);
+		Tokens tokens = new Tokens(Math.max(512, input.length / 2));
 		try {
 			int t = tokenise(r, ByteBuffer.wrap(input), 0, Rule.ANY_WHITESPACE, tokens);
 		} catch (Exception e) {
