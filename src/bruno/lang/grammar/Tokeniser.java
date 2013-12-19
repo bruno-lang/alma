@@ -44,11 +44,28 @@ public final class Tokeniser {
 			return sequence(rule, input, position, separator, tokens);
 		case SELECTION:
 			return selection(rule, input, position, separator, tokens);
+		case COMPLETION:
+			return completion(rule, input, position, separator, tokens);
 		case CAPTURE:
 			return capture(rule, input, position, separator, tokens);
 		default:
 			throw new IllegalArgumentException("`"+rule+"` has no proper type: "+rule.type);
 		}
+	}
+
+	private static int completion(Rule rule, ByteBuffer input, int position,
+			Rule separator, Tokens tokens) {
+		final int l = input.limit();
+		int end = -1;
+		while (position < l) {
+			end = tokenise(rule.elements[0], input, position, separator, tokens);
+			if (end < 0) {
+				position++;
+			} else {
+				return position;
+			}
+		}
+		return -1;
 	}
 
 	private static int character(Rule rule, ByteBuffer input, int position) {

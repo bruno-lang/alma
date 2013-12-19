@@ -39,12 +39,12 @@ public final class BNF {
 		Rule digit = terminal(set('0', '9')).as("-digit");
 		Rule num = digit.plus().as("num");
 		Rule minmax = token(literal("{"), num, literal(","), num, literal("}")).as("minmax");
-		Rule occurrence = selection(minmax, qmark, star, plus, ellipsis).as("occurrence");
+		Rule occurrence = selection(minmax, qmark, star, plus).as("occurrence");
 		
 		Rule group = sequence(literal("("), link("selection"), literal(")")).as("group");
 		Rule terminals = sequence(literal('['), sequence(terminal).plus(), literal(']')).as("terminals");
 		Rule indent = terminal(in(' ', '\t')).star();
-		Rule part = token(selection(group, terminals, atom), occurrence.qmark()).as("part");
+		Rule part = selection(ellipsis, token(selection(group, terminals, atom), occurrence.qmark())).as("part");
 		Rule parts = part.plus().separate(indent).as("parts");
 		Rule selection = sequence(parts, sequence(literal('|'), parts).star()).as("selection"); 
 		Rule separation = sequence(literal('['), name.qmark(), literal(']')).as("separation");

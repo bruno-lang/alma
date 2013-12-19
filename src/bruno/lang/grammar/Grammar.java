@@ -207,7 +207,7 @@ public final class Grammar {
 	}
 	
 	public static enum RuleType {
-		LITERAL("lit"), TERMINAL("trm"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), LINK("lnk"), CAPTURE("cap");
+		LITERAL("lit"), TERMINAL("trm"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cmp"), LINK("lnk"), CAPTURE("cap");
 		
 		public final String code;
 
@@ -220,6 +220,10 @@ public final class Grammar {
 		
 		public static final Rule ANY_WHITESPACE = terminal(whitespace).occurs(star);
 		public static final Rule EMPTY_STRING = literal('$').occurs(never);
+		
+		public static Rule completion(Rule to) {
+			return new Rule(RuleType.COMPLETION, "", new Rule[] { to }, EMPTY_STRING, once, null, NO_CHARACTER);
+		}
 		
 		public static Rule link(String name) {
 			return new Rule(RuleType.LINK, name, new Rule[0], ANY_WHITESPACE, once, null, NO_CHARACTER);

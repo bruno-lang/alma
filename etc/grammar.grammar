@@ -5,7 +5,7 @@ comment       : '%' !eol;
 rule          : separation? name ('=' | ':' ':'? '='?) selection ';'?;
 selection     : parts ( '|' parts )*;
 [indent] parts: part+;
-[] part       : (group | terminals | atom) occurrence?;
+[] part       : ( ellipsis | (group | terminals | atom) occurrence?);
 group         : '(' selection ')';
 terminals     : '[' terminal+ ']';
 atom          : not | any | whitespace | eol | range | terminal | name;
@@ -13,7 +13,7 @@ atom          : not | any | whitespace | eol | range | terminal | name;
 [] terminal   : ''' . !'''* ''';
 range         : terminal '-' terminal;
 [] occurrence : '{' num ',' num '}'
-              | qmark | star | plus | ellipsis;
+              | qmark | star | plus;
 num           : digit+;
 digit         : '0' - '9';
 qmark         : '?';

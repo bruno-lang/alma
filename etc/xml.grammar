@@ -9,4 +9,6 @@ element = open attribute* '>' node* close
 text = !'<'
 value = !'"'
 cdata = '<![CDATA[' data ']]>'
+data = ..
 comment = '<!--' info '-->'
+info = ..

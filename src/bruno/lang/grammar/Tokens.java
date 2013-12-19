@@ -41,12 +41,20 @@ public final class Tokens {
 		indexStack[level] = top;
 	}
 	
+	public int end(int index) {
+		return ends[index];
+	}
+	
+	public int start(int index) {
+		return starts[index];
+	}
+	
 	public int end() {
 		return ends[0];
 	}
 	
 	public int count() {
-		return top;
+		return top+1;
 	}
 
 	public void pop() {
