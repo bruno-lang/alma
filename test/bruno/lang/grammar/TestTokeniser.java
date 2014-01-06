@@ -42,30 +42,33 @@ public class TestTokeniser {
 	
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
-		Tokenised source = Tokeniser.tokenise("etc/json.grammar");
-		assertEquals(362, source.tokens.end());
-		source.printBy(Print.rulePrinter(System.out));
+		Tokenised t = Tokeniser.tokenise("etc/json.grammar");
+		assertEquals(362, t.tokens.end());
 	}
 	
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
-		Tokenised source = Tokeniser.tokenise("etc/xml.grammar");
-		assertEquals(337, source.tokens.end());
-		source.printBy(Print.rulePrinter(System.out));
+		Tokenised t = Tokeniser.tokenise("etc/xml.grammar");
+		assertEquals(337, t.tokens.end());
 	}
 
 	@Test
 	public void thatCompletionWorks() {
 		Tokeniser t = new Tokeniser(COMMENTS);
-		String input = "% this is the comments text\n";
-		Tokens tokens = t.tokenise("comment", ByteBuffer.wrap(input.getBytes()));
-		assertEquals(2, tokens.count());
-		assertEquals(" this is the comments text", input.substring(tokens.start(1), tokens.end(1)));
+		String input = "% this is the comments text\n% this is another one\n";
+		Tokens tokens = t.tokenise("grammar", ByteBuffer.wrap(input.getBytes()));
+		assertEquals(5, tokens.count());
+		assertEquals(" this is the comments text", input.substring(tokens.start(2), tokens.end(2)));
+		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
 	}
-	
+
+	/**
+	 * A minimal grammar for just comments to test completion feature working as
+	 * it is not needed for the {@link BNF} grammar.
+	 */
 	static final Grammar COMMENTS = comments();
 
 	private static Grammar comments() {
-		return new Grammar(sequence(literal('%'), completion(literal('\n')).as("text"), literal('\n')).separate(Rule.EMPTY_STRING).as("comment"));
+		return new Grammar(sequence(sequence(literal('%'), completion(literal('\n')).as("text"), literal('\n')).separate(Rule.EMPTY_STRING).as("comment")).plus().as("grammar"));
 	} 
 }

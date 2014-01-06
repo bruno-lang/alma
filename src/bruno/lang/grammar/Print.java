@@ -8,18 +8,33 @@ import bruno.lang.grammar.Grammar.Rule;
 public final class Print {
 
 	public static Printer rulePrinter(PrintStream out) {
-		return new RulePrinter(out);
+		return new GenericRulePrinter(out);
 	}
 	
 	public static Printer levelPrinter(PrintStream out) {
 		return new LevelPrinter(out);
 	}
 	
-	private static final class RulePrinter implements Printer {
+	private static final class ParseTreePrinter implements Printer {
+		
+		private final PrintStream out;
+
+		public ParseTreePrinter(PrintStream out) {
+			super();
+			this.out = out;
+		};
+		
+		@Override
+		public void print(Tokens tokens, ByteBuffer in, int index) {
+			
+		}
+	}
+	
+	private static final class GenericRulePrinter implements Printer {
 
 		private final PrintStream out;
 		
-		RulePrinter(PrintStream out) {
+		GenericRulePrinter(PrintStream out) {
 			super();
 			this.out = out;
 		}

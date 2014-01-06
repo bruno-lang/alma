@@ -5,13 +5,27 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import bruno.lang.grammar.Grammar.Rule;
 
 public final class Tokeniser {
 
+	public static Tokenised tokenise(String filename) throws IOException {
+		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
+		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
+		FileChannel in = aFile.getChannel();
+		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
+		try {
+			buffer.load();
+			Tokens tokens = t.tokenise("grammar", buffer);
+			return new Tokenised(buffer, tokens);
+		} finally {
+			buffer.clear();
+			in.close();
+			aFile.close();
+		}
+	}
+	
 	private final Grammar grammar;
 
 	public Tokeniser(Grammar grammar) {
@@ -38,7 +52,7 @@ public final class Tokeniser {
 	private static int tokenise(Rule rule, ByteBuffer input, int position, Rule separator, Tokens tokens) {
 		switch (rule.type) {
 		case LITERAL:
-			return character(rule, input, position);
+			return literal(rule, input, position);
 		case TERMINAL:
 			return terminal(rule, input, position); 
 		case ITERATION:
@@ -71,7 +85,7 @@ public final class Tokeniser {
 		return -1;
 	}
 
-	private static int character(Rule rule, ByteBuffer input, int position) {
+	private static int literal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return -1;
 		final byte[] l = rule.literal;
@@ -147,26 +161,6 @@ public final class Tokeniser {
 			return -1;
 		final int l = rule.terminal.matching(input, position);
 		return l == 0 ? -1 : position + l;
-	}
-	
-	public static Tokenised tokenise(String filename) throws IOException {
-		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
-		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
-		FileChannel in = aFile.getChannel();
-		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
-		try {
-			buffer.load();
-			Tokens tokens = t.tokenise("grammar", buffer);
-			return new Tokenised(buffer, tokens);
-		} finally {
-			buffer.clear();
-			in.close();
-			aFile.close();
-		}
-	}
-
-	static byte[] readFile(String path) throws IOException {
-		return Files.readAllBytes(Paths.get(path));
 	}
 
 }
