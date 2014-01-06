@@ -13,10 +13,4 @@ public final class Tokenised {
 		this.tokens = tokens;
 	}
 	
-	public void printBy(Printer printer) {
-		Tokens tokens = this.tokens.sequential();
-		for (int i = 0; i < tokens.count(); i++) {
-			printer.print(tokens, file, i);
-		}
-	}
 }
