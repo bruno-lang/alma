@@ -16,40 +16,42 @@ public class TestTokeniser {
 
 	@Test
 	public void thatToyGrammarCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/toy.grammar");
+		Tokens tokens = Tokeniser.tokenise("etc/toy.grammar").tokens;
 		assertEquals(90, tokens.end());
 	}
 	
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/bruno.grammar");
+		Tokens tokens = Tokeniser.tokenise("etc/bruno.grammar").tokens;
 		assertEquals(6254, tokens.end());
 		assertEquals(2305, tokens.count());
 	}
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar");
+		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar").tokens;
 		assertEquals(982, tokens.end());
 	}
 	
 	@Test
 	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/test.grammar");
+		Tokens tokens = Tokeniser.tokenise("etc/test.grammar").tokens;
 		assertEquals(8, tokens.end());
 		assertEquals("terminal", tokens.rule(8).name);
 	}
 	
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/json.grammar");
-		assertEquals(362, tokens.end());
+		Tokenised source = Tokeniser.tokenise("etc/json.grammar");
+		assertEquals(362, source.tokens.end());
+		source.printBy(Print.rulePrinter(System.out));
 	}
 	
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/xml.grammar");
-		assertEquals(337, tokens.end());
+		Tokenised source = Tokeniser.tokenise("etc/xml.grammar");
+		assertEquals(337, source.tokens.end());
+		source.printBy(Print.rulePrinter(System.out));
 	}
 
 	@Test

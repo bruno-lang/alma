@@ -149,7 +149,7 @@ public final class Tokeniser {
 		return l == 0 ? -1 : position + l;
 	}
 	
-	public static Tokens tokenise(String filename) throws IOException {
+	public static Tokenised tokenise(String filename) throws IOException {
 		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
 		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
 		FileChannel in = aFile.getChannel();
@@ -157,8 +157,7 @@ public final class Tokeniser {
 		try {
 			buffer.load();
 			Tokens tokens = t.tokenise("grammar", buffer);
-			//Printer.print(tokens, buffer, System.out);
-			return tokens;
+			return new Tokenised(buffer, tokens);
 		} finally {
 			buffer.clear();
 			in.close();

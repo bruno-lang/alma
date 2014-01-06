@@ -484,27 +484,6 @@ public final class Grammar {
 
 	}
 	
-	private static final class Are implements Terminal {
-
-		private final byte[] string;
-		
-		Are(byte[] string) {
-			super();
-			this.string = string;
-		}
-
-		@Override
-		public int matching(ByteBuffer input, int position) {
-			for (int i = 0; i < string.length; i++) {
-				if (string[i] != input.get(position+i)) {
-					return 0;
-				}
-			}
-			return string.length;
-		}
-		
-	}
-
 	private static final class Is
 			implements Terminal {
 
