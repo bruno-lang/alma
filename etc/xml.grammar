@@ -1,7 +1,7 @@
 document = doctype root
 root = node
 doctype = '<?xml' attribute* '?>'
-node = element | comment | cdata | text 
+node = element | comment | cdata | text
 element = open attribute* '>' node* close
 [] open = '<' name
 [] close = '</' name '>'

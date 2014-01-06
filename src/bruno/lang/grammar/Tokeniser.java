@@ -1,7 +1,10 @@
 package bruno.lang.grammar;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -16,17 +19,17 @@ public final class Tokeniser {
 		this.grammar = grammar;
 	}
 
-	public Tokens tokenise(String start, byte[] input) {
+	public Tokens tokenise(String start, ByteBuffer input) {
 		Rule r = grammar.rule(start.intern());
-		Tokens tokens = new Tokens(Math.max(512, input.length / 2));
+		Tokens tokens = new Tokens(Math.max(512, input.capacity() / 2));
 		try {
-			int t = tokenise(r, ByteBuffer.wrap(input), 0, Rule.ANY_WHITESPACE, tokens);
+			int t = tokenise(r, input, 0, Rule.ANY_WHITESPACE, tokens);
 		} catch (Exception e) {
 			System.err.println(tokens);
 		}
-		if (tokens.end() != input.length) {
+		if (tokens.end() != input.capacity()) {
 			System.err.println("Failed to parse:");
-			System.out.println(new String(input, tokens.end(), Math.min(60, input.length - tokens.end())));
+			System.out.println(new String(input.array(), tokens.end(), Math.min(60, input.capacity() - tokens.end())));
 		}
 		//TODO verify and visualize errors
 		return tokens;
@@ -148,7 +151,19 @@ public final class Tokeniser {
 	
 	public static Tokens tokenise(String filename) throws IOException {
 		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
-		return t.tokenise("grammar", readFile(filename));
+		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
+		FileChannel in = aFile.getChannel();
+		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
+		try {
+			buffer.load();
+			Tokens tokens = t.tokenise("grammar", buffer);
+			//Printer.print(tokens, buffer, System.out);
+			return tokens;
+		} finally {
+			buffer.clear();
+			in.close();
+			aFile.close();
+		}
 	}
 
 	static byte[] readFile(String path) throws IOException {

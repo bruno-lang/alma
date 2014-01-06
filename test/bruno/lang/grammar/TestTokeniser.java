@@ -6,6 +6,7 @@ import static bruno.lang.grammar.Grammar.Rule.sequence;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
@@ -48,14 +49,14 @@ public class TestTokeniser {
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
 		Tokens tokens = Tokeniser.tokenise("etc/xml.grammar");
-		assertEquals(338, tokens.end());
+		assertEquals(337, tokens.end());
 	}
 
 	@Test
 	public void thatCompletionWorks() {
 		Tokeniser t = new Tokeniser(COMMENTS);
 		String input = "% this is the comments text\n";
-		Tokens tokens = t.tokenise("comment", input.getBytes());
+		Tokens tokens = t.tokenise("comment", ByteBuffer.wrap(input.getBytes()));
 		assertEquals(2, tokens.count());
 		assertEquals(" this is the comments text", input.substring(tokens.start(1), tokens.end(1)));
 	}

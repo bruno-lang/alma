@@ -49,6 +49,10 @@ public final class Tokens {
 		return starts[index];
 	}
 	
+	public int level(int index) {
+		return levels[index];
+	}
+	
 	public int end() {
 		return ends[0];
 	}
@@ -79,7 +83,7 @@ public final class Tokens {
 	}
 	
 	private void toString(StringBuilder b, String indent, int index) {
-		char[] ind = new char[levels[index]];
+		char[] ind = new char[Math.abs(levels[index])];
 		Arrays.fill(ind, ' ');
 		b.append(ind).append(rules[index].name).append(' ').append(starts[index]).append(':').append(ends[index]).append('\n');
 	}
@@ -101,5 +105,51 @@ public final class Tokens {
 
 	public Rule rule(int index) {
 		return rules[index];
+	}
+
+	public boolean isSequential() {
+		return starts[1] == ends[0];
+	}
+	
+	public Tokens sequential() {
+		if (isSequential()) {
+			return this;
+		}
+		Tokens l = new Tokens(rules.length);
+		sequential(l, 0);
+		return l;
+	}
+	
+	private int sequential(Tokens dest, final int index) {
+		int i = index;
+		final int level = level(i);
+		final int nextLevel = level+1; // the level we are looking for
+		final int count = count();
+		i++;
+		if (i >= count || level(i) <= level) {
+			dest.push(rule(index), level, start(index), end(index));
+			return i;
+		}
+		int start = start(index);
+		while (i < count && level(i) == nextLevel) {
+			int s = start(i);
+			if (s > start) {
+				dest.push(rule(index), -level(index), start, s);
+			}
+			i = sequential(dest, i);
+			start = dest.ends[dest.top];
+		}
+		int end = end(index);
+		if (end > start) {
+			dest.push(rule(index), -level, start, end);
+		}
+		return i;
+	}
+	
+	private void push(Rule rule, int level, int start, int end) {
+		rules[++top] = rule;
+		levels[top] = level;
+		starts[top] = start;
+		ends[top] = end;
 	}
 }
