@@ -22,9 +22,11 @@ public class TestTokeniser {
 	
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/bruno.grammar").tokens;
-		assertEquals(6254, tokens.end());
+		Tokenised t = Tokeniser.tokenise("etc/bruno.grammar");
+		Tokens tokens = t.tokens;
+		assertEquals(6118, tokens.end());
 		assertEquals(2305, tokens.count());
+		new Printer.RainbowPrinter(System.out).process(t);
 	}
 	
 	@Test

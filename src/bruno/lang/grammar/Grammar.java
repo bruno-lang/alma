@@ -214,6 +214,10 @@ public final class Grammar {
 		private RuleType(String code) {
 			this.code = code;
 		}
+		
+		public boolean bytes() {
+			return this == LITERAL || this == TERMINAL;
+		}
 	}
 
 	public static final class Rule {

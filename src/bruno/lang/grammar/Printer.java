@@ -2,6 +2,7 @@ package bruno.lang.grammar;
 
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import bruno.lang.grammar.Grammar.Rule;
 
@@ -15,21 +16,48 @@ public final class Printer {
 		return new LevelPrinter(out);
 	}
 	
-	private static final class ParseTreePrinter implements Processor {
+	public static final class ParseTreePrinter implements Processor {
 		
 		private final PrintStream out;
 
 		public ParseTreePrinter(PrintStream out) {
 			super();
 			this.out = out;
-		};
+		}
 
 		@Override
 		public void process(Tokenised t) {
-			// TODO Auto-generated method stub
-			
+			final Tokens tokens = t.tokens.sequential();
+			for (int i = 0; i < tokens.count(); i++) {
+				byte[] indent = new byte[Math.abs(tokens.level(i))];
+				Arrays.fill(indent, (byte)' ');
+				out.append(new String(indent));
+				printColor(out, ANSI.GREEN, tokens.rule(i).name);
+				out.append(' ');
+				printColor(t.file, out, ANSI.BLUE, tokens.start(i), tokens.end(i));
+				out.append('\n');
+			}
 		}
 
+	}
+	
+	public static final class RainbowPrinter implements Processor {
+		
+		private final PrintStream out;
+		private int color;
+
+		public RainbowPrinter(PrintStream out) {
+			this.out = out;
+		}
+		
+		@Override
+		public void process(Tokenised t) {
+			final Tokens tokens = t.tokens.sequential();
+			for (int i = 0; i < tokens.count(); i++) {
+				printColor(t.file, out, ANSI.rainbow(color++), tokens.start(i), tokens.end(i));
+			}
+		}
+		
 	}
 	
 	public static abstract class ColorPrinter implements Processor {
@@ -107,11 +135,14 @@ public final class Printer {
 
 	private static void printColor(ByteBuffer input, PrintStream out, String color, int start, int end) {
 		if (start < end) {
-			String text = string(input, start, end);
-			out.append(color);
-			out.append(text);
-			out.append(ANSI.RESET);
+			printColor(out, color, string(input, start, end));
 		}
+	}
+
+	private static void printColor(PrintStream out, String color, String text) {
+		out.append(color);
+		out.append(text);
+		out.append(ANSI.RESET);
 	}
 
 	private static String string(ByteBuffer input, int start, int end) {

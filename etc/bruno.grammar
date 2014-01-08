@@ -1,198 +1,198 @@
 % Fragments
-LETTER         : 'A' - 'Z';
-Letter         : 'a' - 'z';
-Binary         : '0' - '1';
-Digit          : '0' - '9';
-Octal          : '0' - '7';
-Hex            : '0' - '9' | 'A' - 'F';
-Apostrophe     : ''';
-Quote          : '"';
-Space          : ' ';
+LETTER         : 'A' - 'Z'
+Letter         : 'a' - 'z'
+Binary         : '0' - '1'
+Digit          : '0' - '9'
+Octal          : '0' - '7'
+Hex            : '0' - '9' | 'A' - 'F'
+Apostrophe     : '''
+Quote          : '"'
+Space          : ' '
 
-Pad            : Space?;
-[] Dashed      : ( '-' | Letter | Digit )* ( Letter | Digit )?;
-[] Verb        : ( Letter Dashed );
-[] Noun        : ( LETTER ( Letter | '-' ) ( Letter | '-' | LETTER | Digit )* );
+Pad            : Space?
+[] Dashed      : ( '-' | Letter | Digit )* ( Letter | Digit )?
+[] Verb        : ( Letter Dashed )
+[] Noun        : ( LETTER ( Letter | '-' ) ( Letter | '-' | LETTER | Digit )* )
 
 % Identifiers
-[] Field       : ( Letter | Digit ) Dashed;
-[] Constant    : ':' Field;
-[] Variable    : Field Apostrophe*;
+[] Field       : ( Letter | Digit ) Dashed
+[] Constant    : ':' Field
+[] Variable    : Field Apostrophe*
 
-[] Operation   : Verb '?'?;
-[] Function    : Verb '?'? Apostrophe*;
-Module         : Verb;
-Library        : Verb;
-Namespace      : Verb;
-[] Fault       : Verb '!';
+[] Operation   : Verb '?'?
+[] Function    : Verb '?'? Apostrophe*
+Module         : Verb
+Library        : Verb
+Namespace      : Verb
+[] Fault       : Verb '!'
 
-[] TypeVariable: LETTER Digit?;
-Protocol       : Noun;
-Data           : Noun;
-Unit           : Noun;
-Dimension      : Noun;
-Notation       : Noun;
+[] TypeVariable: LETTER Digit?
+Protocol       : Noun
+Data           : Noun
+Unit           : Noun
+Dimension      : Noun
+Notation       : Noun
 Simple         : Unit
-               | Dimension;
+               | Dimension
 Compound       : Data 
                | Protocol 
-               | Notation;
+               | Notation
 Value          : Simple 
-               | Compound;
+               | Compound
 
 % Operators
-Operator       : OperatorSymbol{1,3};
-[] OperatorSymbol : [ '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' ';' '^' ];
+Operator       : OperatorSymbol{1,3}
+[] OperatorSymbol : [ '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' ';' '^' ]
 
 % Symbols
-[] Measure     : ( LETTER | Letter | UnitSymbol )+;
-UnitSymbol     : [''' '%' '$' '€' '@' '/' '°' '"' ];
+[] Measure     : ( LETTER | Letter | UnitSymbol )+
+UnitSymbol     : [''' '%' '$' '€' '@' '/' '°' '"' ]
 
 % Literals
 Literal        : LiteralLogic 
                | LiteralText 
-               | LiteralBinay;
-[] LiteralLogic : Apostrophe !Space+ Quantity;
-[] LiteralText  : Quote !Quote* Quote;
-[] LiteralBinary: '#' ('b' Binary+ | 'o' Octal+ | 'd' Digit+ | 'x' Hex+ );
+               | LiteralBinay
+[] LiteralLogic : Apostrophe !Space+ Quantity
+[] LiteralText  : Quote !Quote* Quote
+[] LiteralBinary: '#' ('b' Binary+ | 'o' Octal+ | 'd' Digit+ | 'x' Hex+ )
 
-Range          : RangeLiteral 
-               | RangeConstant;
-[] RangeLiteral  : Literal ( Pad '..' Pad Literal )? | '..' Pad Literal;
-[] RangeSet      : '{' Pad Literal Pad (',' Pad Literal Pad )* '}';
-[] RangeConstant : Constant ( Pad '..' Pad Constant )? | '..' Pad Constant;
+Range          : RangeLiteral
+               | RangeConstant
+[] RangeLiteral  : Literal ( Pad '..' Pad Literal )? | '..' Pad Literal
+[] RangeSet      : '{' Pad Literal Pad (',' Pad Literal Pad )* '}'
+[] RangeConstant : Constant ( Pad '..' Pad Constant )? | '..' Pad Constant
 
 % References		
 Reference      : Variable 
                | Constant 
-               | Literal;
+               | Literal
 
 % Types
-[] Type        : TypeBasic TypeVariant?;
-TypeVariant    : [ '!' '?' '~' '*' ];
+[] Type        : TypeBasic TypeVariant?
+TypeVariant    : [ '!' '?' '~' '*' ]
 TypeBasic      : TypeVariable 
-               | Value 
-               | TypeArray 
-               | TypeList 
-               | TypeSet 
-               | TypeTuple 
-               | TypeFn;
-[] TypeArray   : TypeBasic '[' Digit* ']';
-[] TypeList    : '[' TypeBasic ']';
-[] TypeSet     : '{' TypeBasic '}';
-[] TypePad     : Pad Type Pad;
-[] TypeTuple   : '(' ( TypePad ( ',' TypePad )* )? ')';
-[] TypeFn      : '(' TypePad '->' ( TypePad '->' )* TypePad ')';
-[] TypeOp      : Operation TypeFn;
+               | Value
+               | TypeArray
+               | TypeList
+               | TypeSet
+               | TypeTuple
+               | TypeFn
+[] TypeArray   : TypeBasic '[' Digit* ']'
+[] TypeList    : '[' TypeBasic ']'
+[] TypeSet     : '{' TypeBasic '}'
+[] TypePad     : Pad Type Pad
+[] TypeTuple   : '(' ( TypePad ( ',' TypePad )* )? ')'
+[] TypeFn      : '(' TypePad '->' ( TypePad '->' )* TypePad ')'
+[] TypeOp      : Operation TypeFn
 
 % Type Variables
-instances      : 'instances' TypeVariable '::' Operation* InstType;
-[] InstType    : InstBasic TypeVariant?;
+instances      : 'instances' TypeVariable '::' Operation* InstType
+[] InstType    : InstBasic TypeVariant?
 InstBasic      : '_'
-               | TypeBasic 
-               | InstArray 
-               | InstList 
-               | InstSet 
-               | InstTuple 
-               | InstFn 
-               | InstOp; 
-[] InstArray   : InstBasic '[' Digit* ( '-' Digit* )? ']';
-[] InstList    : '[' InstBasic ']';
-[] InstSet     : '{' InstBasic '}';
-[] InstPad     : Pad InstType Pad;
-[] InstElement : Pad '..' Pad | InstPad;
-[] InstTuple   : '(,)' | '(' ( InstElement ( ',' InstElement )* )?  ')';
-[] InstFn      : '(->)' | '(' InstPad '->' ( InstPad '->' )* InstPad ')';
-[] InstOp      : ( Operation | '_' ) InstFn;
+               | TypeBasic
+               | InstArray
+               | InstList
+               | InstSet
+               | InstTuple
+               | InstFn
+               | InstOp
+[] InstArray   : InstBasic '[' Digit* ( '-' Digit* )? ']'
+[] InstList    : '[' InstBasic ']'
+[] InstSet     : '{' InstBasic '}'
+[] InstPad     : Pad InstType Pad
+[] InstElement : Pad '..' Pad | InstPad
+[] InstTuple   : '(,)' | '(' ( InstElement ( ',' InstElement )* )?  ')'
+[] InstFn      : '(->)' | '(' InstPad '->' ( InstPad '->' )* InstPad ')'
+[] InstOp      : ( Operation | '_' ) InstFn
 
 % Modularisation
-file           : library 
-               | namespace 
-               | module;
-library        : 'library' Library '::' '{' Module.. '}';
+file           : library
+               | namespace
+               | module
+library        : 'library' Library '::' '{' Module.. '}'
 
-namespace      : 'namespace' Namespace '::' import* auto* invariant*;
-import         : ( 'use' | 'share' ) 'strict'? Library include? alias?;
-include        : ':' Module+;
-alias          : 'where' ( Value '=' Value | Operation '=' Operation )+;
+namespace      : 'namespace' Namespace '::' import* auto* invariant*
+import         : ( 'use' | 'share' ) 'strict'? Library include? alias?
+include        : ':' Module+
+alias          : 'where' ( Value '=' Value | Operation '=' Operation )+
 
-module         : 'module' Module '::' auto* invariant* feature+;
+module         : 'module' Module '::' auto* invariant* feature+
 feature        : val
                | instances
                | fn
                | op
                | protocol
-               | fault 
+               | fault
                | notation
-               | data 
-               | unit 
-               | dimension 
-               | system;
+               | data
+               | unit
+               | dimension
+               | system
 
-auto           : 'auto' deduction;
+auto           : 'auto' deduction
 
-deduction      : bind | refinement;
-refinement     : ( '[]' | '{}' | Value | TypeTuple | TypeArray ) '=>' Value;
-bind           : Function '=>' Operation Type*;
+deduction      : bind | refinement
+refinement     : ( '[]' | '{}' | Value | TypeTuple | TypeArray ) '=>' Value
+bind           : Function '=>' Operation Type*
 
-invariant      : 'invariant' Value '=>' Function;
+invariant      : 'invariant' Value '=>' Function
 
 % Implementation
-val            : 'val' Constant '::' Type '=' expression;
+val            : 'val' Constant '::' Type '=' expression
 
-data           : 'data' '::' '(' element.. ')' format* enumeration?;
-element        : Field Type;
+data           : 'data' '::' '(' element.. ')' format* enumeration?
+element        : Field Type
 
-format         : '<->' ( Data | TypeTuple | TypeArray );
+format         : '<->' ( Data | TypeTuple | TypeArray )
 
-enumeration    : '=' ( item-set | item-list | item-range );
-item-set       : '{' item.. '}';
-item-list      : '[' item.. ']';
-item-range     : Constant '..' Constant;
-item           : Constant expression?;
+enumeration    : '=' ( item-set | item-list | item-range )
+item-set       : '{' item.. '}'
+item-list      : '[' item.. ']'
+item-range     : Constant '..' Constant
+item           : Constant expression?
 
-dimension      : 'dimension' simple enumeration?;
+dimension      : 'dimension' simple enumeration?
 
-unit           : 'unit' simple;
+unit           : 'unit' simple
 
-simple         : Simple measure? '::' Simple Range? format*;
-[] measure     : '[' Measure ']';
+simple         : Simple measure? '::' Simple Range? format*
+[] measure     : '[' Measure ']'
 
-system         : 'unit' 'system' System '::' '{' ratio+ '}';
+system         : 'unit' 'system' System '::' '{' ratio+ '}'
 
-ratio          : 'ratio' Ratio '::' '(' Unit.. ')' '=' '[' equation.. ']';
-equation       : Literal '=' Literal;
+ratio          : 'ratio' Ratio '::' '(' Unit.. ')' '=' '[' equation.. ']'
+equation       : Literal '=' Literal
 
-fault          : 'fault' Fault '::' Value Range?;
+fault          : 'fault' Fault '::' Value Range?
 
-notation       : 'notation' Notation '::' Type? ( '=' '{' Type.. '}' )?;
+notation       : 'notation' Notation '::' Type? ( '=' '{' Type.. '}' )?
 
-fn             : 'fn' Function operator? '::' signature conditional* return ( 'where' term+ )?;
-[] operator    : '[' Operator ']';
-[] signature   : signature' | '(' signature' ')'; 
-signature'     : parameter '->' ( parameter '->' )* Type;
-parameter      : Type Variable?;
-conditional    : '=' expression '?' expression;
-return         : '=' expression;
-term           : variable 
-               | deduction;
-variable       : Type Variable '=' expression;
+fn             : 'fn' Function operator? '::' signature conditional* return ( 'where' term+ )?
+[] operator    : '[' Operator ']'
+[] signature   : signature' | '(' signature' ')'
+signature'     : parameter '->' ( parameter '->' )* Type
+parameter      : Type Variable?
+conditional    : '=' expression '?' expression
+return         : '=' expression
+term           : variable
+               | deduction
+variable       : Type Variable '=' expression
 
-op             : 'op' Operation operator? '::' Operation? signature;
+op             : 'op' Operation operator? '::' Operation? signature
 
-protocol       : 'protocol' Protocol '::' '{' Operation.. '}';
+protocol       : 'protocol' Protocol '::' '{' Operation.. '}'
 
 expression     : Reference
-               | invoke 
-               | group 
+               | invoke
+               | group
                | specialisation
                | tuple 
                | list
                | set;
-group          : '(' expression ')';
-invoke         : expression Space ( Operator | Function ) ( expression.. )?;
-specialisation : expression '=>' ( Type | Operation );
+group          : '(' expression ')'
+invoke         : expression Space ( Operator | Function ) ( expression.. )?
+specialisation : expression '=>' ( Type | Operation )
 
-list           : '[]' | '[' expression.. ']';
-set            : '{}' | '{' expression.. '}';
-tuple          : '()' | '(' expression.. ')';
+list           : '[]' | '[' expression.. ']'
+set            : '{}' | '{' expression.. '}'
+tuple          : '()' | '(' expression.. ')'
