@@ -34,15 +34,15 @@ Dimension      : Noun
 Notation       : Noun
 Simple         : Unit
                | Dimension
-Compound       : Data 
-               | Protocol 
+Compound       : Data
+               | Protocol
                | Notation
-Value          : Simple 
+Value          : Simple
                | Compound
 
 % Operators
 Operator       : OperatorSymbol{1,3}
-[] OperatorSymbol : [ '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' ';' '^' ]
+[] OperatorSymbol : [ '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' ]
 
 % Symbols
 [] Measure     : ( LETTER | Letter | UnitSymbol )+
@@ -186,9 +186,9 @@ expression     : Reference
                | invoke
                | group
                | specialisation
-               | tuple 
+               | tuple
                | list
-               | set;
+               | set
 group          : '(' expression ')'
 invoke         : expression Space ( Operator | Function ) ( expression.. )?
 specialisation : expression '=>' ( Type | Operation )

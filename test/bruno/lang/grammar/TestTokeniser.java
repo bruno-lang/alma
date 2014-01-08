@@ -24,8 +24,8 @@ public class TestTokeniser {
 	public void thatBrunoLangCanBeTokenised() throws IOException {
 		Tokenised t = Tokeniser.tokenise("etc/bruno.grammar");
 		Tokens tokens = t.tokens;
-		assertEquals(6118, tokens.end());
-		assertEquals(2305, tokens.count());
+		assertEquals(6109, tokens.end());
+		assertEquals(2304, tokens.count());
 		new Printer.RainbowPrinter(System.out).process(t);
 	}
 	
