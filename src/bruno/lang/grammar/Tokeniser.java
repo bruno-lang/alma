@@ -69,31 +69,36 @@ public final class Tokeniser {
 			throw new IllegalArgumentException("`"+rule+"` has no proper type: "+rule.type);
 		}
 	}
+	
+	private static int mismatch(int position) {
+		return -position-1;
+	}
 
 	private static int completion(Rule rule, ByteBuffer input, int position,
 			Rule separator, Tokens tokens) {
 		final int l = input.limit();
-		int end = -1;
 		while (position < l) {
-			end = tokenise(rule.elements[0], input, position, separator, tokens);
+			int end = tokenise(rule.elements[0], input, position, separator, tokens);
 			if (end < 0) {
 				position++;
 			} else {
 				return position;
 			}
 		}
-		return -1;
+		return mismatch(l);
 	}
 
 	private static int literal(Rule rule, ByteBuffer input, int position) {
-		if (position >= input.limit())
-			return -1;
-		final byte[] l = rule.literal;
-		for (int i = 0; i < l.length; i++) {
-			if (input.get(position) != l[i])
-				return -1;
+		final byte[] literal = rule.literal;
+		final int limit = input.limit();
+		for (int i = 0; i < literal.length; i++) {
+			if (position >= limit)
+				return mismatch(limit);
+			if (input.get(position) != literal[i])
+				return mismatch(position);
+			position++;
 		}
-		return position+l.length;
+		return position;
 	}
 
 	private static int capture(Rule rule, ByteBuffer input, int position,
@@ -110,13 +115,15 @@ public final class Tokeniser {
 
 	private static int selection(Rule rule, ByteBuffer input, int position,
 			Rule separator, Tokens tokens) {
+		int end = mismatch(position);
 		for (Rule r : rule.elements) {
-			int end = tokenise(r, input, position, separator, tokens);
-			if (end >= 0) {
-				return end;
+			int endPosition = tokenise(r, input, position, separator, tokens);
+			if (endPosition >= 0) {
+				return endPosition;
 			}
+			end = Math.min(end, endPosition);
 		}
-		return -1;
+		return end;
 	}
 
 	private static int sequence(Rule rule, ByteBuffer input, int position,
@@ -126,8 +133,8 @@ public final class Tokeniser {
 			end = tokenise(rule.separation, input, end, Rule.EMPTY_STRING, tokens);
 			Rule r = rule.elements[i];
 			int endPosition = tokenise(r, input, end, separator, tokens);
-			if (endPosition == -1) {
-				return -1;
+			if (endPosition < 0) {
+				return endPosition;
 			}
 			end = endPosition;
 		}
@@ -140,9 +147,9 @@ public final class Tokeniser {
 		int c = 0;
 		while (c < rule.occur.max) {
 			int endPosition = tokenise(rule.elements[0], input, end, separator, tokens);
-			if (endPosition == -1) {
+			if (endPosition < 0) {
 				if (c < rule.occur.min) {
-					return -1;
+					return endPosition;
 				}
 				return end;
 			} else {
@@ -158,9 +165,9 @@ public final class Tokeniser {
 
 	private static int terminal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
-			return -1;
+			return mismatch(position);
 		final int l = rule.terminal.matching(input, position);
-		return l == 0 ? -1 : position + l;
+		return l == 0 ? mismatch(position) : position + l;
 	}
 
 }

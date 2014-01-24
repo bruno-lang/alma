@@ -26,7 +26,7 @@ public class TestTokeniser {
 		Tokens tokens = t.tokens;
 		assertEquals(6109, tokens.end());
 		assertEquals(2304, tokens.count());
-		new Printer.RainbowPrinter(System.out).process(t);
+		Printer.rulePrinter(System.out).process(t);
 	}
 	
 	@Test
