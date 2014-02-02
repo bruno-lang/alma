@@ -7,8 +7,7 @@ import bruno.lang.grammar.Grammar.Rule;
 
 
 /**
- * An abstract data type for a sequence of tokens for a particular
- * {@link Grammar}.
+ * A sequence of tokens for a particular {@link Grammar}.
  * 
  * @author jan
  */
@@ -53,6 +52,10 @@ public final class Tokens {
 		return levels[index];
 	}
 	
+	public Rule rule(int index) {
+		return rules[index];
+	}
+	
 	public int end() {
 		return ends[0];
 	}
@@ -69,6 +72,18 @@ public final class Tokens {
 	public void done(int end) {
 		ends[indexStack[level]] = end;
 		level--;
+	}
+
+	/*
+	 * further processing utility functions below.
+	 */
+	
+	private int tokenIndexFor(int position) {
+		int index = Math.abs(Arrays.binarySearch(starts, 0, top, position));
+		while (index > 0 && starts[index] > position) {
+			index--;
+		}
+		return index;
 	}
 	
 	@Override
@@ -93,18 +108,6 @@ public final class Tokens {
 		StringBuilder b = new StringBuilder();
 		toString(b, "", index);
 		out.println(b);
-	}
-
-	private int tokenIndexFor(int position) {
-		int index = Math.abs(Arrays.binarySearch(starts, 0, top, position));
-		while (index > 0 && starts[index] > position) {
-			index--;
-		}
-		return index;
-	}
-
-	public Rule rule(int index) {
-		return rules[index];
 	}
 
 	public boolean isSequential() {

@@ -80,7 +80,7 @@ public final class Grammar {
 
 	public static interface Terminal {
 
-		int matching(ByteBuffer input, int position);
+		int length(ByteBuffer input, int position);
 	}
 	
 	private static final byte[] NO_CHARACTER = new byte[0];
@@ -88,12 +88,14 @@ public final class Grammar {
 	private final IdentityHashMap<String, Rule> rulesByName;
 	private final Rule[] rulesById;
 	
-	public Grammar(Rule root) { //OPEN maybe we need other starting points because of links
+	public Grammar(Rule... roots) { //OPEN maybe we need other starting points because of links
 		super();
 		this.rulesByName = new IdentityHashMap<>();
 		List<Rule> idOrder = new ArrayList<>();
 		idOrder.add(null); // zero index is unused
-		init(root, idOrder);
+		for (Rule root : roots) {
+			init(root, idOrder);
+		}
 		this.rulesById = idOrder.toArray(new Rule[idOrder.size()]);
 		link(rulesByName.values().toArray(new Rule[0]), new HashSet<String>());
 	}
@@ -351,7 +353,7 @@ public final class Grammar {
 		return "'" + Character.valueOf((char) character) + "'";
 	}
 	
-	public static int length(ByteBuffer input, int position) {
+	public static int utf8length(ByteBuffer input, int position) {
 		byte b = input.get(position);
 		if (b >= 0)
 			return 1;
@@ -364,7 +366,7 @@ public final class Grammar {
 	private static final class Whitespace implements Terminal {
 
 		@Override
-		public int matching(ByteBuffer input, int position) {
+		public int length(ByteBuffer input, int position) {
 			return Character.isWhitespace(input.get(position)) ? 1 : 0;
 		}
 		
@@ -377,8 +379,8 @@ public final class Grammar {
 	
 	private static final class Any implements Terminal {
 		@Override
-		public int matching(ByteBuffer input, int position) {
-			return length(input, position);
+		public int length(ByteBuffer input, int position) {
+			return utf8length(input, position);
 		}
 
 		@Override
@@ -400,7 +402,7 @@ public final class Grammar {
 		}
 		
 		@Override
-		public int matching(ByteBuffer input, int position) {
+		public int length(ByteBuffer input, int position) {
 			int c = input.get(position);
 			return c >= low && c <= high ? 1 : 0;
 		}
@@ -422,9 +424,9 @@ public final class Grammar {
 		}
 
 		@Override
-		public int matching(ByteBuffer input, int position) {
-			int l = excluded.matching(input, position);
-			return l > 0 ? 0 : length(input, position);
+		public int length(ByteBuffer input, int position) {
+			int l = excluded.length(input, position);
+			return l > 0 ? 0 : utf8length(input, position);
 		}
 
 		@Override
@@ -444,7 +446,7 @@ public final class Grammar {
 		}
 
 		@Override
-		public int matching(ByteBuffer input, int position) {
+		public int length(ByteBuffer input, int position) {
 			byte c = input.get(position);
 			for ( int i = 0; i < members.length; i++ ) {
 				if ( members[i] == c ) {
@@ -477,8 +479,8 @@ public final class Grammar {
 		}
 		
 		@Override
-		public int matching(ByteBuffer input, int position) {
-			return Math.max(a.matching(input, position), b.matching(input, position));
+		public int length(ByteBuffer input, int position) {
+			return Math.max(a.length(input, position), b.length(input, position));
 		}
 
 		@Override
@@ -499,7 +501,7 @@ public final class Grammar {
 		}
 
 		@Override
-		public int matching(ByteBuffer input, int position) {
+		public int length(ByteBuffer input, int position) {
 			return input.get(position) == s ? 1 : 0;
 		}
 		

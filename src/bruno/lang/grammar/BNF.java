@@ -10,6 +10,12 @@ import static bruno.lang.grammar.Grammar.Rule.selection;
 import static bruno.lang.grammar.Grammar.Rule.sequence;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Grammar.Rule.token;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
@@ -57,5 +63,20 @@ public final class BNF {
 		Rule member = selection(comment, rule).as("member");
 		Rule grammar = member.plus().as("grammar");
 		GRAMMAR = new Grammar(grammar);
+	}
+
+	public static Tokenised tokenise(String filename) throws IOException {
+		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
+		FileChannel in = aFile.getChannel();
+		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
+		try {
+			buffer.load();
+			Tokens tokens = Tokeniser.tokenise(buffer, GRAMMAR.rule("grammar".intern()));
+			return new Tokenised(buffer, tokens);
+		} finally {
+			buffer.clear();
+			in.close();
+			aFile.close();
+		}
 	}
 }

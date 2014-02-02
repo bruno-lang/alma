@@ -1,43 +1,21 @@
 package bruno.lang.grammar;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 
 import bruno.lang.grammar.Grammar.Rule;
 
+/**
+ * A multi-language tokeniser that can tokenise any language given a starting
+ * {@link Rule}.
+ * 
+ * @author jan
+ */
 public final class Tokeniser {
 
-	public static Tokenised tokenise(String filename) throws IOException {
-		Tokeniser t = new Tokeniser(BNF.GRAMMAR);
-		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
-		FileChannel in = aFile.getChannel();
-		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
-		try {
-			buffer.load();
-			Tokens tokens = t.tokenise("grammar", buffer);
-			return new Tokenised(buffer, tokens);
-		} finally {
-			buffer.clear();
-			in.close();
-			aFile.close();
-		}
-	}
-	
-	private final Grammar grammar;
-
-	public Tokeniser(Grammar grammar) {
-		super();
-		this.grammar = grammar;
-	}
-
-	public Tokens tokenise(String start, ByteBuffer input) {
-		Rule r = grammar.rule(start.intern());
+	public static Tokens tokenise(ByteBuffer input, Rule start) {
 		Tokens tokens = new Tokens(Math.max(512, input.capacity() / 2));
 		try {
-			int t = tokenise(r, input, 0, Rule.ANY_WHITESPACE, tokens);
+			int t = tokenise(start, input, 0, Rule.ANY_WHITESPACE, tokens);
 		} catch (Exception e) {
 			System.err.println(tokens);
 		}
@@ -166,7 +144,7 @@ public final class Tokeniser {
 	private static int terminal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return mismatch(position);
-		final int l = rule.terminal.matching(input, position);
+		final int l = rule.terminal.length(input, position);
 		return l == 0 ? mismatch(position) : position + l;
 	}
 

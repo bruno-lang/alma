@@ -16,13 +16,13 @@ public class TestTokeniser {
 
 	@Test
 	public void thatToyGrammarCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/toy.grammar").tokens;
+		Tokens tokens = BNF.tokenise("etc/toy.grammar").tokens;
 		assertEquals(90, tokens.end());
 	}
 	
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
-		Tokenised t = Tokeniser.tokenise("etc/bruno.grammar");
+		Tokenised t = BNF.tokenise("etc/bruno.grammar");
 		Tokens tokens = t.tokens;
 		assertEquals(6109, tokens.end());
 		assertEquals(2304, tokens.count());
@@ -31,34 +31,33 @@ public class TestTokeniser {
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/grammar.grammar").tokens;
+		Tokens tokens = BNF.tokenise("etc/grammar.grammar").tokens;
 		assertEquals(982, tokens.end());
 	}
 	
 	@Test
 	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
-		Tokens tokens = Tokeniser.tokenise("etc/test.grammar").tokens;
+		Tokens tokens = BNF.tokenise("etc/test.grammar").tokens;
 		assertEquals(8, tokens.end());
 		assertEquals("terminal", tokens.rule(8).name);
 	}
 	
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokeniser.tokenise("etc/json.grammar");
-		assertEquals(362, t.tokens.end());
+		Tokenised t = BNF.tokenise("etc/json.grammar");
+		assertEquals(368, t.tokens.end());
 	}
 	
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokeniser.tokenise("etc/xml.grammar");
+		Tokenised t = BNF.tokenise("etc/xml.grammar");
 		assertEquals(337, t.tokens.end());
 	}
 
 	@Test
 	public void thatCompletionWorks() {
-		Tokeniser t = new Tokeniser(COMMENTS);
 		String input = "% this is the comments text\n% this is another one\n";
-		Tokens tokens = t.tokenise("grammar", ByteBuffer.wrap(input.getBytes()));
+		Tokens tokens = Tokeniser.tokenise(ByteBuffer.wrap(input.getBytes()), COMMENTS.rule("grammar".intern()));
 		assertEquals(5, tokens.count());
 		assertEquals(" this is the comments text", input.substring(tokens.start(2), tokens.end(2)));
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
