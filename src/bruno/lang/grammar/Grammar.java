@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 
@@ -176,8 +175,8 @@ public final class Grammar {
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		for (Entry<String,Rule> e : rulesByName.entrySet()) {
-			Rule r = e.getValue();
+		for (Rule r : rulesById) {
+			if (r != null && !r.name.isEmpty()) {
 			int l = 15;
 			if (r.separation != Rule.ANY_WHITESPACE) {
 				b.append('[');
@@ -186,12 +185,13 @@ public final class Grammar {
 				b.append(' ');
 				l -= 3 + r.separation.name.length();
 			}
-			b.append(String.format("%-"+l+"s: ", e.getKey()));
+			b.append(String.format("%-"+l+"s: ", r.name));
 			for (Rule elem : r.elements) {
 				b.append(elem);
 				b.append(' ');
 			}
 			b.append('\n');
+			}
 		}
 		return b.toString();
 	}

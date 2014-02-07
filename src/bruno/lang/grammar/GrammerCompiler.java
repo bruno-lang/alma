@@ -129,6 +129,9 @@ public class GrammerCompiler {
 		if (atom == BNF.any) {
 			return Rule.terminal(Grammar.any);
 		}
+		if (atom == BNF.whitespace) {
+			return Rule.ANY_WHITESPACE;
+		}
 		if (atom == BNF.eol) {
 			return Rule.literal('\n');
 		}
