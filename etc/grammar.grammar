@@ -15,7 +15,7 @@ range         : terminal '-' terminal;
 [] occurrence : '{' num ',' num '}'
               | qmark | star | plus;
 num           : -digit+;
--digit        : '0' - '9';
+digit         : '0' - '9';
 qmark         : '?';
 star          : '*';
 plus          : '+';
@@ -24,6 +24,6 @@ any           : '.';
 whitespace    : '_';
 eol           : '$';
 else          : '|';
--character    : -digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
+character     : -digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 [] name       : -character+;
 separation    : '[' name? ']';

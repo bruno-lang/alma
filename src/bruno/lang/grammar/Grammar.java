@@ -115,7 +115,7 @@ public final class Grammar {
 			return;
 		}
 		if (!rule.name.isEmpty()) {
-			rulesByName.put(rule.name, rule);
+			rulesByName.put(rule.name.substring(rule.name.charAt(0) == '-' ? 1 : 0), rule);
 		}
 		if (rule.id() == 0) {
 			rule.id(idOrder.size());
@@ -133,6 +133,7 @@ public final class Grammar {
 	}
 
 	private void link(Rule rule, java.util.Set<String> followed) {
+		//FIXME below: when linked rule uses -minus to not capture the capture has to be unboxed
 		Rule[] elements = rule.elements;
 		if (elements.length > 0) { 
 			if (!followed.contains(rule.name)) {
@@ -164,11 +165,10 @@ public final class Grammar {
 	}
 
 	public Rule rule(String name) {
-		Rule r = rulesByName.get(name);
-		if (r != null)
-			return r;
-		if (name.startsWith("-")) {
-			return rule(name.substring(1));
+		boolean noCapture = name.charAt(0) == '-';
+		Rule r = rulesByName.get(name.substring(noCapture ? 1 : 0).intern());
+		if (r != null) {
+			return noCapture && r.type == RuleType.CAPTURE ? r.elements[0].as(name) : r;
 		}
 		throw new NoSuchElementException("Missing rule: "+name);
 	}
@@ -358,11 +358,11 @@ public final class Grammar {
 		
 		@Override
 		public String toString() {
-			if (type == RuleType.TERMINAL) {
-				return terminal.toString();
-			}
 			if (type == RuleType.CAPTURE) {
 				return name;
+			}
+			if (type == RuleType.TERMINAL) {
+				return terminal.toString();
 			}
 			if (type == RuleType.LITERAL) {
 				return "'"+ new String(literal)+"'";
