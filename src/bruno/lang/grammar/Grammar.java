@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 
@@ -70,6 +71,15 @@ public final class Grammar {
 		
 		@Override
 		public String toString() {
+			if (min == star.min && max == star.max) {
+				return "*";
+			}
+			if (min == plus.min && max == plus.max) {
+				return "+";
+			}
+			if (min == qmark.min && max == qmark.max) {
+				return "?";
+			}
 			return "{"+min+":"+max+"}";
 		}
 
@@ -165,7 +175,25 @@ public final class Grammar {
 	
 	@Override
 	public String toString() {
-		return rulesByName.toString();
+		StringBuilder b = new StringBuilder();
+		for (Entry<String,Rule> e : rulesByName.entrySet()) {
+			Rule r = e.getValue();
+			int l = 15;
+			if (r.separation != Rule.ANY_WHITESPACE) {
+				b.append('[');
+				b.append(r.separation.name);
+				b.append(']');
+				b.append(' ');
+				l -= 3 + r.separation.name.length();
+			}
+			b.append(String.format("%-"+l+"s: ", e.getKey()));
+			for (Rule elem : r.elements) {
+				b.append(elem);
+				b.append(' ');
+			}
+			b.append('\n');
+		}
+		return b.toString();
 	}
 
 	public static Terminal not( Terminal excluded ) {
@@ -240,6 +268,11 @@ public final class Grammar {
 		}
 		
 		public static Rule sequence(Rule...elements) {
+			for (int i = 0; i < elements.length; i++) {
+				if (elements[i].type == RuleType.COMPLETION && elements[i].elements[0] == null) {
+					elements[i].elements[0] = elements[i+1];
+				}
+			}
 			return new Rule(RuleType.SEQUENCE, "", elements, ANY_WHITESPACE, once, null, NO_CHARACTER);
 		}
 		
@@ -314,6 +347,8 @@ public final class Grammar {
 		}
 		
 		public Rule occurs(Occur occur) {
+			if (occur == once)
+				return this;
 			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, separation, occur, null, NO_CHARACTER);
 		}
 		
@@ -330,10 +365,28 @@ public final class Grammar {
 				return name;
 			}
 			if (type == RuleType.LITERAL) {
-				return new String(literal);
+				return "'"+ new String(literal)+"'";
 			}
 			if (type == RuleType.LINK) {
 				return "@"+name;
+			}
+			if (type == RuleType.SELECTION) {
+				StringBuilder b = new StringBuilder();
+				for (Rule e : elements) {
+					b.append(" | ").append(e);
+				}
+				return "("+b.substring(3)+")";
+			}
+			if (type == RuleType.SEQUENCE) {
+				StringBuilder b = new StringBuilder();
+				for (Rule e : elements) {
+					b.append(" ").append(e);
+				}
+				return "("+b.substring(1)+")";
+			}
+			if (type == RuleType.ITERATION) {
+				String iter= occur.toString();
+				return elements[0]+iter;
 			}
 			return type+" "+Arrays.toString(elements);
 		}

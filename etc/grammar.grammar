@@ -1,11 +1,11 @@
 % this grammar is the grammar's grammar in BNF
 grammar       : member+;
 member        : comment | rule;
-comment       : '%' !eol;
+comment       : '%' !$;
 rule          : separation? name ('=' | ':' ':'? '='?) selection ';'?;
-selection     : parts ( '|' parts )*;
-[indent] parts: part+;
-[] part       : ( ellipsis | (group | terminals | atom) occurrence?);
+selection     : elems ( '|' elems )*;
+[indent] elems: elem+;
+[] elem       : ( ellipsis | ((group | terminals | atom) occurrence?));
 group         : '(' selection ')';
 terminals     : '[' terminal+ ']';
 atom          : not | any | whitespace | eol | range | terminal | name;
@@ -14,8 +14,8 @@ atom          : not | any | whitespace | eol | range | terminal | name;
 range         : terminal '-' terminal;
 [] occurrence : '{' num ',' num '}'
               | qmark | star | plus;
-num           : digit+;
-digit         : '0' - '9';
+num           : -digit+;
+-digit        : '0' - '9';
 qmark         : '?';
 star          : '*';
 plus          : '+';
@@ -24,6 +24,6 @@ any           : '.';
 whitespace    : '_';
 eol           : '$';
 else          : '|';
--character     : digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
+-character    : -digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 [] name       : -character+;
 separation    : '[' name? ']';

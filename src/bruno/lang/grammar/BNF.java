@@ -26,44 +26,42 @@ import bruno.lang.grammar.Grammar.Rule;
  */
 public final class BNF {
 
-	static final Grammar GRAMMAR;
-	
-	static {
-		Rule terminal = token(literal("'"), terminal(Grammar.any), terminal(not('\'')).star(), literal("'")).as("terminal");
-		Rule range = sequence(terminal, literal("-"), terminal).as("range");
-		Rule name = token(terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus()).as("name");
-		Rule not = token(literal("!"), link("atom")).as("not");
-		Rule any = literal(".").as("any");
-		Rule whitespace = literal("_").as("whitespace");
-		Rule eol = literal("$").as("eol");
-		Rule atom = selection(not, any, whitespace, eol, range, terminal, name).as("atom");
+	static final Rule
+		terminal = token(literal("'"), terminal(Grammar.any), terminal(not('\'')).star(), literal("'")).as("terminal"),
+		range = sequence(terminal, literal("-"), terminal).as("range"),
+		name = token(terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus()).as("name"),
+		not = token(literal("!"), link("atom")).as("not"),
+		any = literal(".").as("any"),
+		whitespace = literal("_").as("whitespace"),
+		eol = literal("$").as("eol"),
+		atom = selection(not, any, whitespace, eol, range, terminal, name).as("atom"),
 
-		Rule qmark = literal("?").as("qmark");
-		Rule star = literal("*").as("star");
-		Rule plus = literal("+").as("plus");
-		Rule ellipsis  = literal("..").as("ellipsis");
-		Rule digit = terminal(set('0', '9')).as("-digit");
-		Rule num = digit.plus().as("num");
-		Rule minmax = token(literal("{"), num, literal(","), num, literal("}")).as("minmax");
-		Rule occurrence = selection(minmax, qmark, star, plus).as("occurrence");
+		qmark = literal("?").as("qmark"),
+		star = literal("*").as("star"),
+		plus = literal("+").as("plus"),
+		ellipsis  = literal("..").as("ellipsis"),
+		digit = terminal(set('0', '9')).as("-digit"),
+		num = digit.plus().as("num"),
+		minmax = token(literal("{"), num, literal(","), num, literal("}")).as("minmax"),
+		occurrence = selection(minmax, qmark, star, plus).as("occurrence"),
 		
-		Rule group = sequence(literal("("), link("selection"), literal(")")).as("group");
-		Rule terminals = sequence(literal('['), sequence(terminal).plus(), literal(']')).as("terminals");
-		Rule indent = terminal(in(' ', '\t')).star();
-		Rule part = selection(ellipsis, token(selection(group, terminals, atom), occurrence.qmark())).as("part");
-		Rule parts = part.plus().separate(indent).as("parts");
-		Rule selection = sequence(parts, sequence(literal('|'), parts).star()).as("selection"); 
-		Rule separation = sequence(literal('['), name.qmark(), literal(']')).as("separation");
-		Rule colon = literal(":");
-		Rule equal = literal('=');
-		Rule definedAs = selection(equal, sequence(colon, colon.qmark(), equal.qmark()));
-		Rule rule = sequence(separation.qmark(), name,  definedAs, selection, literal(";").qmark()).as("rule");
+		group = sequence(literal("("), link("selection"), literal(")")).as("group"),
+		terminals = sequence(literal('['), sequence(terminal).plus(), literal(']')).as("terminals"),
+		indent = terminal(in(' ', '\t')).star(),
+		elem = selection(ellipsis, token(selection(group, terminals, atom), occurrence.qmark())).as("elem"),
+		elems = elem.plus().separate(indent).as("elems"),
+		selection = sequence(elems, sequence(literal('|'), elems).star()).as("selection"), 
+		separation = sequence(literal('['), name.qmark(), literal(']')).as("separation"),
+		colon = literal(":"),
+		equal = literal('='),
+		definedAs = selection(equal, sequence(colon, colon.qmark(), equal.qmark())),
+		rule = sequence(separation.qmark(), name,  definedAs, selection, literal(";").qmark()).as("rule"),
 		
-		Rule comment = sequence(literal("%"), terminal(not('\n')).plus().as("text")).as("comment");
-		Rule member = selection(comment, rule).as("member");
-		Rule grammar = member.plus().as("grammar");
-		GRAMMAR = new Grammar(grammar);
-	}
+		comment = sequence(literal("%"), terminal(not('\n')).plus().as("text")).as("comment"),
+		member = selection(comment, rule).as("member"),
+		grammar = member.plus().as("grammar");
+		
+	static final Grammar GRAMMAR = new Grammar(grammar);
 
 	public static Tokenised tokenise(String filename) throws IOException {
 		RandomAccessFile aFile = new RandomAccessFile(filename, "r");

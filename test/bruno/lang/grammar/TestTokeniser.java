@@ -31,8 +31,10 @@ public class TestTokeniser {
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
-		Tokens tokens = BNF.tokenise("etc/grammar.grammar").tokens;
-		assertEquals(982, tokens.end());
+		Tokenised t = BNF.tokenise("etc/grammar.grammar");
+		assertEquals(983, t.tokens.end());
+		Grammar g = GrammerCompiler.compile(t);
+		System.out.println(g);
 	}
 	
 	@Test

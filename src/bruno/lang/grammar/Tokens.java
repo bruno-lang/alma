@@ -86,6 +86,17 @@ public final class Tokens {
 		return index;
 	}
 	
+	public int next(int index) {
+		final int l = level(index);
+		final int c = count();
+		while (index < c) {
+			if (level(++index) <= l) {
+				return index;
+			}
+		}
+		return c;
+	}
+	
 	@Override
 	public String toString() {
 		if (top < 0)
