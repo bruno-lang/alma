@@ -1,1 +1,9 @@
-<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don't forget me this weekend!</body></note>
+<?xml version="1.0" encoding="utf-8"?>
+<note>
+	<!-- test -->
+	<![CDATA[ <xml></xml> ]]>
+	<to version="1.0">Tove</to>
+	<from>Jani</from>
+	<heading>Reminder<!-- another --></heading>
+	<body>Don't forget me this weekend!<a></a><b></b></body>
+</note>

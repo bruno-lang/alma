@@ -2,14 +2,14 @@ document = doctype? root
 root = node
 doctype = '<?xml' attribute* '?>'
 node = cdata | comment | element | text
-element = -open attribute* '>' node* -close
+element = '<' name attribute* '>' node* -close
 [] open = '<' name
 [] close = '</' name '>'
 [] attribute = name '=' '"' value '"'
 text = !'<'*
-value = !'"'*
+value = ..
 cdata = '<![CDATA[' data ']]>'
 data = ..
 comment = '<!--' info '-->'
 info = ..
-name = ('a' - 'z' | 'A' - 'Z')+
+[] name = ('a' - 'z' | 'A' - 'Z')+
