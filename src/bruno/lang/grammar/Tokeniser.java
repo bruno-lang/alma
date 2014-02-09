@@ -14,14 +14,18 @@ public final class Tokeniser {
 
 	public static Tokens tokenise(ByteBuffer input, Rule start) {
 		Tokens tokens = new Tokens(Math.max(512, input.capacity() / 2));
+		int t = 0;
 		try {
-			int t = tokenise(start, input, 0, Rule.ANY_WHITESPACE, tokens);
+			t = tokenise(start, input, 0, Rule.ANY_WHITESPACE, tokens);
 		} catch (Exception e) {
 			System.err.println(tokens);
 		}
 		if (tokens.end() != input.capacity()) {
 			System.err.println("Failed to parse:");
-			System.out.println(new String(input.array(), tokens.end(), Math.min(60, input.capacity() - tokens.end())));
+			input.position(Math.abs(t));
+			byte[] x = new byte[10];
+			input.get(x);
+			System.out.println(new String(x));
 		}
 		//TODO verify and visualize errors
 		return tokens;
@@ -132,8 +136,16 @@ public final class Tokeniser {
 				return end;
 			} else {
 				end = endPosition;
-				if (rule.separation != null) {
-					end = tokenise(rule.separation, input, end, Rule.EMPTY_STRING, tokens);
+				Rule separation = rule.separation;
+				if (separation != null && separation != Rule.EMPTY_STRING) {
+					endPosition = tokenise(separation, input, end, Rule.EMPTY_STRING, tokens);
+					if (endPosition < 0) {
+						if (c < rule.occur.min) {
+							return endPosition;
+						}
+						return end;
+					}
+					end = endPosition;
 				}
 				c++;
 			}

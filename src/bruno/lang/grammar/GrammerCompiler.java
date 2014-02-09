@@ -33,25 +33,29 @@ public class GrammerCompiler {
 	
 	public static Rule rule(int token, Tokenised t) {
 		int nameIndex = token+1;
-		String seperation = null;
+		String separation = null;
 		Rule cur = t.tokens.rule(nameIndex);
 		if (cur == BNF.separation) {
 			nameIndex++;
 			if (t.tokens.level(nameIndex) == t.tokens.level(nameIndex-1)+1) {
-				seperation = t.text(nameIndex);
+				separation = t.text(nameIndex);
 				nameIndex++;
 			} else {
-				seperation = "";
+				separation = "";
 			}
 		}
-		Rule r = selection(nameIndex+1, t).as(t.text(nameIndex));
-		if (seperation != null) {
-			r = r.separate(seperation.isEmpty() ? Rule.EMPTY_STRING : Rule.link(seperation));
-		}
-		return r;
+		return selection(nameIndex+1, t, separation(separation)).as(t.text(nameIndex));
 	}
 	
-	public static Rule selection(int token, Tokenised t) {
+	public static Rule separation(String separation) {
+		if (separation == null)
+			return Rule.ANY_WHITESPACE;
+		if (separation.isEmpty())
+			return Rule.EMPTY_STRING;
+		return Rule.link(separation);
+	}
+	
+	public static Rule selection(int token, Tokenised t, Rule separation) {
 		if (t.tokens.rule(token) != BNF.selection) {
 			throw new RuntimeException(t.tokens.rule(token).toString());
 		}
@@ -59,7 +63,7 @@ public class GrammerCompiler {
 		int i = token+1;
 		int level = t.tokens.level(token)+1;
 		while (t.tokens.rule(i) == BNF.elems && t.tokens.level(i) == level) {
-			elems.add(elems(i, t));
+			elems.add(elems(i, t, separation));
 			i = t.tokens.next(i);
 		}
 		if (elems.size() == 1) {
@@ -68,46 +72,35 @@ public class GrammerCompiler {
 		return Rule.selection(elems.toArray(new Rule[elems.size()]));
 	}
 	
-	public static Rule elems(int token, Tokenised t) {
+	public static Rule elems(int token, Tokenised t, Rule separation) {
 		List<Rule> elems = new ArrayList<>();
 		int i = token+1;
 		int level = t.tokens.level(token)+1;
 		while (t.tokens.rule(i) == BNF.elem && t.tokens.level(i) == level) {
-			elems.add(elem(i, t));
+			elems.add(elem(i, t, separation));
 			i = t.tokens.next(i);
 		}
 		if (elems.size() == 1) {
 			return elems.get(0);
 		}
-		return Rule.sequence(elems.toArray(new Rule[elems.size()]));
+		return Rule.sequence(elems.toArray(new Rule[elems.size()])).separate(separation);
 
 	}
 	
-	public static Rule elem(int token, Tokenised t) {
-		Occur occur = Grammar.once;
-		int oi = t.tokens.next(token+1);
-		if (t.tokens.rule(oi) == BNF.occurrence) {
-			Rule occurance = t.tokens.rule(oi+1);
-			if (occurance == BNF.plus) {
-				occur = Grammar.plus;
-			} else if (occurance == BNF.star) {
-				occur = Grammar.star;
-			} else if (occurance == BNF.qmark) {
-				occur = Grammar.qmark;
-			} else {
-				occur = Grammar.occur(parseInt(t.text(oi+2)), parseInt(t.text(oi+2)));
-			}
-		}
+	public static Rule elem(int token, Tokenised t, Rule separation) {
+		//FIXME occur seams to be added to wrong rule sometimes
+		Occur occur = occurenceOf(token, t);
 		Rule elem = t.tokens.rule(token+1);
 		if (elem == BNF.atom) {
-			return atom(token+1, t).occurs(occur);
+			return atom(token+1, t).occurs(occur).separate(separation);
 		}
 		if (elem == BNF.group) {
-			return selection(token+2, t);
+			return selection(token+2, t, separation).occurs(occur).separate(separation);
 		}
 		if (elem == BNF.ellipsis) {
-			return Rule.completion(null);
+			return Rule.completion();
 		}
+		//TODO terminals
 		return Rule.ANY_WHITESPACE;
 	}
 	
@@ -145,12 +138,22 @@ public class GrammerCompiler {
 		return Rule.ANY_WHITESPACE;
 	}
 	
-	public static Occur occurence(int token, Tokenised t) {
+	public static Occur occurenceOf(int token, Tokenised t) {
+		int oi = t.tokens.next(token+1);
+		if (t.tokens.rule(oi) == BNF.occurrence && t.tokens.level(oi) == t.tokens.level(token)+1) {
+			Rule occurance = t.tokens.rule(oi+1);
+			if (occurance == BNF.plus) {
+				return Grammar.plus;
+			} 
+			if (occurance == BNF.star) {
+				return Grammar.star;
+			} 
+			if (occurance == BNF.qmark) {
+				return Grammar.qmark;
+			}
+			return Grammar.occur(parseInt(t.text(oi+2)), parseInt(t.text(oi+2)));
+		}
 		return Grammar.once;
 	}
 	
-	public static Rule compile(Rule r, int token, Tokenised t) {
-		//TODO
-		return r;
-	}
 }

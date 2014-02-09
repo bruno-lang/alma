@@ -107,10 +107,30 @@ public final class Grammar {
 		}
 		this.rulesById = idOrder.toArray(new Rule[idOrder.size()]);
 		link(rulesByName.values().toArray(new Rule[0]), new HashSet<String>());
+		complete(roots, null, new HashSet<Rule>());
 	}
-	
+
+	private void complete(Rule[] elements, Rule completed, java.util.Set<Rule> followed) {
+		for (Rule e : elements) {
+			if (!followed.contains(e)) {
+				followed.add(e);
+				if (e.type == RuleType.COMPLETION) {
+					if (e.elements[0] == null) {
+						e.elements[0] = completed;
+					}
+				} else if (e.type == RuleType.SEQUENCE && e.elements.length > 1) {
+					for (int i = 0; i < e.elements.length-1; i++) {
+						complete(new Rule[] { e.elements[i] }, e.elements[i+1], followed);
+					}
+				} else {
+					complete(e.elements, completed, followed);
+				}
+			}
+		}
+	}
+
 	private void init(Rule rule, List<Rule> idOrder) {
-		if (rule.type == RuleType.LINK) {
+		if (rule == null || rule.type == RuleType.LINK) {
 			return;
 		}
 		if (!rule.name.isEmpty()) {
@@ -132,6 +152,12 @@ public final class Grammar {
 	}
 
 	private void link(Rule rule, java.util.Set<String> followed) {
+		if (rule.type == RuleType.COMPLETION) {
+			return;
+		}
+		if (rule != null && rule.separation != null && rule.separation.type == RuleType.LINK) {
+			rule.separation = rule(rule.separation.name);
+		}
 		//FIXME below: when linked rule uses -minus to not capture the capture has to be unboxed
 		Rule[] elements = rule.elements;
 		if (elements.length > 0) { 
@@ -142,11 +168,11 @@ public final class Grammar {
 				}
 				for (int i = 0; i < elements.length; i++) {
 					Rule e = elements[i];
-					if (e.type == RuleType.LINK) {
-						elements[i] = rule(e.name);
-					} else {
-						link(e, followed);
-					}
+						if (e.type == RuleType.LINK) {
+							elements[i] = rule(e.name);
+						} else {
+							link(e, followed);
+						}
 				}
 			} else {
 				for (int i = 0; i < elements.length; i++) {
@@ -255,8 +281,8 @@ public final class Grammar {
 		public static final Rule ANY_WHITESPACE = terminal(whitespace).occurs(star);
 		public static final Rule EMPTY_STRING = literal('$').occurs(never);
 		
-		public static Rule completion(Rule to) {
-			return new Rule(RuleType.COMPLETION, "", new Rule[] { to }, EMPTY_STRING, once, null, NO_CHARACTER);
+		public static Rule completion() {
+			return new Rule(RuleType.COMPLETION, "", new Rule[1], EMPTY_STRING, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule link(String name) {
@@ -268,11 +294,6 @@ public final class Grammar {
 		}
 		
 		public static Rule sequence(Rule...elements) {
-			for (int i = 0; i < elements.length; i++) {
-				if (elements[i].type == RuleType.COMPLETION && elements[i].elements[0] == null) {
-					elements[i].elements[0] = elements[i+1];
-				}
-			}
 			return new Rule(RuleType.SEQUENCE, "", elements, ANY_WHITESPACE, once, null, NO_CHARACTER);
 		}
 		
@@ -306,7 +327,7 @@ public final class Grammar {
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
-		public final Rule separation;
+		public Rule separation; //FIXME should also be final (find a way to link this)
 		public final Occur occur;
 		public final Terminal terminal;
 		public final byte[] literal;
@@ -370,6 +391,9 @@ public final class Grammar {
 			if (type == RuleType.LINK) {
 				return "@"+name;
 			}
+			if (type == RuleType.COMPLETION) {
+				return "..["+elements[0]+"]";
+			}
 			if (type == RuleType.SELECTION) {
 				StringBuilder b = new StringBuilder();
 				for (Rule e : elements) {
@@ -425,7 +449,7 @@ public final class Grammar {
 		
 		@Override
 		public String toString() {
-			return "(whitespace)";
+			return "_";
 		}
 		
 	}

@@ -27,3 +27,4 @@ else          : '|';
 character     : -digit | 'a' - 'z' | 'A'-'Z' | '_' | '-';
 [] name       : -character+;
 separation    : '[' name? ']';
+indent        : (' ' | '\t')*

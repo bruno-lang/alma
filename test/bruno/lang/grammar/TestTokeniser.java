@@ -32,7 +32,7 @@ public class TestTokeniser {
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Tokenised t = BNF.tokenise("etc/grammar.grammar");
-		assertEquals(983, t.tokens.end());
+		assertEquals(1013, t.tokens.end());
 		Grammar g = GrammerCompiler.compile(t);
 		System.out.println(g);
 	}
@@ -47,19 +47,28 @@ public class TestTokeniser {
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
 		Tokenised t = BNF.tokenise("etc/json.grammar");
-		assertEquals(368, t.tokens.end());
+		assertEquals(435, t.tokens.end());
+		Grammar json = GrammerCompiler.compile(t);
+		Tokenised jsont = Tokenised.tokenise("etc/example.json", "json", json);
+		Printer.rulePrinter(System.out).process(jsont);
+		new Printer.ParseTreePrinter(System.out).process(jsont);
 	}
 	
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
 		Tokenised t = BNF.tokenise("etc/xml.grammar");
-		assertEquals(337, t.tokens.end());
+		assertEquals(374, t.tokens.end());
+		Grammar xml = GrammerCompiler.compile(t);
+		Tokenised xmlt = Tokenised.tokenise("etc/example.xml", "document", xml);
+		Printer.rulePrinter(System.out).process(xmlt);
+		new Printer.ParseTreePrinter(System.out).process(xmlt);
 	}
 
 	@Test
 	public void thatCompletionWorks() {
 		String input = "% this is the comments text\n% this is another one\n";
-		Tokens tokens = Tokeniser.tokenise(ByteBuffer.wrap(input.getBytes()), COMMENTS.rule("grammar".intern()));
+		Grammar grammar = COMMENTS;
+		Tokens tokens = Tokeniser.tokenise(ByteBuffer.wrap(input.getBytes()), grammar.rule("grammar".intern()));
 		assertEquals(5, tokens.count());
 		assertEquals(" this is the comments text", input.substring(tokens.start(2), tokens.end(2)));
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
@@ -72,6 +81,6 @@ public class TestTokeniser {
 	static final Grammar COMMENTS = comments();
 
 	private static Grammar comments() {
-		return new Grammar(sequence(sequence(literal('%'), completion(literal('\n')).as("text"), literal('\n')).separate(Rule.EMPTY_STRING).as("comment")).plus().as("grammar"));
+		return new Grammar(sequence(sequence(literal('%'), completion().as("text"), literal('\n')).separate(Rule.EMPTY_STRING).as("comment")).plus().as("grammar"));
 	} 
 }
