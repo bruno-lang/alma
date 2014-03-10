@@ -25,6 +25,10 @@ public final class Grammar {
 	public static Occur occur( int min, int max ) {
 		return new Occur(min, max);
 	}
+	
+	public static Occur x(int times) {
+		return occur(times, times);
+	}
 
 	public static final Occur never = occur(0, 0);
 	
@@ -84,6 +88,7 @@ public final class Grammar {
 
 	}
 	
+	public static final Terminal comma = null;
 	public static final Terminal any = new Any();
 	public static final Terminal whitespace = new Whitespace();
 
@@ -93,7 +98,8 @@ public final class Grammar {
 	}
 	
 	private static final byte[] NO_CHARACTER = new byte[0];
-	
+
+
 	private final IdentityHashMap<String, Rule> rulesByName;
 	private final Rule[] rulesById;
 	
@@ -130,7 +136,7 @@ public final class Grammar {
 	}
 
 	private void init(Rule rule, List<Rule> idOrder) {
-		if (rule == null || rule.type == RuleType.LINK) {
+		if (rule == null || rule.type == RuleType.REFERENCE) {
 			return;
 		}
 		if (!rule.name.isEmpty()) {
@@ -155,7 +161,7 @@ public final class Grammar {
 		if (rule.type == RuleType.COMPLETION) {
 			return;
 		}
-		if (rule != null && rule.separation != null && rule.separation.type == RuleType.LINK) {
+		if (rule != null && rule.separation != null && rule.separation.type == RuleType.REFERENCE) {
 			rule.separation = rule(rule.separation.name);
 		}
 		//FIXME below: when linked rule uses -minus to not capture the capture has to be unboxed
@@ -168,7 +174,7 @@ public final class Grammar {
 				}
 				for (int i = 0; i < elements.length; i++) {
 					Rule e = elements[i];
-						if (e.type == RuleType.LINK) {
+						if (e.type == RuleType.REFERENCE) {
 							elements[i] = rule(e.name);
 						} else {
 							link(e, followed);
@@ -177,7 +183,7 @@ public final class Grammar {
 			} else {
 				for (int i = 0; i < elements.length; i++) {
 					Rule e = elements[i];
-					if (e.type == RuleType.LINK) {
+					if (e.type == RuleType.REFERENCE) {
 						elements[i] = rule(e.name);
 					}
 				}
@@ -257,13 +263,18 @@ public final class Grammar {
 		}
 		return new In(bs);
 	}
+	
+	public static Terminal ascii( Terminal...terminals ) {
+		//TODO
+		return new ASCIIs(0L, 0L);
+	}
 
 	public static byte toByte( char c ) {
 		return String.valueOf(c).getBytes()[0];
 	}
 	
 	public static enum RuleType {
-		LITERAL("lit"), TERMINAL("trm"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cmp"), LINK("lnk"), CAPTURE("cap");
+		LITERAL("lit"), TERMINAL("trm"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cmp"), REFERENCE("ref"), CAPTURE("cap");
 		
 		public final String code;
 
@@ -285,27 +296,27 @@ public final class Grammar {
 			return new Rule(RuleType.COMPLETION, "", new Rule[1], EMPTY_STRING, once, null, NO_CHARACTER);
 		}
 		
-		public static Rule link(String name) {
-			return new Rule(RuleType.LINK, name, new Rule[0], ANY_WHITESPACE, once, null, NO_CHARACTER);
+		public static Rule ref(String name) {
+			return new Rule(RuleType.REFERENCE, name, new Rule[0], ANY_WHITESPACE, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule selection(Rule...elements) {
 			return new Rule(RuleType.SELECTION, "", elements, EMPTY_STRING, once, null, NO_CHARACTER);
 		}
 		
-		public static Rule sequence(Rule...elements) {
+		public static Rule seq(Rule...elements) {
 			return new Rule(RuleType.SEQUENCE, "", elements, ANY_WHITESPACE, once, null, NO_CHARACTER);
 		}
 		
 		public static Rule token(Rule...elements) {
-			return sequence(elements).separate(EMPTY_STRING);
+			return seq(elements).separate(EMPTY_STRING);
 		}
 		
 		public static Rule literal( char l ) {
-			return literal(String.valueOf(l));
+			return symbol(String.valueOf(l));
 		}
 		
-		public static Rule literal(String l) {
+		public static Rule symbol(String l) {
 			return new Rule(RuleType.LITERAL, "", new Rule[0], EMPTY_STRING, once, null, l.getBytes());
 		}
 		
@@ -388,7 +399,7 @@ public final class Grammar {
 			if (type == RuleType.LITERAL) {
 				return "'"+ new String(literal)+"'";
 			}
-			if (type == RuleType.LINK) {
+			if (type == RuleType.REFERENCE) {
 				return "@"+name;
 			}
 			if (type == RuleType.COMPLETION) {
@@ -464,6 +475,44 @@ public final class Grammar {
 		public String toString() {
 			return ".";
 		}
+	}
+
+	/**
+	 * Matches any set of ASCII characters indicated by bits in 2 long masks.
+	 *  
+	 * @author jan
+	 */
+	private static final class ASCIIs implements Terminal {
+
+		private final long _0_63;
+		private final long _64_127;
+		
+		ASCIIs(long _0_63, long _64_127) {
+			super();
+			this._0_63 = _0_63;
+			this._64_127 = _64_127;
+		}
+
+		@Override
+		public int length(ByteBuffer input, int position) {
+			int p = position;
+			while (contains(input.get(p))) {
+				p++;
+			}
+			return p-position;
+		}
+
+		private boolean contains(byte code) {
+			if (code < 64) {
+				if (code < 0)
+					return false;
+				long m = 1L << code;
+				return (m & _0_63) > 0L; 
+			}
+			long m = 1L << (code - 64);
+			return (m & _64_127) > 0L;
+		}
+		
 	}
 	
 	private static final class Set

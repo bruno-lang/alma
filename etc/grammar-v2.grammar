@@ -1,0 +1,45 @@
+%v2
+grammar       : member (, member)*
+member        : comment | rule
+comment       : '%' .. \n
+rule          : name, ('=' | (':' ':'? '='?)), selection, ';'?
+selection     : sequence (, '|', sequence )*
+sequence      : element ( {' ' \t}* element )*
+element       : (completion | group | option | literal | symbol | ref | terminal ) occurrence?
+completion    : '..'
+group         : '(', selection, ')'
+option        : '[', selection, ']'
+
+occurrence    : 'x'? num:low '-'? num:high? | qmark | star | plus
+num           : #+
+qmark         : '?'
+star          : '*'
+plus          : '+'
+
+ref           : name [':' name:alias ]
+name          : '-'? '\'? {@ # '_' '-'}+
+
+symbol        : ''' .x2+ '''
+
+wildcard      : '.'
+atom          : ''' . '''
+hexcode       : '\u' #x4
+literal       : hexcode | atom
+range         : literal, {'-' '+'}, literal
+letter        : '@'
+digit         : '#'
+not           : {'!' '^'}
+whitespace    : '_'
+gap           : ','
+separation    : '~'
+
+\t            : \u0009
+\n            : \u0010
+\r            : \u0013
+\s            : { \r \n \t ' '}
+shortname     : \s | \t | \n | \r
+
+class         : '\u&' @+
+figure        : not? (wildcard | letter | digit | class | range | literal | whitespace | shortname| ref)
+figures       : '{', figure (, figure )* '}'
+terminal      : figure | figures | gap | separation

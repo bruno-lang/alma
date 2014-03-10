@@ -52,7 +52,7 @@ public class GrammerCompiler {
 			return Rule.ANY_WHITESPACE;
 		if (separation.isEmpty())
 			return Rule.EMPTY_STRING;
-		return Rule.link(separation);
+		return Rule.ref(separation);
 	}
 	
 	public static Rule selection(int token, Tokenised t, Rule separation) {
@@ -83,7 +83,7 @@ public class GrammerCompiler {
 		if (elems.size() == 1) {
 			return elems.get(0);
 		}
-		return Rule.sequence(elems.toArray(new Rule[elems.size()])).separate(separation);
+		return Rule.seq(elems.toArray(new Rule[elems.size()])).separate(separation);
 
 	}
 	
@@ -129,11 +129,11 @@ public class GrammerCompiler {
 			return Rule.literal('\n');
 		}
 		if (atom == BNF.name) {
-			return Rule.link(t.text(type));
+			return Rule.ref(t.text(type));
 		}
 		if (atom == BNF.terminal) {
 			String literal = t.text(type);
-			return Rule.literal(literal.substring(1, literal.length()-1));
+			return Rule.symbol(literal.substring(1, literal.length()-1));
 		}
 		return Rule.ANY_WHITESPACE;
 	}
