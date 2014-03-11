@@ -17,19 +17,19 @@ import bruno.lang.grammar.Grammar.Terminal;
 
 public class X2 {
 
+	//TODO bitmask unicode sets (to cover a-Z0-9-_ in one mask)
+
 	static final Terminal
 		DIGIT = set('0', '9'),
 		LETTER = or(set('a', 'z'), set('A','Z')),
 		NOT = in('^', '!')
 		;
 	
-	//TODO bitmask unicode sets (to cover a-Z0-9-_ in one mask)
-	
 	static final Rule
 		c = terminal(Grammar.comma),
 		
 		name = seq(literal('-').qmark(), literal('\\').qmark(), terminal(or(LETTER, DIGIT, in('_', '-'))).plus()).as("name"),
-		ref = seq(name, seq(literal(':'), name.as("literal").qmark())).as("ref"),
+		ref = seq(name, seq(literal(':'), name.as("literal")).qmark()).as("ref"),
 
 		wildcard = literal('.').as("wildcard"),
 		atom = seq(literal('\''), terminal(Grammar.any), literal('\'')).as("atom"),

@@ -83,12 +83,18 @@ public final class Grammar {
 			if (min == qmark.min && max == qmark.max) {
 				return "?";
 			}
-			return "{"+min+":"+max+"}";
+			if (min == max) {
+				return "x"+min;
+			}
+			if (max == plus.max) {
+				return "x"+min+"+";
+			}
+			return "x"+min+"-"+max+"";
 		}
 
 	}
 	
-	public static final Terminal comma = null;
+	public static final Terminal comma = new Gap();
 	public static final Terminal any = new Any();
 	public static final Terminal whitespace = new Whitespace();
 
@@ -210,16 +216,14 @@ public final class Grammar {
 		for (Rule r : rulesById) {
 			if (r != null && !r.name.isEmpty()) {
 			int l = 15;
-			if (r.separation != Rule.ANY_WHITESPACE) {
-				b.append('[');
-				b.append(r.separation.name);
-				b.append(']');
-				b.append(' ');
-				l -= 3 + r.separation.name.length();
-			}
 			b.append(String.format("%-"+l+"s: ", r.name));
 			for (Rule elem : r.elements) {
-				b.append(elem);
+				String s = elem.toString();
+				RuleType type = elem.type;
+				if (type == RuleType.SEQUENCE || elem.type == RuleType.SELECTION) {
+					s = s.substring(1, s.length()-1);
+				}
+				b.append(s);
 				b.append(' ');
 			}
 			b.append('\n');
@@ -450,6 +454,21 @@ public final class Grammar {
 		return p - position;
 		
 	}
+	
+	private static final class Gap implements Terminal {
+
+		@Override
+		public int length(ByteBuffer input, int position) {
+			int c = 0;
+			while (Character.isWhitespace(input.get(position++))) { c++; }
+			return c;
+		}
+		
+		@Override
+		public String toString() {
+			return ",";
+		}
+	}
 
 	private static final class Whitespace implements Terminal {
 
@@ -586,9 +605,9 @@ public final class Grammar {
 		public String toString() {
 			StringBuilder b = new StringBuilder();
 			for ( byte c : members ) {
-				b.append(" | ").append(Grammar.print(c));
+				b.append(" ").append(Grammar.print(c));
 			}
-			return b.substring(3);
+			return "{"+ b.substring(1) +"}";
 		}
 	}
 
@@ -611,7 +630,15 @@ public final class Grammar {
 
 		@Override
 		public String toString() {
-			return a + " | " + b;
+			String as = a.toString();
+			if (a instanceof Or || a instanceof In) {
+				as = as.substring(1, as.length()-1);
+			}
+			String bs = b.toString();
+			if (b instanceof Or || b instanceof In) {
+				bs = bs.substring(1, bs.length()-1);
+			}
+			return "{"+ as + " " + bs+"}";
 		}
 
 	}

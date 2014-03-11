@@ -74,6 +74,12 @@ public class TestTokeniser {
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
 	}
 
+	@Test
+	public void grammar2() {
+		Grammar g2 = X2.GRAMMAR;
+		System.out.println(g2);
+	}
+	
 	/**
 	 * A minimal grammar for just comments to test completion feature working as
 	 * it is not needed for the {@link BNF} grammar.
@@ -82,5 +88,6 @@ public class TestTokeniser {
 
 	private static Grammar comments() {
 		return new Grammar(seq(seq(literal('%'), completion().as("text"), literal('\n')).separate(Rule.EMPTY_STRING).as("comment")).plus().as("grammar"));
-	} 
+	}
+	
 }
