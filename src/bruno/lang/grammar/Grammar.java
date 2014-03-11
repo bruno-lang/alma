@@ -342,7 +342,7 @@ public final class Grammar {
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
-		public Rule separation; //FIXME should also be final (find a way to link this)
+		private Rule separation; //FIXME should also be final (find a way to link this)
 		public final Occur occur;
 		public final Terminal terminal;
 		public final byte[] literal;

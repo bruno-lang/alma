@@ -75,9 +75,10 @@ public class TestTokeniser {
 	}
 
 	@Test
-	public void grammar2() {
+	public void grammar2() throws IOException {
 		Grammar g2 = X2.GRAMMAR;
-		System.out.println(g2);
+		Tokenised t = Tokenised.tokenise("etc/grammar-v2.grammar", "grammar", g2);
+		new Printer.ParseTreePrinter(System.out).process(t);
 	}
 	
 	/**

@@ -1,31 +1,32 @@
 %v2
 grammar       : member (, member)*
 member        : comment | rule
-comment       : '%' .. \n
-rule          : name, ('=' | (':' ':'? '='?)), selection, ';'?
-selection     : sequence (, '|', sequence )*
+comment       : '%' (!\n):text
+rule          : name, ('=' | (':' ':'? '='?)), selection ';'?
+selection     : sequence (, '|' {' ' \t}* sequence )*
 sequence      : element ( {' ' \t}* element )*
-element       : (completion | group | option | literal | symbol | ref | terminal ) occurrence?
+element       : (completion | group | option | ref | terminal | symbol | literal ) occurrence?
 completion    : '..'
-group         : '(', selection, ')'
-option        : '[', selection, ']'
+group         : '(', selection, ')' capture
+option        : '[', selection, ']' capture
 
-occurrence    : 'x'? num:low '-'? num:high? | qmark | star | plus
+occurrence    : 'x'? num:low {'-' '+'}:to? num:high? | qmark | star | plus
 num           : #+
 qmark         : '?'
 star          : '*'
 plus          : '+'
 
-ref           : name [':' name:alias ]
+ref           : name capture
 name          : '-'? '\'? {@ # '_' '-'}+
+capture       : [':' name:alias ]
 
-symbol        : ''' .x2+ '''
+symbol        : ''' !'''x2+ '''
 
 wildcard      : '.'
 atom          : ''' . '''
 hexcode       : '\u' #x4
 literal       : hexcode | atom
-range         : literal, {'-' '+'}, literal
+range         : literal, '-', literal
 letter        : '@'
 digit         : '#'
 not           : {'!' '^'}
@@ -40,6 +41,6 @@ separation    : '~'
 shortname     : \s | \t | \n | \r
 
 class         : '\u&' @+
-figure        : not? (wildcard | letter | digit | class | range | literal | whitespace | shortname| ref)
-figures       : '{', figure (, figure )* '}'
+figure        : not? (wildcard | letter | digit | class | range | literal | whitespace | shortname | ref)
+figures       : '{', figure (, figure )* '}' capture
 terminal      : figure | figures | gap | separation

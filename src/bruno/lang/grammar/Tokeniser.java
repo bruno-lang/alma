@@ -13,7 +13,7 @@ import bruno.lang.grammar.Grammar.Rule;
 public final class Tokeniser {
 
 	public static Tokens tokenise(ByteBuffer input, Rule start) {
-		Tokens tokens = new Tokens(Math.max(512, input.capacity() / 2));
+		Tokens tokens = new Tokens(Math.max(512, input.capacity()));
 		int t = 0;
 		try {
 			t = tokenise(start, input, 0, Rule.ANY_WHITESPACE, tokens);
@@ -23,9 +23,9 @@ public final class Tokeniser {
 		if (tokens.end() != input.capacity()) {
 			System.err.println("Failed to parse:");
 			input.position(Math.abs(t));
-			byte[] x = new byte[10];
+			byte[] x = new byte[20];
 			input.get(x);
-			System.out.println(new String(x));
+			System.err.println(ANSI.RESET+new String(x)+ANSI.RESET);
 		}
 		//TODO verify and visualize errors
 		return tokens;
@@ -112,7 +112,7 @@ public final class Tokeniser {
 			Rule separator, Tokens tokens) {
 		int end = position;
 		for (int i = 0; i < rule.elements.length; i++) {
-			end = tokenise(rule.separation, input, end, Rule.EMPTY_STRING, tokens);
+			//end = tokenise(rule.separation, input, end, Rule.EMPTY_STRING, tokens);
 			Rule r = rule.elements[i];
 			int endPosition = tokenise(r, input, end, separator, tokens);
 			if (endPosition < 0) {
@@ -136,6 +136,7 @@ public final class Tokeniser {
 				return end;
 			} else {
 				end = endPosition;
+				/*
 				Rule separation = rule.separation;
 				if (separation != null && separation != Rule.EMPTY_STRING) {
 					endPosition = tokenise(separation, input, end, Rule.EMPTY_STRING, tokens);
@@ -147,6 +148,7 @@ public final class Tokeniser {
 					}
 					end = endPosition;
 				}
+				*/
 				c++;
 			}
 		}
