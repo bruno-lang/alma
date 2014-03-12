@@ -85,19 +85,19 @@ The above rule says that a `number` consists of 1 or more `digit`s but by using 
 ### Short-hands
 There is some _syntactic sugar_ that does not add more expressiveness but better readability by giving frequently used patterns a short-hand syntax.
 
-#### White-space
+##### White-space
 - `_` = `\s` = `{ \t \n \r ' '}`
 - `,` = `_*` = `{ \t \n \r ' '}*`
 - `~` = `_+` = `{ \t \n \r ' '}+`
 - `>>` = `{ \t ' ' }*`
 
-#### Sets of Characters
+##### Sets of Characters
 - `#` = `'0'-'9'`
 - `@` = `{ 'a'-'z' 'A'-'Z' }`
 - `X` = `{ # 'A'-'F'}` = `{ '0'-'9' 'A'-'F'}`
 - `.` = `{ \u0000-\u7FFFFFFF }` (that is any UTF-8)
 
-#### Occurrence
+##### Occurrence
 - `+` = `x1+`
 - `*` = `x0+`
 - `?` = `x0-1`
