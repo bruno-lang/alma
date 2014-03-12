@@ -94,6 +94,7 @@ There is some _syntactic sugar_ that does not add more expressiveness but better
 #### Sets of Characters
 - `#` = `'0'-'9'`
 - `@` = `{ 'a'-'z' 'A'-'Z' }`
+- 'X' = `{ # 'A'-'F'}` = `{ '0'-'9' 'A'-'F'}`
 - `.` = `{ \u0000-\u7FFFFFFF }` (that is any UTF-8)
 
 #### Occurrence
