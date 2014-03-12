@@ -90,10 +90,12 @@ There is some _syntactic sugar_ that does not add more expressiveness but better
 - `,` = `_*` = `{ \t \n \r ' '}*`
 - `~` = `_+` = `{ \t \n \r ' '}+`
 - `>>` = `{ \t ' ' }*`
+
 #### Sets of Characters
 - `#` = `'0'-'9'`
 - `@` = `{ 'a'-'z' 'A'-'Z' }`
 - `.` = `{ \u0000-\u7FFFFFFF }` (that is any UTF-8)
+
 #### Occurrence
 - `+` = `x1+`
 - `*` = `x0+`
