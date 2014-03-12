@@ -3,9 +3,9 @@ grammar       : member (, member)*
 member        : comment | rule
 comment       : '%' (!\n):text
 rule          : name, ('=' | (':' ':'? '='?)), selection ';'?
-selection     : sequence (, '|' {' ' \t}* sequence )*
-sequence      : element ( {' ' \t}* element )*
-element       : (completion | group | option | ref | terminal | symbol | literal ) occurrence?
+selection     : sequence (, '|' >> sequence )*
+sequence      : element ( >> element )*
+element       : (completion | group | option | terminal | symbol | literal | ref ) occurrence?
 completion    : '..'
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
@@ -24,23 +24,25 @@ symbol        : ''' !'''x2+ '''
 
 wildcard      : '.'
 atom          : ''' . '''
-hexcode       : '\u' #x4
+hexcode       : '\u' Xx4-8
 literal       : hexcode | atom
 range         : literal, '-', literal
 letter        : '@'
 digit         : '#'
+hex           : 'X'
 not           : {'!' '^'}
 whitespace    : '_'
 gap           : ','
 separation    : '~'
+indent        : '>>'
 
 \t            : \u0009
-\n            : \u0010
-\r            : \u0013
+\n            : \u000A
+\r            : \u000D
 \s            : { \r \n \t ' '}
 shortname     : \s | \t | \n | \r
 
-class         : '\u&' @+
-figure        : not? (wildcard | letter | digit | class | range | literal | whitespace | shortname | ref)
+class         : '\u{' @+ '}'
+figure        : not? (wildcard | letter | hex | digit | class | range | literal | whitespace | shortname | ref)
 figures       : '{', figure (, figure )* '}' capture
-terminal      : figure | figures | gap | separation
+terminal      : figure | figures | gap | separation | indent

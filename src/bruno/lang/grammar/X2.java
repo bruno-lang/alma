@@ -5,7 +5,6 @@ import static bruno.lang.grammar.Grammar.not;
 import static bruno.lang.grammar.Grammar.occur;
 import static bruno.lang.grammar.Grammar.or;
 import static bruno.lang.grammar.Grammar.set;
-import static bruno.lang.grammar.Grammar.x;
 import static bruno.lang.grammar.Grammar.Rule.literal;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;
@@ -21,6 +20,7 @@ public class X2 {
 
 	static final Terminal
 		DIGIT = set('0', '9'),
+		HEX = or(DIGIT, set('A', 'F')),
 		LETTER = or(set('a', 'z'), set('A','Z')),
 		NOT = in('^', '!')
 		;
@@ -36,15 +36,17 @@ public class X2 {
 
 		wildcard = literal('.').as("wildcard"),
 		atom = seq(apo, terminal(Grammar.any), apo).as("atom"),
-		hexcode = seq(symbol("\\u"), terminal(DIGIT).occurs(x(4))).as("hexcode"), 
+		hexcode = seq(symbol("\\u"), terminal(HEX).occurs(occur(4, 8))).as("hexcode"), 
 		literal = selection(hexcode, atom).as("literal"),
 		range = seq(literal, c, literal('-'), c, literal).as("range"),
 		letter = literal('@').as("letter"),
 		digit = literal('#').as("digit"),
+		hex = literal('X').as("hex"),
 		not = terminal(NOT).as("not"),
 		whitespace = literal('_').as("whitespace"),
 		gap = literal(',').as("gap"),
 		separation = literal('~').as("separation"),
+		indent = symbol(">>").as("indent"),
 
 		_t = symbol("\\t").as("\\t"),
 		_n = symbol("\\n").as("\\n"),
@@ -52,10 +54,10 @@ public class X2 {
 		_s = symbol("\\s").as("\\s"),
 		shortname = selection(_s, _t, _n, _r).as("shortname"),
 
-		clazz = seq(symbol("\\u&"), terminal(LETTER).plus()).as("class"),
-		figure = seq(not.qmark(), selection(wildcard, letter, digit, clazz, range, literal, whitespace, shortname, ref)).as("figure"),
+		clazz = seq(symbol("\\u{"), terminal(LETTER).plus(), literal('}')).as("class"),
+		figure = seq(not.qmark(), selection(wildcard, letter, hex, digit, clazz, range, literal, whitespace, shortname, ref)).as("figure"),
 		figures = seq(literal('{'), c, seq(figure, seq(c, figure).star()) , c, literal('}'), capture).as("figures"),
-		terminal = selection(figure, figures, gap, separation).as("terminal"),
+		terminal = selection(figure, figures, gap, separation, indent).as("terminal"),
 
 		symbol = seq(apo, terminal(not('\'')).occurs(occur(2, Grammar.plus.max)), apo).as("symbol"),
 
@@ -68,7 +70,7 @@ public class X2 {
 		option = seq(literal('['), c, ref("selection"), c, literal(']'), capture).as("option"),
 		group = seq(literal('('), c, ref("selection"), c, literal(')'), capture).as("group"),
 		completion = symbol("..").as("completion"),
-		element = seq(selection(completion, group, option, ref, symbol, terminal, literal), occurrence.qmark()).as("element"),
+		element = seq(selection(completion, group, option, symbol, terminal, literal, ref), occurrence.qmark()).as("element"),
 		
 		sequence = seq(element, seq(pad, element).star()).as("sequence"),
 		selection = seq(sequence, seq(c, literal('|'), pad, sequence).star()).as("selection"),
