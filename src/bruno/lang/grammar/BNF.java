@@ -1,9 +1,5 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.in;
-import static bruno.lang.grammar.Grammar.not;
-import static bruno.lang.grammar.Grammar.or;
-import static bruno.lang.grammar.Grammar.set;
 import static bruno.lang.grammar.Grammar.Rule.literal;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;
@@ -11,6 +7,10 @@ import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Grammar.Rule.token;
+import static bruno.lang.grammar.Terminals.in;
+import static bruno.lang.grammar.Terminals.not;
+import static bruno.lang.grammar.Terminals.or;
+import static bruno.lang.grammar.Terminals.set;
 
 import java.io.IOException;
 
@@ -25,7 +25,7 @@ import bruno.lang.grammar.Grammar.Rule;
 public final class BNF {
 
 	static final Rule
-		terminal = token(symbol("'"), terminal(Grammar.any), terminal(not('\'')).star(), symbol("'")).as("terminal"),
+		terminal = token(symbol("'"), terminal(Terminals.any), terminal(not('\'')).star(), symbol("'")).as("terminal"),
 		range = seq(terminal, symbol("-"), terminal).as("range"),
 		name = token(terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus()).as("name"),
 		not = token(symbol("!"), ref("atom")).as("not"),

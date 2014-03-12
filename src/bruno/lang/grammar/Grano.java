@@ -1,22 +1,24 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.in;
-import static bruno.lang.grammar.Grammar.not;
-import static bruno.lang.grammar.Grammar.occur;
-import static bruno.lang.grammar.Grammar.or;
-import static bruno.lang.grammar.Grammar.set;
 import static bruno.lang.grammar.Grammar.Rule.literal;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;
 import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
+import static bruno.lang.grammar.Occur.occur;
+import static bruno.lang.grammar.Terminals.in;
+import static bruno.lang.grammar.Terminals.not;
+import static bruno.lang.grammar.Terminals.or;
+import static bruno.lang.grammar.Terminals.set;
 import bruno.lang.grammar.Grammar.Rule;
-import bruno.lang.grammar.Grammar.Terminal;
 
-public class X2 {
-
-	//TODO bitmask unicode sets (to cover a-Z0-9-_ in one mask)
+/**
+ * The name <code>grano</code> is derived from grammar notation.
+ * 
+ * @author jan
+ */
+public final class Grano {
 
 	static final Terminal
 		DIGIT = set('0', '9'),
@@ -26,7 +28,7 @@ public class X2 {
 		;
 	
 	static final Rule
-		c = terminal(Grammar.comma).qmark(),
+		c = terminal(Terminals.comma).qmark(),
 		pad = terminal(in(' ', '\t')).star(),
 		apo = literal('\''),
 		
@@ -35,7 +37,7 @@ public class X2 {
 		ref = seq(name, capture).as("ref"),
 
 		wildcard = literal('.').as("wildcard"),
-		atom = seq(apo, terminal(Grammar.any), apo).as("atom"),
+		atom = seq(apo, terminal(Terminals.any), apo).as("atom"),
 		hexcode = seq(symbol("\\u"), terminal(HEX).occurs(occur(4, 8))).as("hexcode"), 
 		literal = selection(hexcode, atom).as("literal"),
 		range = seq(literal, c, literal('-'), c, literal).as("range"),
@@ -59,7 +61,7 @@ public class X2 {
 		figures = seq(literal('{'), c, seq(figure, seq(c, figure).star()) , c, literal('}'), capture).as("figures"),
 		terminal = selection(figure, figures, gap, separation, indent).as("terminal"),
 
-		symbol = seq(apo, terminal(not('\'')).occurs(occur(2, Grammar.plus.max)), apo).as("symbol"),
+		symbol = seq(apo, terminal(not('\'')).occurs(occur(2, Occur.plus.max)), apo).as("symbol"),
 
 		num = terminal(DIGIT).plus().as("num"),
 		star = literal('*').as("star"),

@@ -1,6 +1,5 @@
 package bruno.lang.grammar;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -16,93 +15,6 @@ import java.util.NoSuchElementException;
  */
 public final class Grammar {
 
-
-	/**
-	 * <pre>
-	 * { min, max }
-	 * </pre>
-	 */
-	public static Occur occur( int min, int max ) {
-		return new Occur(min, max);
-	}
-	
-	public static Occur x(int times) {
-		return occur(times, times);
-	}
-
-	public static final Occur never = occur(0, 0);
-	
-	
-	/**
-	 * <pre>
-	 * *
-	 * </pre>
-	 */
-	public static final Occur once = occur(1 , 1);
-
-	/**
-	 * <pre>
-	 * *
-	 * </pre>
-	 */
-	public static final Occur star = occur(0 , 1000);
-
-	/**
-	 * <pre>
-	 * +
-	 * </pre>
-	 */
-	public static final Occur plus = occur(1 , 1000);
-
-	/**
-	 * <pre>
-	 * ?
-	 * </pre>
-	 */
-	public static final Occur qmark = occur(0 , 1);
-
-	public static final class Occur {
-
-		public final int min;
-		public final int max;
-
-		Occur( int min, int max ) {
-			super();
-			this.min = min;
-			this.max = max;
-		}
-		
-		@Override
-		public String toString() {
-			if (min == star.min && max == star.max) {
-				return "*";
-			}
-			if (min == plus.min && max == plus.max) {
-				return "+";
-			}
-			if (min == qmark.min && max == qmark.max) {
-				return "?";
-			}
-			if (min == max) {
-				return "x"+min;
-			}
-			if (max == plus.max) {
-				return "x"+min+"+";
-			}
-			return "x"+min+"-"+max+"";
-		}
-
-	}
-	
-	public static final Terminal comma = new Gap();
-	public static final Terminal any = new Any();
-	public static final Terminal whitespace = new Whitespace();
-
-	public static interface Terminal {
-
-		int length(ByteBuffer input, int position);
-	}
-	
 	private static final byte[] NO_CHARACTER = new byte[0];
 
 
@@ -167,9 +79,6 @@ public final class Grammar {
 		if (rule.type == RuleType.COMPLETION) {
 			return;
 		}
-		if (rule != null && rule.separation != null && rule.separation.type == RuleType.REFERENCE) {
-			rule.separation = rule(rule.separation.name);
-		}
 		//FIXME below: when linked rule uses -minus to not capture the capture has to be unboxed
 		Rule[] elements = rule.elements;
 		if (elements.length > 0) { 
@@ -232,51 +141,6 @@ public final class Grammar {
 		return b.toString();
 	}
 
-	public static Terminal not( Terminal excluded ) {
-		return new Not(excluded);
-	}
-
-	public static Terminal not( char s ) {
-		return not(new Is(toByte(s)));
-	}
-
-	public static Terminal or( Terminal s, Terminal... more ) {
-		Terminal or = s;
-		for ( Terminal m : more ) {
-			or = or(or , m);
-		}
-		return or;
-	}
-
-	public static Terminal or( Terminal a, Terminal b ) {
-		return new Or(a, b);
-	}
-
-	public static Terminal set( char low, char high ) {
-		return set(toByte(low) , toByte(high));
-	}
-
-	public static Terminal set( byte low, byte high ) {
-		return new Set(low, high);
-	}
-
-	public static Terminal in( char... cs ) {
-		byte[] bs = new byte[cs.length];
-		for ( int i = 0; i < bs.length; i++ ) {
-			bs[i] = toByte(cs[i]);
-		}
-		return new In(bs);
-	}
-	
-	public static Terminal ascii( Terminal...terminals ) {
-		//TODO
-		return new ASCIIs(0L, 0L);
-	}
-
-	public static byte toByte( char c ) {
-		return String.valueOf(c).getBytes()[0];
-	}
-	
 	public static enum RuleType {
 		LITERAL("lit"), TERMINAL("trm"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cmp"), REFERENCE("ref"), CAPTURE("cap");
 		
@@ -293,23 +157,23 @@ public final class Grammar {
 
 	public static final class Rule {
 		
-		public static final Rule ANY_WHITESPACE = terminal(whitespace).occurs(star);
-		public static final Rule EMPTY_STRING = literal('$').occurs(never);
+		public static final Rule ANY_WHITESPACE = terminal(Terminals.whitespace).occurs(Occur.star);
+		public static final Rule EMPTY_STRING = literal('$').occurs(Occur.never);
 		
 		public static Rule completion() {
-			return new Rule(RuleType.COMPLETION, "", new Rule[1], EMPTY_STRING, once, null, NO_CHARACTER);
+			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, null, NO_CHARACTER);
 		}
 		
 		public static Rule ref(String name) {
-			return new Rule(RuleType.REFERENCE, name, new Rule[0], ANY_WHITESPACE, once, null, NO_CHARACTER);
+			return new Rule(RuleType.REFERENCE, name, new Rule[0], Occur.once, null, NO_CHARACTER);
 		}
 		
 		public static Rule selection(Rule...elements) {
-			return new Rule(RuleType.SELECTION, "", elements, EMPTY_STRING, once, null, NO_CHARACTER);
+			return new Rule(RuleType.SELECTION, "", elements, Occur.once, null, NO_CHARACTER);
 		}
 		
 		public static Rule seq(Rule...elements) {
-			return new Rule(RuleType.SEQUENCE, "", elements, ANY_WHITESPACE, once, null, NO_CHARACTER);
+			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, null, NO_CHARACTER);
 		}
 		
 		public static Rule token(Rule...elements) {
@@ -321,7 +185,7 @@ public final class Grammar {
 		}
 		
 		public static Rule symbol(String l) {
-			return new Rule(RuleType.LITERAL, "", new Rule[0], EMPTY_STRING, once, null, l.getBytes());
+			return new Rule(RuleType.LITERAL, "", new Rule[0], Occur.once, null, l.getBytes());
 		}
 		
 		public static Rule terminal(Terminal...seq) {
@@ -336,25 +200,22 @@ public final class Grammar {
 		}
 
 		private static Rule terminal(Terminal terminal) {
-			return new Rule(RuleType.TERMINAL, "", new Rule[0], EMPTY_STRING,  once, terminal, NO_CHARACTER);
+			return new Rule(RuleType.TERMINAL, "", new Rule[0], Occur.once, terminal, NO_CHARACTER);
 		}
 		
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
-		private Rule separation; //FIXME should also be final (find a way to link this)
 		public final Occur occur;
 		public final Terminal terminal;
 		public final byte[] literal;
 		private int id = 0;
 		
-		public Rule(RuleType type, String name, Rule[] elements, Rule separation,
-				Occur occur, Terminal terminal, byte[] literal) {
+		public Rule(RuleType type, String name, Rule[] elements, Occur occur, Terminal terminal, byte[] literal) {
 			super();
 			this.type = type;
 			this.name = name.intern();
 			this.elements = elements;
-			this.separation = separation;
 			this.occur = occur;
 			this.terminal = terminal;
 			this.literal = literal;
@@ -372,24 +233,24 @@ public final class Grammar {
 		
 		public Rule as(String name) {
 			if (name.length() > 0 && name.charAt(0) == '-') {
-				return new Rule(type, name, elements, separation, occur, terminal, literal);
+				return new Rule(type, name, elements, occur, terminal, literal);
 			}
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
-			return new Rule(RuleType.CAPTURE, name, elems, separation, Grammar.once, null, NO_CHARACTER);
+			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, null, NO_CHARACTER);
 		}
 		
 		public Rule plus() {
-			return occurs(plus);
+			return occurs(Occur.plus);
 		}
 		
 		public Rule occurs(Occur occur) {
-			if (occur == once)
+			if (occur == Occur.once)
 				return this;
-			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, separation, occur, null, NO_CHARACTER);
+			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null, NO_CHARACTER);
 		}
 		
 		public Rule separate(Rule separation) {
-			return new Rule(type, name, elements, separation, occur, terminal, literal);
+			return new Rule(type, name, elements, occur, terminal, literal);
 		}
 		
 		@Override
@@ -431,237 +292,17 @@ public final class Grammar {
 		}
 
 		public Rule star() {
-			return occurs(star);
+			return occurs(Occur.star);
 		}
 
 		public Rule qmark() {
-			return occurs(qmark);
+			return occurs(Occur.qmark);
 		}
 
 	}
-
 
 	static String print( byte character ) {
 		return "'" + Character.valueOf((char) character) + "'";
-	}
-	
-	public static int utf8length(ByteBuffer input, int position) {
-		byte b = input.get(position);
-		if (b >= 0)
-			return 1;
-		int p = position;
-		while (input.get(++p) < 0) { ; }
-		return p - position;
-		
-	}
-	
-	private static final class Gap implements Terminal {
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			int c = 0;
-			while (Character.isWhitespace(input.get(position++))) { c++; }
-			return c;
-		}
-		
-		@Override
-		public String toString() {
-			return ",";
-		}
-	}
-
-	private static final class Whitespace implements Terminal {
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			return Character.isWhitespace(input.get(position)) ? 1 : 0;
-		}
-		
-		@Override
-		public String toString() {
-			return "_";
-		}
-		
-	}
-	
-	private static final class Any implements Terminal {
-		@Override
-		public int length(ByteBuffer input, int position) {
-			return utf8length(input, position);
-		}
-
-		@Override
-		public String toString() {
-			return ".";
-		}
-	}
-
-	/**
-	 * Matches any set of ASCII characters indicated by bits in 2 long masks.
-	 *  
-	 * @author jan
-	 */
-	private static final class ASCIIs implements Terminal {
-
-		private final long _0_63;
-		private final long _64_127;
-		
-		ASCIIs(long _0_63, long _64_127) {
-			super();
-			this._0_63 = _0_63;
-			this._64_127 = _64_127;
-		}
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			int p = position;
-			while (contains(input.get(p))) {
-				p++;
-			}
-			return p-position;
-		}
-
-		private boolean contains(byte code) {
-			if (code < 64) {
-				if (code < 0)
-					return false;
-				long m = 1L << code;
-				return (m & _0_63) > 0L; 
-			}
-			long m = 1L << (code - 64);
-			return (m & _64_127) > 0L;
-		}
-		
-	}
-	
-	private static final class Set
-			implements Terminal {
-
-		final byte low;
-		final byte high;
-
-		Set( byte low, byte high ) {
-			super();
-			this.low = low;
-			this.high = high;
-		}
-		
-		@Override
-		public int length(ByteBuffer input, int position) {
-			int c = input.get(position);
-			return c >= low && c <= high ? 1 : 0;
-		}
-		
-		@Override
-		public String toString() {
-			return Grammar.print(low) + " - " + Grammar.print(high);
-		}
-	}
-
-	private static final class Not
-			implements Terminal {
-
-		private final Terminal excluded;
-
-		Not( Terminal excluded ) {
-			super();
-			this.excluded = excluded;
-		}
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			int l = excluded.length(input, position);
-			return l > 0 ? 0 : utf8length(input, position);
-		}
-
-		@Override
-		public String toString() {
-			return "!" + excluded;
-		}
-	}
-
-	private static final class In
-			implements Terminal {
-
-		private final byte[] members;
-
-		In( byte[] members ) {
-			super();
-			this.members = members;
-		}
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			byte c = input.get(position);
-			for ( int i = 0; i < members.length; i++ ) {
-				if ( members[i] == c ) {
-					return 1;
-				}
-			}
-			return 0;
-		}
-
-		@Override
-		public String toString() {
-			StringBuilder b = new StringBuilder();
-			for ( byte c : members ) {
-				b.append(" ").append(Grammar.print(c));
-			}
-			return "{"+ b.substring(1) +"}";
-		}
-	}
-
-	private static final class Or
-			implements Terminal {
-
-		private final Terminal a;
-		private final Terminal b;
-
-		Or( Terminal a, Terminal b ) {
-			super();
-			this.a = a;
-			this.b = b;
-		}
-		
-		@Override
-		public int length(ByteBuffer input, int position) {
-			return Math.max(a.length(input, position), b.length(input, position));
-		}
-
-		@Override
-		public String toString() {
-			String as = a.toString();
-			if (a instanceof Or || a instanceof In) {
-				as = as.substring(1, as.length()-1);
-			}
-			String bs = b.toString();
-			if (b instanceof Or || b instanceof In) {
-				bs = bs.substring(1, bs.length()-1);
-			}
-			return "{"+ as + " " + bs+"}";
-		}
-
-	}
-	
-	private static final class Is
-			implements Terminal {
-
-		private final byte s;
-
-		Is( byte s ) {
-			super();
-			this.s = s;
-		}
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			return input.get(position) == s ? 1 : 0;
-		}
-		
-		@Override
-		public String toString() {
-			return Grammar.print(s);
-		}
 	}
 
 }

@@ -23,7 +23,7 @@ This allows to adapt to personal or organisational preferences and similarities 
 
 **Note** that the grammar does not have the classic distinction between terminal and non-terminal rules. This is also due to the fact that white-space is explicitly described as everything else. 
 
-#### Names
+##### Names
 A name is any sequence of ASCII letters (both lower and upper), ASCII digits, underscore `_` and dash `-`. In addition a name may start with backslash `\`. Names starting with dash `-` or backslash `\` are never captured. 
 
 ### Building Blocks of Rule Declarations

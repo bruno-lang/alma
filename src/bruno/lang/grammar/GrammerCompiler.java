@@ -5,7 +5,6 @@ import static java.lang.Integer.parseInt;
 import java.util.ArrayList;
 import java.util.List;
 
-import bruno.lang.grammar.Grammar.Occur;
 import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
@@ -110,17 +109,17 @@ public class GrammerCompiler {
 		if (atom == BNF.not) {
 			Rule neg = atom(type+1, t);
 			if (neg.type == RuleType.LITERAL) {
-				return Rule.terminal(Grammar.not(new String(neg.literal).charAt(0)));
+				return Rule.terminal(Terminals.not(new String(neg.literal).charAt(0)));
 			}
-			return Rule.terminal(Grammar.not(neg.terminal));
+			return Rule.terminal(Terminals.not(neg.terminal));
 		}
 		if (atom == BNF.range) {
 			String min = t.text(type+1);
 			String max = t.text(type+2);
-			return Rule.terminal(Grammar.set(min.charAt(1), max.charAt(1)));
+			return Rule.terminal(Terminals.set(min.charAt(1), max.charAt(1)));
 		}
 		if (atom == BNF.any) {
-			return Rule.terminal(Grammar.any);
+			return Rule.terminal(Terminals.any);
 		}
 		if (atom == BNF.whitespace) {
 			return Rule.ANY_WHITESPACE;
@@ -143,17 +142,17 @@ public class GrammerCompiler {
 		if (t.tokens.rule(oi) == BNF.occurrence && t.tokens.level(oi) == t.tokens.level(token)+1) {
 			Rule occurance = t.tokens.rule(oi+1);
 			if (occurance == BNF.plus) {
-				return Grammar.plus;
+				return Occur.plus;
 			} 
 			if (occurance == BNF.star) {
-				return Grammar.star;
+				return Occur.star;
 			} 
 			if (occurance == BNF.qmark) {
-				return Grammar.qmark;
+				return Occur.qmark;
 			}
-			return Grammar.occur(parseInt(t.text(oi+2)), parseInt(t.text(oi+2)));
+			return Occur.occur(parseInt(t.text(oi+2)), parseInt(t.text(oi+2)));
 		}
-		return Grammar.once;
+		return Occur.once;
 	}
 	
 }
