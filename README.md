@@ -1,6 +1,6 @@
 
-Bruno Grammar
-=============
+grano - the bruno grammar
+=========================
                                                       
 A general grammar used for the bruno language.
 

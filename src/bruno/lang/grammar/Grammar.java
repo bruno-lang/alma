@@ -244,6 +244,9 @@ public final class Grammar {
 		}
 		
 		public Rule occurs(Occur occur) {
+			if (type == RuleType.ITERATION) {
+				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, terminal, literal);
+			}
 			if (occur == Occur.once)
 				return this;
 			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null, NO_CHARACTER);

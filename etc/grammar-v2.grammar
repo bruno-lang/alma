@@ -10,7 +10,7 @@ completion    : '..'
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
 
-occurrence    : 'x'? num:low {'-' '+'}:to? num:high? | qmark | star | plus
+occurrence    : 'x'? num:min {'-' '+'}:to? num:max? | qmark | star | plus
 num           : #+
 qmark         : '?'
 star          : '*'

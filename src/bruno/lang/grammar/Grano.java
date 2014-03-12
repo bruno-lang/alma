@@ -67,7 +67,7 @@ public final class Grano {
 		star = literal('*').as("star"),
 		plus = literal('+').as("plus"),
 		qmark = literal('?').as("qmark"),
-		occurrence = selection(seq(literal('x').qmark(), num.as("low"), terminal(in('-', '+')).as("to").qmark(), num.as("high").qmark()), qmark, star, plus).as("occurrence"),
+		occurrence = selection(seq(literal('x').qmark(), num.as("min"), terminal(in('-', '+')).as("to").qmark(), num.as("max").qmark()), qmark, star, plus).as("occurrence"),
 		
 		option = seq(literal('['), c, ref("selection"), c, literal(']'), capture).as("option"),
 		group = seq(literal('('), c, ref("selection"), c, literal(')'), capture).as("group"),
