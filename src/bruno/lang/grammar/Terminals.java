@@ -4,9 +4,12 @@ import java.nio.ByteBuffer;
 
 public final class Terminals {
 
-	public static final Terminal comma = new Gap();
-	public static final Terminal any = new Any();
+	public static final Terminal gap = new Gap();
+	public static final Terminal indent = new Indent();
+	public static final Terminal pad = new Pad();
+
 	public static final Terminal whitespace = new Whitespace();
+	public static final Terminal wildcard = new Wildcard();
 
 	public static byte toByte( char c ) {
 		return String.valueOf(c).getBytes()[0];
@@ -17,7 +20,7 @@ public final class Terminals {
 	}
 
 	public static Terminal not( char s ) {
-		return not(new Is(toByte(s)));
+		return not(in(s));
 	}
 
 	public static Terminal or( Terminal s, Terminal... more ) {
@@ -32,11 +35,11 @@ public final class Terminals {
 		return new Or(a, b);
 	}
 
-	public static Terminal set( char low, char high ) {
-		return set(toByte(low) , toByte(high));
+	public static Terminal range( char low, char high ) {
+		return range(toByte(low) , toByte(high));
 	}
 
-	public static Terminal set( byte low, byte high ) {
+	public static Terminal range( byte low, byte high ) {
 		return new Set(low, high);
 	}
 
@@ -53,7 +56,38 @@ public final class Terminals {
 		return new ASCIIs(0L, 0L);
 	}
 	
+	public static class Indent implements Terminal {
+
+		@Override
+		public int length(ByteBuffer input, int position) {
+			int c = 0;
+			byte b = input.get(position);
+			while (b == ' ' || b == '\t') { b = input.get(position+ ++c); }
+			return c;
+		}
+		
+		@Override
+		public String toString() {
+			return ">>";
+		}
+
+	}
 	
+	public static class Pad implements Terminal {
+
+		@Override
+		public int length(ByteBuffer input, int position) {
+			int c = 0;
+			while (Character.isWhitespace(input.get(position++))) { c++; }
+			return c == 0 ? NOT_MACHTING : c;
+		}
+		
+		@Override
+		public String toString() {
+			return "~";
+		}
+
+	}
 	
 	static final class Gap implements Terminal {
 
@@ -74,7 +108,7 @@ public final class Terminals {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
-			return Character.isWhitespace(input.get(position)) ? 1 : 0;
+			return Character.isWhitespace(input.get(position)) ? 1 : NOT_MACHTING;
 		}
 		
 		@Override
@@ -84,7 +118,7 @@ public final class Terminals {
 		
 	}
 	
-	static final class Any implements Terminal {
+	static final class Wildcard implements Terminal {
 		@Override
 		public int length(ByteBuffer input, int position) {
 			return utf8length(input, position);
@@ -118,7 +152,8 @@ public final class Terminals {
 			while (contains(input.get(p))) {
 				p++;
 			}
-			return p-position;
+			int l = p-position;
+			return l == 0 ? NOT_MACHTING : l;
 		}
 
 		private boolean contains(byte code) {
@@ -149,7 +184,7 @@ public final class Terminals {
 		@Override
 		public int length(ByteBuffer input, int position) {
 			int c = input.get(position);
-			return c >= low && c <= high ? 1 : 0;
+			return c >= low && c <= high ? 1 : NOT_MACHTING;
 		}
 		
 		@Override
@@ -171,7 +206,7 @@ public final class Terminals {
 		@Override
 		public int length(ByteBuffer input, int position) {
 			int l = excluded.length(input, position);
-			return l > 0 ? 0 : utf8length(input, position);
+			return l < 0 ? utf8length(input, position) : NOT_MACHTING;
 		}
 
 		@Override
@@ -198,7 +233,7 @@ public final class Terminals {
 					return 1;
 				}
 			}
-			return 0;
+			return NOT_MACHTING;
 		}
 
 		@Override
@@ -241,27 +276,6 @@ public final class Terminals {
 			return "{"+ as + " " + bs+"}";
 		}
 
-	}
-	
-	private static final class Is
-			implements Terminal {
-
-		private final byte s;
-
-		Is( byte s ) {
-			super();
-			this.s = s;
-		}
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			return input.get(position) == s ? 1 : 0;
-		}
-		
-		@Override
-		public String toString() {
-			return Grammar.print(s);
-		}
 	}
 	
 	public static int utf8length(ByteBuffer input, int position) {

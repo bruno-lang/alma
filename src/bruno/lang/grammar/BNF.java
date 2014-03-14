@@ -10,7 +10,7 @@ import static bruno.lang.grammar.Grammar.Rule.token;
 import static bruno.lang.grammar.Terminals.in;
 import static bruno.lang.grammar.Terminals.not;
 import static bruno.lang.grammar.Terminals.or;
-import static bruno.lang.grammar.Terminals.set;
+import static bruno.lang.grammar.Terminals.range;
 
 import java.io.IOException;
 
@@ -25,9 +25,9 @@ import bruno.lang.grammar.Grammar.Rule;
 public final class BNF {
 
 	static final Rule
-		terminal = token(symbol("'"), terminal(Terminals.any), terminal(not('\'')).star(), symbol("'")).as("terminal"),
+		terminal = token(symbol("'"), terminal(Terminals.wildcard), terminal(not('\'')).star(), symbol("'")).as("terminal"),
 		range = seq(terminal, symbol("-"), terminal).as("range"),
-		name = token(terminal(or(set('0', '9'), set('a','z'), set('A','Z'), in('_', '-', '\''))).plus()).as("name"),
+		name = token(terminal(or(range('0', '9'), range('a','z'), range('A','Z'), in('_', '-', '\''))).plus()).as("name"),
 		not = token(symbol("!"), ref("atom")).as("not"),
 		any = symbol(".").as("any"),
 		whitespace = symbol("_").as("whitespace"),
@@ -38,7 +38,7 @@ public final class BNF {
 		star = symbol("*").as("star"),
 		plus = symbol("+").as("plus"),
 		ellipsis  = symbol("..").as("ellipsis"),
-		digit = terminal(set('0', '9')).as("-digit"),
+		digit = terminal(range('0', '9')).as("-digit"),
 		num = digit.plus().as("num"),
 		minmax = token(symbol("{"), num, symbol(","), num, symbol("}")).as("minmax"),
 		occurrence = selection(minmax, qmark, star, plus).as("occurrence"),

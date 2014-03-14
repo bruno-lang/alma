@@ -116,10 +116,10 @@ public class GrammerCompiler {
 		if (atom == BNF.range) {
 			String min = t.text(type+1);
 			String max = t.text(type+2);
-			return Rule.terminal(Terminals.set(min.charAt(1), max.charAt(1)));
+			return Rule.terminal(Terminals.range(min.charAt(1), max.charAt(1)));
 		}
 		if (atom == BNF.any) {
-			return Rule.terminal(Terminals.any);
+			return Rule.terminal(Terminals.wildcard);
 		}
 		if (atom == BNF.whitespace) {
 			return Rule.ANY_WHITESPACE;

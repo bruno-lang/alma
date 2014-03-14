@@ -213,6 +213,12 @@ public final class Grammar {
 		
 		public Rule(RuleType type, String name, Rule[] elements, Occur occur, Terminal terminal, byte[] literal) {
 			super();
+			if (type == RuleType.TERMINAL && terminal == null) {
+				throw new NullPointerException();
+			}
+			if (name.contains(":")) {
+				throw new IllegalArgumentException(name);
+			}
 			this.type = type;
 			this.name = name.intern();
 			this.elements = elements;

@@ -21,11 +21,12 @@ public final class Tokeniser {
 			System.err.println(tokens);
 		}
 		if (tokens.end() != input.capacity()) {
-			System.err.println("Failed to parse:");
+			System.err.println("Failed to parse at "+tokens.end()+":");
 			input.position(Math.abs(t));
 			byte[] x = new byte[20];
 			input.get(x);
 			System.err.println(ANSI.RESET+new String(x)+ANSI.RESET);
+			throw new RuntimeException();
 		}
 		//TODO verify and visualize errors
 		return tokens;
@@ -159,7 +160,7 @@ public final class Tokeniser {
 		if (position >= input.limit())
 			return mismatch(position);
 		final int l = rule.terminal.length(input, position);
-		return l == 0 ? mismatch(position) : position + l;
+		return l < 0 ? mismatch(position) : position + l;
 	}
 
 }

@@ -76,9 +76,15 @@ public class TestTokeniser {
 
 	@Test
 	public void grammar2() throws IOException {
-		Grammar g2 = Grano.GRAMMAR;
-		Tokenised t = Tokenised.tokenise("etc/grammar-v2.grammar", "grammar", g2);
-		new Printer.ParseTreePrinter(System.out).process(t);
+		Grammar g0 = Grano.GRAMMAR;
+		System.out.println(g0);
+		Tokenised t1 = Tokenised.tokenise("etc/grammar-v2.grammar", "grammar", g0);
+		new Printer.ParseTreePrinter(System.out).process(t1);
+		Grammar g1 = Builder.build(t1);
+		System.out.println(g1);
+		Tokenised t2 = Tokenised.tokenise("etc/grammar-v2.grammar", "grammar", g1);
+		System.out.println(t2.tokens);
+		new Printer.ParseTreePrinter(System.out).process(t2);
 	}
 	
 	/**
