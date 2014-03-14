@@ -1,6 +1,0 @@
-y : foo bar 'xxx'
-  | baz:que
-x : [ 'a' 'b' ]
-foo : bar+ (baz)
-completion = '..'
-% this is just to trigger classloading...

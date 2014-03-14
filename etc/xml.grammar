@@ -1,15 +1,15 @@
-document = doctype? root
+document = doctype?, root
 root = node
-doctype = '<?xml' attribute* '?>'
+doctype = '<?xml' attributes? , '?>'
 node = cdata | comment | element | text
-element = '<' name attribute* '>' node* -close
-[] open = '<' name
-[] close = '</' name '>'
-[] attribute = name '=' '"' value '"'
+element = '<' name attributes? , '>', nodes?, '</' name '>'
+nodes = node (, node)*
+attributes = ~ attribute (~ attribute)*
+attribute = name '=' '"' value '"'
 text = !'<'*
 value = ..
 cdata = '<![CDATA[' data ']]>'
 data = ..
 comment = '<!--' info '-->'
 info = ..
-[] name = ('a' - 'z' | 'A' - 'Z')+
+name = @+

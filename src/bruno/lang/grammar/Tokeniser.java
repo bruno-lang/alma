@@ -21,7 +21,7 @@ public final class Tokeniser {
 			System.err.println(tokens);
 		}
 		if (tokens.end() != input.capacity()) {
-			System.err.println("Failed to parse at "+tokens.end()+":");
+			System.err.println("Failed to parse at "+Math.abs(t)+":");
 			input.position(Math.abs(t));
 			byte[] x = new byte[20];
 			input.get(x);
