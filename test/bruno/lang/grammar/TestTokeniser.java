@@ -17,21 +17,20 @@ public class TestTokeniser {
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", Grano.GRAMMAR);
-		Tokens tokens = t.tokens;
-		assertEquals(6109, tokens.end());
-		assertEquals(2304, tokens.count());
-		Printer.rulePrinter(System.out).process(t);
+		Grammar bruno = Builder.build(t);
+		Tokenised code = Tokenised.tokenise("etc/example.mod", "file", bruno);
+		Printer.rulePrinter(System.out).process(code);
 	}
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Grammar g0 = Grano.GRAMMAR;
 		System.out.println(g0);
-		Tokenised t1 = Tokenised.tokenise("etc/grammar-v2.grammar", "grammar", g0);
+		Tokenised t1 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g0);
 		new Printer.ParseTreePrinter(System.out).process(t1);
 		Grammar g1 = Builder.build(t1);
 		System.out.println(g1);
-		Tokenised t2 = Tokenised.tokenise("etc/grammar-v2.grammar", "grammar", g1);
+		Tokenised t2 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g1);
 		System.out.println(t2.tokens);
 		new Printer.ParseTreePrinter(System.out).process(t2);
 	}
@@ -56,7 +55,6 @@ public class TestTokeniser {
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", Grano.GRAMMAR);
-		//assertEquals(374, t.tokens.end());
 		Grammar xml = Builder.build(t);
 		System.out.println(xml);
 		Tokenised xmlt = Tokenised.tokenise("etc/example.xml", "document", xml);

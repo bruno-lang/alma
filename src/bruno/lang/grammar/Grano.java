@@ -23,46 +23,52 @@ public final class Grano {
 	static final Terminal
 		DIGIT = range('0', '9'),
 		HEX = or(DIGIT, range('A', 'F')),
-		LETTER = or(range('a', 'z'), range('A','Z')),
+		OCTAL = range('0', '7'),
+		BINARY = range('0', '1'),
+		LETTER = or(range('a', 'z'), range('A','Z'))
 		//TODO move above to terminals
-		
-		NOT = in('^', '!')
 		;
+	
+	// use U+XXXX
 	
 	static final Rule
 		tGap = terminal(Terminals.gap),
 		tIndent = terminal(Terminals.indent),
 		apo = literal('\''),
 		
-		name = seq(literal('-').qmark(), literal('\\').qmark(), terminal(or(LETTER, DIGIT, in('_', '-'))).plus()).as("name"),
+		name = seq(literal('-').qmark(), literal('\\').qmark(), terminal(LETTER), terminal(or(LETTER, DIGIT, in('_', '-'))).star()).as("name"),
 		capture = seq(literal(':'), name.as("alias")).qmark().as("capture"),
 		ref = seq(name, capture).as("ref"),
 
 		wildcard = literal('.').as("wildcard"),
 		atom = seq(apo, terminal(Terminals.wildcard), apo).as("atom"),
-		hexcode = seq(symbol("\\u"), terminal(HEX).occurs(occur(4, 8))).as("hexcode"), 
-		literal = selection(hexcode, atom).as("literal"),
+		utf8 = seq(symbol("U+"), terminal(HEX).occurs(occur(4, 8))).as("utf8"), 
+		literal = selection(utf8, atom).as("literal"),
 		range = seq(literal, tGap, literal('-'), tGap, literal).as("range"),
 		letter = literal('@').as("letter"),
 		digit = literal('#').as("digit"),
-		hex = literal('X').as("hex"),
-		not = terminal(NOT).as("not"),
+		hex = literal('&').as("hex"),
+		octal = literal('8').as("octal"),
+		binary = literal('1').as("binary"),
+		not = literal('!').as("not"),
 		whitespace = literal('_').as("whitespace"),
 		gap = literal(',').as("gap"),
 		pad = literal('~').as("pad"),
 		indent = symbol(">>").as("indent"),
+		separator = literal('^').as("separator"),
 
-		_t = symbol("\\t").as("\\t"),
-		_n = symbol("\\n").as("\\n"),
-		_r = symbol("\\r").as("\\r"),
-		_s = symbol("\\s").as("\\s"),
-		shortname = selection(_s, _t, _n, _r).as("shortname"),
+		tab = symbol("\\t").as("tab"),
+		lf = symbol("\\n").as("lf"),
+		cr = symbol("\\r").as("cr"),
+		shortname = selection(tab, lf, cr).as("shortname"),
 
-		clazz = seq(symbol("\\u{"), terminal(LETTER).plus(), literal('}')).as("class"),
-		figure = seq(not.qmark(), selection(wildcard, letter, hex, digit, clazz, range, literal, whitespace, shortname)).as("figure"),
-		figure1 = selection(figure, ref).as("-figure1"),
-		figures = seq(literal('{'), tGap, seq(figure1, seq(tGap, figure1).star()) , tGap, literal('}'), capture).as("figures"),
-		terminal = selection(figure, figures, gap, pad, indent).as("terminal"),
+		utf8_class = seq(symbol("U+{"), terminal(LETTER).plus(), literal('}')).as("utf8-class"),
+		utf8_set = seq(not.qmark(), selection(wildcard, letter, digit, hex, octal, binary, utf8_class, range, literal, whitespace, shortname)).as("utf8-set"),
+		
+		figure = selection(utf8_set, ref).as("-figure"),
+		figures = seq(literal('{'), tGap, seq(figure, seq(tGap, figure).star()) , tGap, literal('}'), capture).as("figures"),
+		pattern = selection(gap, pad, indent, separator).as("pattern"),
+		terminal = selection(pattern, utf8_set, figures).as("terminal"),
 
 		symbol = seq(apo, terminal(not('\'')).occurs(occur(2, Occur.plus.max)), apo).as("symbol"),
 
@@ -87,4 +93,5 @@ public final class Grano {
 		;
 
 	static final Grammar GRAMMAR = new Grammar(grammar);
+
 }

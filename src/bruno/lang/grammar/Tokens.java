@@ -30,6 +30,17 @@ public final class Tokens {
 		this.ends = new int[length];
 		this.levels = new int[length];
 	}
+	
+	private Tokens(Rule[] rules, int[] starts, int[] ends, int[] levels,
+			int level, int top) {
+		super();
+		this.rules = rules;
+		this.starts = starts;
+		this.ends = ends;
+		this.levels = levels;
+		this.level = level;
+		this.top = top;
+	}
 
 	public void push(Rule rule, int start) {
 		starts[++top] = start;
@@ -132,6 +143,12 @@ public final class Tokens {
 		Tokens l = new Tokens(rules.length);
 		sequential(l, 0);
 		return l;
+	}
+	
+	public Tokens debug() {
+		int t = 0;
+		while (rules[t] != null) { t++; }
+		return new Tokens(rules, starts, ends, levels, 0, t-1);
 	}
 	
 	private int sequential(Tokens dest, final int index) {

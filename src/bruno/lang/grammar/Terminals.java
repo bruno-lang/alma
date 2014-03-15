@@ -5,8 +5,9 @@ import java.nio.ByteBuffer;
 public final class Terminals {
 
 	public static final Terminal gap = new Gap();
-	public static final Terminal indent = new Indent();
 	public static final Terminal pad = new Pad();
+	public static final Terminal indent = new Indent();
+	public static final Terminal separator = new Separator();
 
 	public static final Terminal whitespace = new Whitespace();
 	public static final Terminal wildcard = new Wildcard();
@@ -51,19 +52,37 @@ public final class Terminals {
 		return new In(bs);
 	}
 	
-	public static Terminal ascii( Terminal...terminals ) {
-		//TODO
-		return new ASCIIs(0L, 0L);
-	}
-	
-	public static class Indent implements Terminal {
+	public static class Separator implements Terminal {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
 			int c = 0;
-			byte b = input.get(position);
+			int b = input.get(position);
 			while (b == ' ' || b == '\t') { b = input.get(position+ ++c); }
-			return c;
+			return c == 0 ? NOT_MACHTING : c;
+		}
+		
+		@Override
+		public String toString() {
+			return "^";
+		}
+
+	}
+	
+	public static class Indent implements Terminal {
+
+		static final byte tab = '\t';
+		static final byte space = ' ';
+		
+		@Override
+		public int length(ByteBuffer input, int position) {
+			int c = position;
+			while (c < input.limit() && isIndent(input.get(c))) { c++; }
+			return c-position;
+		}
+		
+		private static boolean isIndent(int b) {
+			return b == space || b == tab;
 		}
 		
 		@Override
@@ -78,7 +97,8 @@ public final class Terminals {
 		@Override
 		public int length(ByteBuffer input, int position) {
 			int c = 0;
-			while (Character.isWhitespace(input.get(position++))) { c++; }
+			while ( 
+					Character.isWhitespace(input.get(position++))) { c++; }
 			return c == 0 ? NOT_MACHTING : c;
 		}
 		
@@ -94,7 +114,8 @@ public final class Terminals {
 		@Override
 		public int length(ByteBuffer input, int position) {
 			int c = 0;
-			while (Character.isWhitespace(input.get(position++))) { c++; }
+			while (  position < input.limit() &&
+					 Character.isWhitespace(input.get(position++))) { c++; }
 			return c;
 		}
 		
@@ -108,7 +129,8 @@ public final class Terminals {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
-			return Character.isWhitespace(input.get(position)) ? 1 : NOT_MACHTING;
+			return  position < input.limit() &&
+					Character.isWhitespace(input.get(position)) ? 1 : NOT_MACHTING;
 		}
 		
 		@Override
@@ -129,45 +151,6 @@ public final class Terminals {
 			return ".";
 		}
 	}
-
-	/**
-	 * Matches any set of ASCII characters indicated by bits in 2 long masks.
-	 *  
-	 * @author jan
-	 */
-	private static final class ASCIIs implements Terminal {
-
-		private final long _0_63;
-		private final long _64_127;
-		
-		ASCIIs(long _0_63, long _64_127) {
-			super();
-			this._0_63 = _0_63;
-			this._64_127 = _64_127;
-		}
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			int p = position;
-			while (contains(input.get(p))) {
-				p++;
-			}
-			int l = p-position;
-			return l == 0 ? NOT_MACHTING : l;
-		}
-
-		private boolean contains(byte code) {
-			if (code < 64) {
-				if (code < 0)
-					return false;
-				long m = 1L << code;
-				return (m & _0_63) > 0L; 
-			}
-			long m = 1L << (code - 64);
-			return (m & _64_127) > 0L;
-		}
-		
-	}
 	
 	private static final class Set
 			implements Terminal {
@@ -183,6 +166,8 @@ public final class Terminals {
 		
 		@Override
 		public int length(ByteBuffer input, int position) {
+			if (position >= input.limit())
+				return NOT_MACHTING;
 			int c = input.get(position);
 			return c >= low && c <= high ? 1 : NOT_MACHTING;
 		}
@@ -227,6 +212,9 @@ public final class Terminals {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
+			if (position >= input.limit()) {
+				return NOT_MACHTING;
+			}
 			byte c = input.get(position);
 			for ( int i = 0; i < members.length; i++ ) {
 				if ( members[i] == c ) {

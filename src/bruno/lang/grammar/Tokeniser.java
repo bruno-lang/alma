@@ -18,15 +18,18 @@ public final class Tokeniser {
 		try {
 			t = tokenise(start, input, 0, Rule.ANY_WHITESPACE, tokens);
 		} catch (Exception e) {
-			System.err.println(tokens);
+			e.printStackTrace(System.err);
 		}
 		if (tokens.end() != input.capacity()) {
-			System.err.println("Failed to parse at "+Math.abs(t)+":");
-			input.position(Math.abs(t));
-			byte[] x = new byte[20];
+			int pos = Math.abs(t);
+			String msg = "Failed to parse at "+pos+":";
+			System.err.println(msg);
+			System.err.println(tokens.debug());
+			input.position(pos);
+			byte[] x = new byte[Math.min(20, input.limit()-pos)];
 			input.get(x);
 			System.err.println(ANSI.RESET+new String(x)+ANSI.RESET);
-			throw new RuntimeException();
+			throw new RuntimeException(msg);
 		}
 		//TODO verify and visualize errors
 		return tokens;
@@ -113,13 +116,11 @@ public final class Tokeniser {
 			Rule separator, Tokens tokens) {
 		int end = position;
 		for (int i = 0; i < rule.elements.length; i++) {
-			//end = tokenise(rule.separation, input, end, Rule.EMPTY_STRING, tokens);
 			Rule r = rule.elements[i];
-			int endPosition = tokenise(r, input, end, separator, tokens);
-			if (endPosition < 0) {
-				return endPosition;
+			end = tokenise(r, input, end, separator, tokens);
+			if (end < 0) {
+				return end;
 			}
-			end = endPosition;
 		}
 		return end;
 	}
@@ -137,19 +138,6 @@ public final class Tokeniser {
 				return end;
 			} else {
 				end = endPosition;
-				/*
-				Rule separation = rule.separation;
-				if (separation != null && separation != Rule.EMPTY_STRING) {
-					endPosition = tokenise(separation, input, end, Rule.EMPTY_STRING, tokens);
-					if (endPosition < 0) {
-						if (c < rule.occur.min) {
-							return endPosition;
-						}
-						return end;
-					}
-					end = endPosition;
-				}
-				*/
 				c++;
 			}
 		}
@@ -157,8 +145,8 @@ public final class Tokeniser {
 	}
 
 	private static int terminal(Rule rule, ByteBuffer input, int position) {
-		if (position >= input.limit())
-			return mismatch(position);
+//		if (position >= input.limit())
+//			return mismatch(position);
 		final int l = rule.terminal.length(input, position);
 		return l < 0 ? mismatch(position) : position + l;
 	}

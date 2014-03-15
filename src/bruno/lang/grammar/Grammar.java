@@ -111,9 +111,11 @@ public final class Grammar {
 	}
 
 	public Rule rule(String name) {
-		boolean noCapture = name.charAt(0) == '-';
-		Rule r = rulesByName.get(name.substring(noCapture ? 1 : 0).intern());
+		char n0 = name.charAt(0);
+		boolean noCapture = n0 == '-' || n0 == '\\';
+		Rule r = rulesByName.get(name.substring(n0 == '-' ? 1 : 0).intern());
 		if (r != null) {
+			//TODO wenn es ein \ ist dann capture auspacken...
 			return noCapture && r.type == RuleType.CAPTURE ? r.elements[0].as(name) : r;
 		}
 		throw new NoSuchElementException("Missing rule: "+name);

@@ -17,33 +17,37 @@ star          : '*'
 plus          : '+'
 
 ref           : name capture
-name          : '-'? '\'? {@ # '_' '-'}+
+name          : '-'? '\'? @ {@ # '_' '-'}*
 capture       : [':' name:alias ]
 
 symbol        : ''' !'''x2+ '''
 
 wildcard      : '.'
 atom          : ''' . '''
-hexcode       : '\u' Xx4-8
-literal       : hexcode | atom
+utf8          : 'U+' &x4-8
+literal       : utf8 | atom
 range         : literal, '-', literal
 letter        : '@'
 digit         : '#'
-hex           : 'X'
-not           : {'!' '^'}
+hex           : '&'
+octal         : '8'
+binary        : '1'
+not           : '!'
 whitespace    : '_'
 gap           : ','
 pad           : '~'
 indent        : '>>'
+separator     : '^'
 
-t             : '\t'
-n             : '\n'
-r             : '\r'
-s             : '\s'
-shortname     : s | t | n | r
+tab           : '\t'
+lf            : '\n'
+cr            : '\r'
+shortname     : tab | lf | cr
 
-class         : '\u{' @+ '}'
-figure        : not? (wildcard | letter | hex | digit | class | range | literal | whitespace | shortname )
-figure1       : figure | ref
-figures       : '{', -figure1 (, -figure1 )* '}' capture
-terminal      : figure | figures | gap | pad | indent
+utf8-class    : 'U+{' @+ '}'
+utf8-set      : not? (wildcard | letter | digit | hex | octal | binary | utf8-class | range | literal | whitespace | shortname )
+
+figure        : utf8-set | ref
+figures       : '{', -figure (, -figure )* '}' capture
+pattern       : gap | pad | indent | separator
+terminal      : pattern | utf8-set | figures
