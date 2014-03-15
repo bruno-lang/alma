@@ -1,7 +1,7 @@
 % Fragments
 Dashed         : { '-' 'a' - 'z' # }* { 'a' - 'z' # }?
 Verb           : 'a' - 'z' -Dashed?
-Noun           : 'A' - 'Z' { 'a' - 'z' '-' } { 'a' - 'z' '-' 'A' - 'Z'  # }*
+Noun           : 'A' - 'Z' { @ '-' } { @  # }*
 
 % Identifiers
 Field          : { 'a' - 'z' # } -Dashed?
@@ -37,7 +37,7 @@ UnitSymbol     : { ''' '%' '$' '€' '@' '/' '°' '"' ' ' }
 
 % Literals
 Literal        : LiteralLogic | LiteralText | LiteralBinary
-LiteralLogic   : ''' .. Measure
+LiteralLogic   : ''' (#+ | .. Measure)
 LiteralText    : '"' !'"'* '"'
 LiteralBinary  : '#' ('b' 1+ | 'o' 8+ | 'd' #+ | 'x' &+ )
 
@@ -75,32 +75,31 @@ KFn            : '(->)' | '(' Kind >> '->' ( >> Kind >> '->' )* >> Kind ')'
 KOp            : ( '_' | Operation ) KFn
 
 % Modularisation
-file           : library | namespace | module
+file           : (library | namespace | module) ,
 library        : 'library', Library, '::', '{', Module, (',', Module,)* '}'
 
-namespace      : 'namespace', Namespace, '::', import* %, auto*, invariant*
-import         : ,( 'use' | 'share' ) ~ ['strict' ~] Library >> include?,  alias?
-include        : ':' >> Module (>> Module)* ';'?
+namespace      : 'namespace', Namespace, '::', import*, auto*, invariant*
+import         : '-use' ~ ['shared' ~] ['strict' ~] Library >> include?,  alias?
+include        : ':' >> Module (>> Module)* >> \n
 alias          : 'where', ( Value >> '=' >> Value, | Operation >> '=' >> Operation, )+
 
 module         : 'module', Module, '::', auto*, invariant*, feature+
-feature        : val | instances | fn | op | protocol | fault | notation | data | unit | dimension | system
+feature        : (val | instances | fn | op | protocol | fault | notation | data | unit | dimension | system),
 
-auto           : 'auto' >> deduction
-
+auto           : '-auto' ^ deduction
 deduction      : bind | refinement
-refinement     : ( '[]' | '{}' | Value | TTuple | TArray ) >> '=>' >> Value
+refinement     : ( '[]' | '{}' | Value | TTuple | TArray ) >> '=<>' >> Value
 bind           : Function >> '=>' >> Operation (>> Type)*
 
-invariant      : 'invariant' >> Value >> '=>' >> Function
+invariant      : '-invariant' ^ Value >> '!' >> Function
 
 % Implementation
 val            : 'val' >> Constant >> '::' >> Type >> '=', expr
 
-data           : 'data', '::', '(', element, (',', element,)* ')', format*, enumeration?
-element        : Field >> Type
+data           : 'data' ^ Data >> '::', '(', element, (',', element,)* ')' , format*, enumeration?
+element        : Type >> Field
 
-format         : '<->', ( Data | TTuple | TArray )
+format         : '<->', ( TTuple | TArray | Data ),
 
 enumeration    : '=', ( item-set | item-list | item-range )
 item-set       : '{', item, (',', item,)* '}'
@@ -112,11 +111,11 @@ dimension      : 'dimension' >> simple, enumeration?
 
 unit           : 'unit' >> simple
 
-simple         : Simple >> ['[' Measure ']'] >> '::', Simple % >> Range?, format*
+simple         : Simple >> ['[' Measure ']'] >> '::', Simple? >> Range?, format*
 
-system         : 'unit' >> 'system' >> System >> '::', '{', ratio, (ratio,)* '}'
+system         : 'unit' ^ 'system' ^ System >> '::', '{', ratio, (ratio,)* '}'
 
-ratio          : 'ratio' >> Ratio >> '::', '(', Unit, (',', Unit,)* ')', '=', '[', equation, (',', equation,)* ']'
+ratio          : 'ratio' ^ Ratio >> '::', '(', Unit, (',', Unit,)* ')', '=', '[', equation, (',', equation,)* ']'
 equation       : Literal >> '=' >> Literal
 
 fault          : 'fault' >> Fault >> '::', Value, Range?
