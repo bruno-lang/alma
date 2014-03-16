@@ -14,8 +14,14 @@ public final class UTF8 {
 	static final byte utf8_3bit = (byte) 0b11100000;
 	static final byte utf8_2bit = (byte) 0b11000000;
 	
-	public static int codePoint(byte... utf8) {
-		return codePoint(ByteBuffer.wrap(utf8), 0);
+	public static byte[] bytes(int codePoint) {
+		StringBuilder b = new StringBuilder();
+		b.appendCodePoint(codePoint);
+		return b.toString().getBytes();
+	}
+	
+	public static int codePoint(byte... bytes) {
+		return codePoint(ByteBuffer.wrap(bytes), 0);
 	}
 	
 	public static int codePoint(ByteBuffer input, int position) {

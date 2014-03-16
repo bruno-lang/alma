@@ -159,10 +159,8 @@ public class TestTerminal {
 	
 	private void assertContainsCharacters(Terminal t, int[] codePoints, boolean contains) {
 		for (int cp : codePoints) {
-			StringBuilder b = new StringBuilder();
-			b.appendCodePoint(cp);
-			String c = b.toString();
-			assertEquals(c+"("+UTF8.codePoint(c.getBytes())+")", contains, t.contains(ByteBuffer.wrap(c.getBytes()), 0));
+			byte[] bytes = UTF8.bytes(cp);
+			assertEquals(new String(bytes)+"("+cp+")", contains, t.contains(ByteBuffer.wrap(bytes), 0));
 		}
 	}
 

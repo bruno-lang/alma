@@ -8,10 +8,11 @@ import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Occur.occur;
-import static bruno.lang.grammar.Patterns.in;
-import static bruno.lang.grammar.Patterns.not;
+import static bruno.lang.grammar.Terminal.DIGIT;
+import static bruno.lang.grammar.Terminal.HEX;
+import static bruno.lang.grammar.Terminal.LETTER;
 import static bruno.lang.grammar.Terminal.character;
-import static bruno.lang.grammar.Terminal.range;
+import static bruno.lang.grammar.Terminal.notCharacter;
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
@@ -21,15 +22,6 @@ import bruno.lang.grammar.Grammar.Rule;
  */
 public final class Grano {
 
-	static final Terminal
-		DIGIT = range('0', '9'),
-		HEX = DIGIT.and(range('A', 'F')),
-		OCTAL = range('0', '7'),
-		BINARY = range('0', '1'),
-		LETTER = range('a', 'z').and(range('A','Z'))
-		//TODO move above to terminals
-		;
-	
 	//TODO use ; as "must be newline"
 	
 	static final Rule
@@ -42,7 +34,7 @@ public final class Grano {
 		ref = seq(name, capture).as("ref"),
 
 		wildcard = literal('.').as("wildcard"),
-		atom = seq(apo, pattern(Patterns.wildcard), apo).as("atom"),
+		atom = seq(apo, terminal(Terminal.WILDCARD), apo).as("atom"),
 		utf8 = seq(symbol("U+"), terminal(HEX).occurs(occur(4, 8))).as("utf8"), 
 		literal = selection(utf8, atom).as("literal"),
 		range = seq(literal, tGap, literal('-'), tGap, literal).as("range"),
@@ -71,13 +63,13 @@ public final class Grano {
 		pattern = selection(gap, pad, indent, separator).as("pattern"),
 		terminal = selection(pattern, utf8_set, figures).as("terminal"),
 
-		symbol = seq(apo, pattern(not('\'')).occurs(occur(2, Occur.plus.max)), apo).as("symbol"),
+		symbol = seq(apo, terminal(notCharacter('\'')).occurs(occur(2, Occur.plus.max)), apo).as("symbol"),
 
 		num = terminal(DIGIT).plus().as("num"),
 		star = literal('*').as("star"),
 		plus = literal('+').as("plus"),
 		qmark = literal('?').as("qmark"),
-		occurrence = selection(seq(literal('x').qmark(), num.as("min"), pattern(in('-', '+')).as("to").qmark(), num.as("max").qmark()), qmark, star, plus).as("occurrence"),
+		occurrence = selection(seq(literal('x').qmark(), num.as("min"), terminal(character('-').and(character('+'))).as("to").qmark(), num.as("max").qmark()), qmark, star, plus).as("occurrence"),
 		
 		option = seq(literal('['), tGap, ref("selection"), tGap, literal(']'), capture).as("option"),
 		group = seq(literal('('), tGap, ref("selection"), tGap, literal(')'), capture).as("group"),
@@ -88,7 +80,7 @@ public final class Grano {
 		selection = seq(sequence, seq(tGap, literal('|'), tIndent, sequence).star()).as("selection"),
 		
 		rule = seq(name, tGap, selection(literal('='), seq(literal(':'), literal(':').qmark(), literal('=').qmark())), tGap, selection, literal(';').qmark()).as("rule"),
-		comment = seq(literal('%'), pattern(not('\n')).plus().as("text")).as("comment"),
+		comment = seq(literal('%'), terminal(notCharacter('\n')).plus().as("text")).as("comment"),
 		member = selection(comment, rule).as("member"), 
 		grammar = seq(member, seq(tGap, member).star()).as("grammar") 
 		;

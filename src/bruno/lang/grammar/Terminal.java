@@ -25,6 +25,13 @@ public final class Terminal {
 	 */
 	public static final Terminal WHITESPACE = range(9, 13).and(character(32));
 	
+	public static final Terminal
+		DIGIT = range('0', '9'),
+		HEX = DIGIT.and(range('A', 'F')),
+		OCTAL = range('0', '7'),
+		BINARY = range('0', '1'),
+		LETTER = range('a', 'z').and(range('A','Z'));
+	
 	public static Terminal notRange(int minCodePoint, int maxCodePoint) {
 		return new Terminal(new int[] { -minCodePoint, -maxCodePoint }); 
 	}

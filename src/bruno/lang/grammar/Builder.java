@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import bruno.lang.grammar.Grammar.Rule;
+import bruno.lang.grammar.Grammar.RuleType;
 
 /**
  * Builds a {@link Grammar} from a given {@link Tokenised} grammar file.
@@ -85,12 +86,10 @@ public class Builder {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(Occur.qmark);
 		}
 		if (r == Grano.terminal) {
-			Rule t = terminal(token+1, grammar).occurs(occur); //FIXME when terminal uses occur this is reset here...
-			if (false) { // a terminal of a single character -> use literal instead
-				//TODO reuse equal literals
-				StringBuilder b = new StringBuilder(); // extract to UTF8 util (also used elsewhere in tests!?
-				b.appendCodePoint(t.terminal.ranges[0]);
-				return Rule.symbol(b.toString()).occurs(occur);			
+			Rule t = terminal(token+1, grammar).occurs(occur);
+			// a terminal of a single character -> use literal instead
+			if (t.type == RuleType.TERMINAL && t.terminal.ranges.length == 2 && t.terminal.ranges[0] == t.terminal.ranges[1] && t.terminal.ranges[0] >= 0) { 
+				return Rule.symbol(new String(UTF8.bytes(t.terminal.ranges[0]))).occurs(occur);
 			}
 			return t;
 		}
@@ -186,29 +185,25 @@ public class Builder {
 		return not ? Rule.terminal(utf8s.terminal.not()) : utf8s;
 	}
 
-	private static int literalCodePoint(Rule literal) {
-		return new String(literal.literal).codePointAt(0);
-	}
-
 	private static Rule utf8s(int token, Tokenised grammar) {
 		Rule r = grammar.tokens.rule(token);
 		if (r == Grano.wildcard) {
 			return Rule.terminal(Terminal.WILDCARD);
 		}
 		if (r == Grano.letter) {
-			return Rule.terminal(Grano.LETTER);
+			return Rule.terminal(Terminal.LETTER);
 		}
 		if (r == Grano.hex) {
-			return Rule.terminal(Grano.HEX);
+			return Rule.terminal(Terminal.HEX);
 		}
 		if (r == Grano.octal) {
-			return Rule.terminal(Grano.OCTAL);
+			return Rule.terminal(Terminal.OCTAL);
 		}
 		if (r == Grano.binary) {
-			return Rule.terminal(Grano.BINARY);
+			return Rule.terminal(Terminal.BINARY);
 		}
 		if (r == Grano.digit) {
-			return Rule.terminal(Grano.DIGIT);
+			return Rule.terminal(Terminal.DIGIT);
 		}
 		if (r == Grano.utf8_class) {
 			//TODO

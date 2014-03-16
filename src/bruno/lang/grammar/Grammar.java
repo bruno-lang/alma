@@ -292,8 +292,4 @@ public final class Grammar {
 
 	}
 
-	static String print( byte character ) {
-		return "'" + Character.valueOf((char) character) + "'";
-	}
-
 }

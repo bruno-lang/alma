@@ -21,27 +21,12 @@ public final class Patterns {
 	 */
 	public static final Pattern separator = new Separator();
 
-	public static final Pattern whitespace = new Whitespace();
-	public static final Pattern wildcard = new Wildcard();
-
 	public static byte toByte( char c ) {
 		return String.valueOf(c).getBytes()[0];
-	}	
+	}
 	
-	public static Pattern not( Pattern excluded ) {
+	public static Pattern not( Pattern excluded ) { //TODO allow for not pattern in grammar
 		return new Not(excluded);
-	}
-
-	public static Pattern not( char s ) {
-		return not(in(s));
-	}
-
-	public static Pattern or( Pattern s, Pattern... more ) {
-		Pattern or = s;
-		for ( Pattern m : more ) {
-			or = or(or , m);
-		}
-		return or;
 	}
 
 	public static Pattern or( Pattern a, Pattern b ) {
@@ -51,24 +36,8 @@ public final class Patterns {
 			return a;
 		return new Or(a, b);
 	}
-
-	public static Pattern range( char low, char high ) {
-		return range(toByte(low) , toByte(high));
-	}
-
-	public static Pattern range( byte low, byte high ) {
-		return new Set(low, high);
-	}
-
-	public static Pattern in( char... cs ) {
-		byte[] bs = new byte[cs.length];
-		for ( int i = 0; i < bs.length; i++ ) {
-			bs[i] = toByte(cs[i]);
-		}
-		return new In(bs);
-	}
 	
-	public static class Separator implements Pattern {
+	static final class Separator implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -89,7 +58,7 @@ public final class Patterns {
 		return b == ' ' || b == '\t';
 	}
 	
-	public static class Indent implements Pattern {
+	static final class Indent implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -106,7 +75,7 @@ public final class Patterns {
 
 	}
 	
-	public static class Pad implements Pattern {
+	static final class Pad implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -138,62 +107,8 @@ public final class Patterns {
 			return ",";
 		}
 	}
-
-	static final class Whitespace implements Pattern {
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			return  position < input.limit() &&
-					Character.isWhitespace(input.get(position)) ? 1 : NOT_MACHTING;
-		}
-		
-		@Override
-		public String toString() {
-			return "_";
-		}
-		
-	}
 	
-	static final class Wildcard implements Pattern {
-		@Override
-		public int length(ByteBuffer input, int position) {
-			return UTF8.byteLength(input, position);
-		}
-
-		@Override
-		public String toString() {
-			return ".";
-		}
-	}
-	
-	private static final class Set
-			implements Pattern {
-
-		final byte low;
-		final byte high;
-
-		Set( byte low, byte high ) {
-			super();
-			this.low = low;
-			this.high = high;
-		}
-		
-		@Override
-		public int length(ByteBuffer input, int position) {
-			if (position >= input.limit())
-				return NOT_MACHTING;
-			int c = input.get(position);
-			return c >= low && c <= high ? 1 : NOT_MACHTING;
-		}
-		
-		@Override
-		public String toString() {
-			return Grammar.print(low) + " - " + Grammar.print(high);
-		}
-	}
-
-	private static final class Not
-			implements Pattern {
+	static final class Not implements Pattern {
 
 		private final Pattern excluded;
 
@@ -211,40 +126,6 @@ public final class Patterns {
 		@Override
 		public String toString() {
 			return "!" + excluded;
-		}
-	}
-
-	private static final class In
-			implements Pattern {
-
-		private final byte[] members;
-
-		In( byte[] members ) {
-			super();
-			this.members = members;
-		}
-
-		@Override
-		public int length(ByteBuffer input, int position) {
-			if (position >= input.limit()) {
-				return NOT_MACHTING;
-			}
-			byte c = input.get(position);
-			for ( int i = 0; i < members.length; i++ ) {
-				if ( members[i] == c ) {
-					return 1;
-				}
-			}
-			return NOT_MACHTING;
-		}
-
-		@Override
-		public String toString() {
-			StringBuilder b = new StringBuilder();
-			for ( byte c : members ) {
-				b.append(" ").append(Grammar.print(c));
-			}
-			return "{"+ b.substring(1) +"}";
 		}
 	}
 
@@ -267,15 +148,7 @@ public final class Patterns {
 
 		@Override
 		public String toString() {
-			String as = a.toString();
-			if (a instanceof Or || a instanceof In) {
-				as = as.substring(1, as.length()-1);
-			}
-			String bs = b.toString();
-			if (b instanceof Or || b instanceof In) {
-				bs = bs.substring(1, bs.length()-1);
-			}
-			return "{"+ as + " " + bs+"}";
+			return a+" | "+b;
 		}
 
 	}
