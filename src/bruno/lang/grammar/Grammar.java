@@ -190,7 +190,7 @@ public final class Grammar {
 			return new Rule(RuleType.LITERAL, "", new Rule[0], Occur.once, null, l.getBytes());
 		}
 		
-		public static Rule terminal(Terminal...seq) {
+		public static Rule terminal(Pattern...seq) {
 			if (seq.length == 1) {
 				return terminal(seq[0]);
 			}
@@ -201,7 +201,7 @@ public final class Grammar {
 			return token(sequence);
 		}
 
-		private static Rule terminal(Terminal terminal) {
+		private static Rule terminal(Pattern terminal) {
 			return new Rule(RuleType.TERMINAL, "", new Rule[0], Occur.once, terminal, NO_CHARACTER);
 		}
 		
@@ -209,11 +209,11 @@ public final class Grammar {
 		public final String name;
 		public final Rule[] elements;
 		public final Occur occur;
-		public final Terminal terminal;
+		public final Pattern terminal;
 		public final byte[] literal;
 		private int id = 0;
 		
-		public Rule(RuleType type, String name, Rule[] elements, Occur occur, Terminal terminal, byte[] literal) {
+		public Rule(RuleType type, String name, Rule[] elements, Occur occur, Pattern terminal, byte[] literal) {
 			super();
 			if (type == RuleType.TERMINAL && terminal == null) {
 				throw new NullPointerException();

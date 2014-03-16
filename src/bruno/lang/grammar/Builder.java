@@ -155,7 +155,7 @@ public class Builder {
 		check(token, grammar, Grano.figures);
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token);
-		Terminal t = null;
+		Pattern t = null;
 		int i = token+1;
 		List<Rule> refs = new ArrayList<>();
 		while (tokens.end(i) <= end && tokens.rule(i) != Grano.capture) {
@@ -165,7 +165,7 @@ public class Builder {
 				if (f.type == RuleType.TERMINAL) {
 					t = t == null ? f.terminal : Terminals.or(t, f.terminal);
 				} else if (f.type == RuleType.LITERAL) {
-					Terminal tl = Terminals.in(new String(f.literal).charAt(0));
+					Pattern tl = Terminals.in(new String(f.literal).charAt(0));
 					t = t == null ? tl : Terminals.or(t, tl);
 				} else {
 					throw new RuntimeException("Unexpected rule: "+f);

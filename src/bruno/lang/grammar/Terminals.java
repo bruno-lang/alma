@@ -4,47 +4,59 @@ import java.nio.ByteBuffer;
 
 public final class Terminals {
 
-	public static final Terminal gap = new Gap();
-	public static final Terminal pad = new Pad();
-	public static final Terminal indent = new Indent();
-	public static final Terminal separator = new Separator();
+	/**
+	 * <code>,</code>
+	 */
+	public static final Pattern gap = new Gap();
+	/**
+	 * <code>~</code>
+	 */
+	public static final Pattern pad = new Pad();
+	/**
+	 * <code>>></code>
+	 */
+	public static final Pattern indent = new Indent();
+	/**
+	 * <code>^</code>
+	 */
+	public static final Pattern separator = new Separator();
 
-	public static final Terminal whitespace = new Whitespace();
-	public static final Terminal wildcard = new Wildcard();
+	public static final Pattern whitespace = new Whitespace();
+	public static final Pattern wildcard = new Wildcard();
 
 	public static byte toByte( char c ) {
 		return String.valueOf(c).getBytes()[0];
 	}	
 	
-	public static Terminal not( Terminal excluded ) {
+	public static Pattern not( Pattern excluded ) {
 		return new Not(excluded);
 	}
 
-	public static Terminal not( char s ) {
+	public static Pattern not( char s ) {
 		return not(in(s));
 	}
 
-	public static Terminal or( Terminal s, Terminal... more ) {
-		Terminal or = s;
-		for ( Terminal m : more ) {
+	public static Pattern or( Pattern s, Pattern... more ) {
+		Pattern or = s;
+		for ( Pattern m : more ) {
 			or = or(or , m);
 		}
 		return or;
 	}
 
-	public static Terminal or( Terminal a, Terminal b ) {
+	public static Pattern or( Pattern a, Pattern b ) {
 		return new Or(a, b);
 	}
 
-	public static Terminal range( char low, char high ) {
+	public static Pattern range( char low, char high ) {
 		return range(toByte(low) , toByte(high));
 	}
 
-	public static Terminal range( byte low, byte high ) {
+	public static Pattern range( byte low, byte high ) {
 		return new Set(low, high);
 	}
 
-	public static Terminal in( char... cs ) {
+	public static Pattern in( char... cs ) {
 		byte[] bs = new byte[cs.length];
 		for ( int i = 0; i < bs.length; i++ ) {
 			bs[i] = toByte(cs[i]);
@@ -52,13 +64,13 @@ public final class Terminals {
 		return new In(bs);
 	}
 	
-	public static class Separator implements Terminal {
+	public static class Separator implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
-			int c = 0;
-			int b = input.get(position);
-			while (b == ' ' || b == '\t') { b = input.get(position+ ++c); }
+			int p = position;
+			while (p < input.limit() && isIndent(input.get(p))) { p++; }
+			int c = p-position;
 			return c == 0 ? NOT_MACHTING : c;
 		}
 		
@@ -69,21 +81,19 @@ public final class Terminals {
 
 	}
 	
-	public static class Indent implements Terminal {
+	static boolean isIndent(int b) {
+		return b == ' ' || b == '\t';
+	}
+	
+	public static class Indent implements Pattern {
 
-		static final byte tab = '\t';
-		static final byte space = ' ';
-		
 		@Override
 		public int length(ByteBuffer input, int position) {
-			int c = position;
-			while (c < input.limit() && isIndent(input.get(c))) { c++; }
-			return c-position;
+			int p = position;
+			while (p < input.limit() && isIndent(input.get(p))) { p++; }
+			return p-position;
 		}
 		
-		private static boolean isIndent(int b) {
-			return b == space || b == tab;
-		}
 		
 		@Override
 		public String toString() {
@@ -92,7 +102,7 @@ public final class Terminals {
 
 	}
 	
-	public static class Pad implements Terminal {
+	public static class Pad implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -109,7 +119,7 @@ public final class Terminals {
 
 	}
 	
-	static final class Gap implements Terminal {
+	static final class Gap implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -125,7 +135,7 @@ public final class Terminals {
 		}
 	}
 
-	static final class Whitespace implements Terminal {
+	static final class Whitespace implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -140,10 +150,10 @@ public final class Terminals {
 		
 	}
 	
-	static final class Wildcard implements Terminal {
+	static final class Wildcard implements Pattern {
 		@Override
 		public int length(ByteBuffer input, int position) {
-			return utf8length(input, position);
+			return UTF8.byteLength(input, position);
 		}
 
 		@Override
@@ -153,7 +163,7 @@ public final class Terminals {
 	}
 	
 	private static final class Set
-			implements Terminal {
+			implements Pattern {
 
 		final byte low;
 		final byte high;
@@ -179,11 +189,11 @@ public final class Terminals {
 	}
 
 	private static final class Not
-			implements Terminal {
+			implements Pattern {
 
-		private final Terminal excluded;
+		private final Pattern excluded;
 
-		Not( Terminal excluded ) {
+		Not( Pattern excluded ) {
 			super();
 			this.excluded = excluded;
 		}
@@ -191,7 +201,7 @@ public final class Terminals {
 		@Override
 		public int length(ByteBuffer input, int position) {
 			int l = excluded.length(input, position);
-			return l < 0 ? utf8length(input, position) : NOT_MACHTING;
+			return l < 0 ? UTF8.byteLength(input, position) : NOT_MACHTING;
 		}
 
 		@Override
@@ -201,7 +211,7 @@ public final class Terminals {
 	}
 
 	private static final class In
-			implements Terminal {
+			implements Pattern {
 
 		private final byte[] members;
 
@@ -235,12 +245,12 @@ public final class Terminals {
 	}
 
 	private static final class Or
-			implements Terminal {
+			implements Pattern {
 
-		private final Terminal a;
-		private final Terminal b;
+		private final Pattern a;
+		private final Pattern b;
 
-		Or( Terminal a, Terminal b ) {
+		Or( Pattern a, Pattern b ) {
 			super();
 			this.a = a;
 			this.b = b;
@@ -264,15 +274,5 @@ public final class Terminals {
 			return "{"+ as + " " + bs+"}";
 		}
 
-	}
-	
-	public static int utf8length(ByteBuffer input, int position) {
-		byte b = input.get(position);
-		if (b >= 0)
-			return 1;
-		int p = position;
-		while (input.get(++p) < 0) { ; }
-		return p - position;
-		
 	}
 }

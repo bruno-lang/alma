@@ -150,5 +150,10 @@ public final class Tokeniser {
 		final int l = rule.terminal.length(input, position);
 		return l < 0 ? mismatch(position) : position + l;
 	}
+	
+	private static int pattern(Rule rule, ByteBuffer input, int position) {
+		final int l = rule.terminal.length(input, position);
+		return l < 0 ? mismatch(position) : position + l;
+	}
 
 }

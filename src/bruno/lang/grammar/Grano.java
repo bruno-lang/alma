@@ -20,7 +20,7 @@ import bruno.lang.grammar.Grammar.Rule;
  */
 public final class Grano {
 
-	static final Terminal
+	static final Pattern
 		DIGIT = range('0', '9'),
 		HEX = or(DIGIT, range('A', 'F')),
 		OCTAL = range('0', '7'),
@@ -29,7 +29,7 @@ public final class Grano {
 		//TODO move above to terminals
 		;
 	
-	// use U+XXXX
+	//TODO use ; as "must be newline"
 	
 	static final Rule
 		tGap = terminal(Terminals.gap),
