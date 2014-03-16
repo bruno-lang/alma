@@ -19,9 +19,11 @@ public final class Grammar {
 
 
 	private final IdentityHashMap<String, Rule> rulesByName;
+	
+	//TODO get rid of rules by id and id in rules - does work without it
 	private final Rule[] rulesById;
 	
-	public Grammar(Rule... roots) { //OPEN maybe we need other starting points because of links
+	public Grammar(Rule... roots) {
 		super();
 		this.rulesByName = new IdentityHashMap<>();
 		List<Rule> idOrder = new ArrayList<>();
@@ -144,7 +146,7 @@ public final class Grammar {
 	}
 
 	public static enum RuleType {
-		LITERAL("lit"), TERMINAL("trm"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cmp"), REFERENCE("ref"), CAPTURE("cap");
+		LITERAL("lit"), TERMINAL("trm"), PATTERN("pat"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cpl"), REFERENCE("ref"), CAPTURE("cap");
 		
 		public final String code;
 
@@ -152,15 +154,9 @@ public final class Grammar {
 			this.code = code;
 		}
 		
-		public boolean bytes() {
-			return this == LITERAL || this == TERMINAL;
-		}
 	}
 
 	public static final class Rule {
-		
-		public static final Rule ANY_WHITESPACE = terminal(Terminals.whitespace).occurs(Occur.star);
-		public static final Rule EMPTY_STRING = literal('$').occurs(Occur.never);
 		
 		public static Rule completion() {
 			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, null, NO_CHARACTER);
@@ -178,10 +174,6 @@ public final class Grammar {
 			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, null, NO_CHARACTER);
 		}
 		
-		public static Rule token(Rule...elements) {
-			return seq(elements).separate(EMPTY_STRING);
-		}
-		
 		public static Rule literal( char l ) {
 			return symbol(String.valueOf(l));
 		}
@@ -189,43 +181,26 @@ public final class Grammar {
 		public static Rule symbol(String l) {
 			return new Rule(RuleType.LITERAL, "", new Rule[0], Occur.once, null, l.getBytes());
 		}
-		
-		public static Rule terminal(Pattern...seq) {
-			if (seq.length == 1) {
-				return terminal(seq[0]);
-			}
-			Rule[] sequence = new Rule[seq.length];
-			for (int i = 0; i < sequence.length; i++) {
-				sequence[i] = terminal(seq[i]);
-			}
-			return token(sequence);
-		}
 
-		private static Rule terminal(Pattern terminal) {
-			return new Rule(RuleType.TERMINAL, "", new Rule[0], Occur.once, terminal, NO_CHARACTER);
+		public static Rule pattern(Pattern p) {
+			return new Rule(RuleType.PATTERN, "", new Rule[0], Occur.once, p, NO_CHARACTER);
 		}
 		
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
 		public final Occur occur;
-		public final Pattern terminal;
+		public final Pattern pattern;
 		public final byte[] literal;
 		private int id = 0;
 		
-		public Rule(RuleType type, String name, Rule[] elements, Occur occur, Pattern terminal, byte[] literal) {
+		public Rule(RuleType type, String name, Rule[] elements, Occur occur, Pattern pattern, byte[] literal) {
 			super();
-			if (type == RuleType.TERMINAL && terminal == null) {
-				throw new NullPointerException();
-			}
-			if (name.contains(":")) {
-				throw new IllegalArgumentException(name);
-			}
 			this.type = type;
 			this.name = name.intern();
 			this.elements = elements;
 			this.occur = occur;
-			this.terminal = terminal;
+			this.pattern = pattern;
 			this.literal = literal;
 		}
 		
@@ -241,7 +216,7 @@ public final class Grammar {
 		
 		public Rule as(String name) {
 			if (name.length() > 0 && name.charAt(0) == '-') {
-				return new Rule(type, name, elements, occur, terminal, literal);
+				return new Rule(type, name, elements, occur, pattern, literal);
 			}
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
 			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, null, NO_CHARACTER);
@@ -253,15 +228,11 @@ public final class Grammar {
 		
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.ITERATION) {
-				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, terminal, literal);
+				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, pattern, literal);
 			}
 			if (occur == Occur.once)
 				return this;
 			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null, NO_CHARACTER);
-		}
-		
-		public Rule separate(Rule separation) {
-			return new Rule(type, name, elements, occur, terminal, literal);
 		}
 		
 		@Override
@@ -270,7 +241,10 @@ public final class Grammar {
 				return name;
 			}
 			if (type == RuleType.TERMINAL) {
-				return terminal.toString();
+				return ""; //TODO
+			}
+			if (type == RuleType.PATTERN) {
+				return pattern.toString();
 			}
 			if (type == RuleType.LITERAL) {
 				return "'"+ new String(literal)+"'";

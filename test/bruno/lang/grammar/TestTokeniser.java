@@ -10,8 +10,6 @@ import java.nio.ByteBuffer;
 
 import org.junit.Test;
 
-import bruno.lang.grammar.Grammar.Rule;
-
 public class TestTokeniser {
 
 	@Test
@@ -79,7 +77,7 @@ public class TestTokeniser {
 	static final Grammar COMMENTS = comments();
 
 	private static Grammar comments() {
-		return new Grammar(seq(seq(literal('%'), completion().as("text"), literal('\n')).separate(Rule.EMPTY_STRING).as("comment")).plus().as("grammar"));
+		return new Grammar(seq(seq(literal('%'), completion().as("text"), literal('\n')).as("comment")).plus().as("grammar"));
 	}
 	
 }
