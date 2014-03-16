@@ -143,17 +143,24 @@ public final class Terminal {
 		return !excluded && ranges[0] < 0; // just in case there was excluding ranges it means all others where included
 	}
 	
+	public boolean isSingleCharacter() {
+		return ranges.length == 2 && ranges[0] == ranges[1];
+	}
+	
 	@Override
 	public String toString() {
 		if (ranges.length == 2 && ranges[0] == 0 && ranges[1] == UTF8.MAX_CODE_POINT) {
 			return ".";
 		}
 		//TODO special any whitespace _
-		// TODO also \n \r \t and so on
 		StringBuilder b = new StringBuilder();
-		b.append("{");
+		if (!isSingleCharacter()) {
+			b.append("{ ");
+		}
 		for (int i = 0; i < ranges.length; i+=2) {
-			b.append(" ");
+			if (i > 0) {
+				b.append(" ");
+			}
 			if (ranges[i] < 0) {
 				b.append('!');
 			}
@@ -165,7 +172,9 @@ public final class Terminal {
 				appendChar(ranges[i+1], b);
 			}
 		}
-		b.append(" }");
+		if (!isSingleCharacter()) {
+			b.append(" }");
+		}
 		return b.toString();
 	}
 
@@ -175,6 +184,12 @@ public final class Terminal {
 			b.append('\'');
 			b.append((char)codePoint);
 			b.append('\'');
+		} else if (codePoint == '\t') {
+			b.append("\\t");
+		} else if (codePoint == '\n') {
+			b.append("\\n");
+		} else if (codePoint == '\r') {
+			b.append("\\r");
 		} else {
 			b.append("U+");
 			b.append(String.format("%04x", codePoint));

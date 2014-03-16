@@ -88,7 +88,7 @@ public class Builder {
 		if (r == Grano.terminal) {
 			Rule t = terminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
-			if (t.type == RuleType.TERMINAL && t.terminal.ranges.length == 2 && t.terminal.ranges[0] == t.terminal.ranges[1] && t.terminal.ranges[0] >= 0) { 
+			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
 				return Rule.symbol(new String(UTF8.bytes(t.terminal.ranges[0]))).occurs(occur);
 			}
 			return t;
