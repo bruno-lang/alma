@@ -25,7 +25,7 @@ public final class Patterns {
 		return String.valueOf(c).getBytes()[0];
 	}
 	
-	public static Pattern not( Pattern excluded ) { //TODO allow for not pattern in grammar
+	public static Pattern not( Pattern excluded ) {
 		return new Not(excluded);
 	}
 

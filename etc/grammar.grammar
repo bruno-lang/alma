@@ -49,5 +49,5 @@ utf8-set      : not? (wildcard | letter | digit | hex | octal | binary | utf8-cl
 
 figure        : utf8-set | ref
 figures       : '{', -figure (, -figure )* '}' capture
-pattern       : gap | pad | indent | separator
+pattern       : not? (gap | pad | indent | separator)
 terminal      : pattern | utf8-set | figures

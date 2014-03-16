@@ -60,7 +60,7 @@ public final class Grano {
 		
 		figure = selection(utf8_set, ref).as("-figure"),
 		figures = seq(literal('{'), tGap, seq(figure, seq(tGap, figure).star()) , tGap, literal('}'), capture).as("figures"),
-		pattern = selection(gap, pad, indent, separator).as("pattern"),
+		pattern = seq(not.qmark(), selection(gap, pad, indent, separator)).as("pattern"),
 		terminal = selection(pattern, utf8_set, figures).as("terminal"),
 
 		symbol = seq(apo, terminal(notCharacter('\'')).occurs(occur(2, Occur.plus.max)), apo).as("symbol"),

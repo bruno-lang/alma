@@ -136,7 +136,13 @@ public class Builder {
 
 	private static Rule pattern(int token, Tokenised grammar) {
 		check(token, grammar, Grano.pattern);
-		Rule r = grammar.tokens.rule(token+1);
+		boolean not = grammar.tokens.rule(token+1) == Grano.not;
+		Rule p = patternSelection(token+(not?2:1), grammar);
+		return not ? Rule.pattern(Patterns.not(p.pattern)) : p;
+	}
+
+	private static Rule patternSelection(int token, Tokenised grammar) {
+		Rule r = grammar.tokens.rule(token);
 		if (r == Grano.gap) {
 			return Rule.pattern(Patterns.gap);
 		}
@@ -181,11 +187,11 @@ public class Builder {
 	private static Rule utf8set(int token, Tokenised grammar) {
 		check(token, grammar, Grano.utf8_set);
 		boolean not = grammar.tokens.rule(token+1) == Grano.not;
-		Rule utf8s = utf8s(token +(not ? 2 : 1), grammar);
+		Rule utf8s = utf8setSelection(token +(not ? 2 : 1), grammar);
 		return not ? Rule.terminal(utf8s.terminal.not()) : utf8s;
 	}
 
-	private static Rule utf8s(int token, Tokenised grammar) {
+	private static Rule utf8setSelection(int token, Tokenised grammar) {
 		Rule r = grammar.tokens.rule(token);
 		if (r == Grano.wildcard) {
 			return Rule.terminal(Terminal.WILDCARD);
