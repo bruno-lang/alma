@@ -2,7 +2,7 @@ package bruno.lang.grammar;
 
 import java.nio.ByteBuffer;
 
-public final class Terminals {
+public final class Patterns {
 
 	/**
 	 * <code>,</code>
@@ -45,6 +45,10 @@ public final class Terminals {
 	}
 
 	public static Pattern or( Pattern a, Pattern b ) {
+		if (a == null)
+			return b;
+		if (b == null)
+			return a;
 		return new Or(a, b);
 	}
 

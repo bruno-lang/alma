@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import bruno.lang.grammar.Grammar.Rule;
-import bruno.lang.grammar.Grammar.RuleType;
 
 /**
  * Builds a {@link Grammar} from a given {@link Tokenised} grammar file.
@@ -86,16 +85,19 @@ public class Builder {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(Occur.qmark);
 		}
 		if (r == Grano.terminal) {
-			return terminal(token+1, grammar).occurs(occur); //FIXME when terminal uses occur this is reset here...
+			Rule t = terminal(token+1, grammar).occurs(occur); //FIXME when terminal uses occur this is reset here...
+			if (false) { // a terminal of a single character -> use literal instead
+				//TODO reuse equal literals
+				StringBuilder b = new StringBuilder(); // extract to UTF8 util (also used elsewhere in tests!?
+				b.appendCodePoint(t.terminal.ranges[0]);
+				return Rule.symbol(b.toString()).occurs(occur);			
+			}
+			return t;
 		}
 		if (r == Grano.symbol) {
 			//TODO reuse equal symbols
 			String text = grammar.text(token+1);
 			return Rule.symbol(text.substring(1, text.length()-1)).occurs(occur);
-		}
-		if (r == Grano.literal) {
-			//TODO reuse equal literals
-			return Rule.literal(grammar.text(token+1).charAt(1)).occurs(occur);
 		}
 		if (r == Grano.ref) {
 			return ref(token+1, grammar).occurs(occur);
@@ -137,16 +139,16 @@ public class Builder {
 		check(token, grammar, Grano.pattern);
 		Rule r = grammar.tokens.rule(token+1);
 		if (r == Grano.gap) {
-			return Rule.pattern(Terminals.gap);
+			return Rule.pattern(Patterns.gap);
 		}
 		if (r == Grano.pad) {
-			return Rule.pattern(Terminals.pad);
+			return Rule.pattern(Patterns.pad);
 		}
 		if (r == Grano.indent) {
-			return Rule.pattern(Terminals.indent);
+			return Rule.pattern(Patterns.indent);
 		}
 		if (r == Grano.separator) {
-			return Rule.pattern(Terminals.separator);
+			return Rule.pattern(Patterns.separator);
 		}		
 		throw new RuntimeException("Unexpected rule: "+r);
 	}
@@ -155,29 +157,22 @@ public class Builder {
 		check(token, grammar, Grano.figures);
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token);
-		Pattern t = null;
+		Terminal terminal = null;
 		int i = token+1;
-		List<Rule> refs = new ArrayList<>();
+		List<Rule> nonTerminals = new ArrayList<>();
 		while (tokens.end(i) <= end && tokens.rule(i) != Grano.capture) {
 			Rule figure = tokens.rule(i);
 			if (figure == Grano.utf8_set) {
 				Rule f = utf8set(i, grammar);
-				if (f.type == RuleType.PATTERN) {
-					t = t == null ? f.pattern : Terminals.or(t, f.pattern);
-				} else if (f.type == RuleType.LITERAL) {
-					Pattern tl = Terminals.in(new String(f.literal).charAt(0));
-					t = t == null ? tl : Terminals.or(t, tl);
-				} else {
-					throw new RuntimeException("Unexpected rule: "+f);
-				}
+				terminal = terminal == null ? f.terminal : terminal.and(f.terminal);
 			} else if (figure == Grano.ref) {
-				refs.add(ref(i, grammar));
+				nonTerminals.add(ref(i, grammar));
 			}
 			i = tokens.next(i);
 		}
-		Rule r = t == null ? Rule.selection(refs.toArray(new Rule[0])) : Rule.pattern(t);
-		if (!refs.isEmpty() && t != null) {
-			Rule[] a = Arrays.copyOf(refs.toArray(new Rule[0]), refs.size() + 1);
+		Rule r = terminal == null ? Rule.selection(nonTerminals.toArray(new Rule[0])) : Rule.terminal(terminal);
+		if (!nonTerminals.isEmpty() && terminal != null) {
+			Rule[] a = Arrays.copyOf(nonTerminals.toArray(new Rule[0]), nonTerminals.size() + 1);
 			a[a.length-1] = r;
 			r = Rule.selection(a);
 		}
@@ -187,73 +182,71 @@ public class Builder {
 	private static Rule utf8set(int token, Tokenised grammar) {
 		check(token, grammar, Grano.utf8_set);
 		boolean not = grammar.tokens.rule(token+1) == Grano.not;
-		Rule utf8set = utf8setBody(token +(not ? 2 : 1), grammar);
-		if (not) {
-			if (utf8set.type == RuleType.PATTERN) {
-				return Rule.pattern(Terminals.not(utf8set.pattern));
-			}
-			return Rule.pattern(Terminals.not(new String(utf8set.literal).charAt(0)));
-		}
-		return utf8set;
+		Rule utf8s = utf8s(token +(not ? 2 : 1), grammar);
+		return not ? Rule.terminal(utf8s.terminal.not()) : utf8s;
 	}
 
-	private static Rule utf8setBody(int token, Tokenised grammar) {
+	private static int literalCodePoint(Rule literal) {
+		return new String(literal.literal).codePointAt(0);
+	}
+
+	private static Rule utf8s(int token, Tokenised grammar) {
 		Rule r = grammar.tokens.rule(token);
 		if (r == Grano.wildcard) {
-			return Rule.pattern(Terminals.wildcard);
+			return Rule.terminal(Terminal.WILDCARD);
 		}
 		if (r == Grano.letter) {
-			return Rule.pattern(Grano.LETTER);
+			return Rule.terminal(Grano.LETTER);
 		}
 		if (r == Grano.hex) {
-			return Rule.pattern(Grano.HEX);
+			return Rule.terminal(Grano.HEX);
 		}
 		if (r == Grano.octal) {
-			return Rule.pattern(Grano.OCTAL);
+			return Rule.terminal(Grano.OCTAL);
 		}
 		if (r == Grano.binary) {
-			return Rule.pattern(Grano.BINARY);
+			return Rule.terminal(Grano.BINARY);
 		}
 		if (r == Grano.digit) {
-			return Rule.pattern(Grano.DIGIT);
+			return Rule.terminal(Grano.DIGIT);
 		}
 		if (r == Grano.utf8_class) {
 			//TODO
 		}
 		if (r == Grano.range) {
-			return Rule.pattern(Terminals.range(literal(token+1, grammar), literal(token+3, grammar)));
+			return Rule.terminal(Terminal.range(literal(token+1, grammar), literal(token+3, grammar)));
 		}
 		if (r == Grano.literal) {
-			return Rule.literal(literal(token, grammar));
+			return Rule.terminal(Terminal.character(literal(token, grammar)));
 		}
 		if (r == Grano.whitespace) {
-			return Rule.pattern(Terminals.whitespace);
+			return Rule.terminal(Terminal.WHITESPACE);
 		}
 		if (r == Grano.shortname) {
 			String name = grammar.text(token+1);
-			char c = name.charAt(1);
+			char c = name.charAt(1); //FIXME use code point
 			if (c == 't') {
-				return Rule.literal('\t');
+				return Rule.terminal(Terminal.character('\t'));
 			}
 			if (c == 'n') {
-				return Rule.literal('\n');
+				return Rule.terminal(Terminal.character('\n'));
 			}
 			if (c == 'r') {
-				return Rule.literal('\r');
+				return Rule.terminal(Terminal.character('\r'));
 			}
 			throw new NoSuchElementException(name);
 		}
 		throw new RuntimeException("Unexpected rule: "+r);
 	}
 
-	private static char literal(int token, Tokenised grammar) {
+	private static int literal(int token, Tokenised grammar) {
 		check(token, grammar, Grano.literal);
 		Rule r = grammar.tokens.rule(token+1);
 		if (r == Grano.atom) {
-			return grammar.text(token+1).charAt(1);
+			return grammar.text(token+1).codePointAt(1);
 		}
 		if (r == Grano.utf8) {
-			return (char) Integer.parseInt(grammar.text(token+1).substring(2), 16);
+			return Integer.parseInt(grammar.text(token+1).substring(2), 16);
 		}
 		throw new RuntimeException("Unexpected rule: "+r);
 	}

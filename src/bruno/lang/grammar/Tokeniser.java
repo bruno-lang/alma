@@ -142,10 +142,12 @@ public final class Tokeniser {
 	}
 
 	private static int terminal(Rule rule, ByteBuffer input, int position) {
-//		if (position >= input.limit())
-//			return mismatch(position);
-		final int l = rule.pattern.length(input, position);
-		return l < 0 ? mismatch(position) : position + l;
+		if (position >= input.limit())
+			return mismatch(position);
+		if (rule.terminal.contains(input, position)) {
+			return position + UTF8.byteLength(input, position);
+		}
+		return mismatch(position);
 	}
 	
 	private static int pattern(Rule rule, ByteBuffer input, int position) {

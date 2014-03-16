@@ -7,13 +7,23 @@ import java.nio.ByteBuffer;
  * 
  * The matching is based on UTF-8 code point ranges. Ranges with negative 
  * numbers are excluding the range (and including all other) while ranges with
- * positive code points are including the range. Ranges are sorted specially so
- * that ranges just covering ASCII come first (before {@link #r0}) followed by
- * the (non-ASCII) excluding ranges followed by the (non-ASCII) including ranges.
+ * positive code points are including the range. Ranges are sorted so that
+ * all excluding ranges are before all including one. 
  *  
  * @author jan
  */
 public final class Terminal {
+	
+	/**
+	 * Simply all unicodes are contained in the range of the terminal.
+	 */
+	public static final Terminal WILDCARD = range(0, UTF8.MAX_CODE_POINT);
+	
+	/**
+	 * Should follow the Unicode 5.0 standard,
+	 * see https://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ
+	 */
+	public static final Terminal WHITESPACE = range(9, 13).and(character(32));
 	
 	public static Terminal notRange(int minCodePoint, int maxCodePoint) {
 		return new Terminal(new int[] { -minCodePoint, -maxCodePoint }); 
@@ -76,6 +86,14 @@ public final class Terminal {
 		return i;
 	}
 	
+	public Terminal not() {
+		int[] not = ranges.clone();
+		for (int i = 0; i < not.length; i++) {
+			not[i] = -not[i];
+		}
+		return new Terminal(not);
+	}
+	
 	public Terminal and(Terminal other) {
 		int[] merged = new int[ranges.length+other.ranges.length];
 		int ex = excluding();
@@ -98,7 +116,7 @@ public final class Terminal {
 	public boolean contains(ByteBuffer input, int position) {
 		byte b = input.get(position);
 		if (b >= 0) {
-			return (asciis[b/32] & 1 << b % 32) > 0;
+			return (asciis[b/32] & 1 << b % 32) != 0;
 		}
 		final int codePoint = UTF8.codePoint(input, position);
 		int i = 0;
@@ -120,6 +138,11 @@ public final class Terminal {
 	
 	@Override
 	public String toString() {
+		if (ranges.length == 2 && ranges[0] == 0 && ranges[1] == UTF8.MAX_CODE_POINT) {
+			return ".";
+		}
+		//TODO special any whitespace _
+		// TODO also \n \r \t and so on
 		StringBuilder b = new StringBuilder();
 		b.append("{");
 		for (int i = 0; i < ranges.length; i+=2) {

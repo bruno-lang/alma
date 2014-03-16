@@ -11,6 +11,11 @@ import org.junit.Test;
 public class TestTerminal {
 
 	@Test
+	public void wildcardIncludesAnyCodePoint() {
+		assertContainsCharacters(Terminal.WILDCARD, '?');
+	}
+	
+	@Test
 	public void singleAsciiInclusiveRange() {
 		Terminal t = range('a', 'z');
 

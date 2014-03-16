@@ -1,16 +1,17 @@
 package bruno.lang.grammar;
 
 import static bruno.lang.grammar.Grammar.Rule.literal;
+import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;
 import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
-import static bruno.lang.grammar.Grammar.Rule.pattern;
+import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Occur.occur;
-import static bruno.lang.grammar.Terminals.in;
-import static bruno.lang.grammar.Terminals.not;
-import static bruno.lang.grammar.Terminals.or;
-import static bruno.lang.grammar.Terminals.range;
+import static bruno.lang.grammar.Patterns.in;
+import static bruno.lang.grammar.Patterns.not;
+import static bruno.lang.grammar.Terminal.character;
+import static bruno.lang.grammar.Terminal.range;
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
@@ -20,29 +21,29 @@ import bruno.lang.grammar.Grammar.Rule;
  */
 public final class Grano {
 
-	static final Pattern
+	static final Terminal
 		DIGIT = range('0', '9'),
-		HEX = or(DIGIT, range('A', 'F')),
+		HEX = DIGIT.and(range('A', 'F')),
 		OCTAL = range('0', '7'),
 		BINARY = range('0', '1'),
-		LETTER = or(range('a', 'z'), range('A','Z'))
+		LETTER = range('a', 'z').and(range('A','Z'))
 		//TODO move above to terminals
 		;
 	
 	//TODO use ; as "must be newline"
 	
 	static final Rule
-		tGap = pattern(Terminals.gap),
-		tIndent = pattern(Terminals.indent),
+		tGap = pattern(Patterns.gap),
+		tIndent = pattern(Patterns.indent),
 		apo = literal('\''),
 		
-		name = seq(literal('-').qmark(), literal('\\').qmark(), pattern(LETTER), pattern(or(LETTER, DIGIT, in('_', '-'))).star()).as("name"),
+		name = seq(literal('-').qmark(), literal('\\').qmark(), terminal(LETTER), terminal(LETTER.and(DIGIT).and(character('_')).and(character('-'))).star()).as("name"),
 		capture = seq(literal(':'), name.as("alias")).qmark().as("capture"),
 		ref = seq(name, capture).as("ref"),
 
 		wildcard = literal('.').as("wildcard"),
-		atom = seq(apo, pattern(Terminals.wildcard), apo).as("atom"),
-		utf8 = seq(symbol("U+"), pattern(HEX).occurs(occur(4, 8))).as("utf8"), 
+		atom = seq(apo, pattern(Patterns.wildcard), apo).as("atom"),
+		utf8 = seq(symbol("U+"), terminal(HEX).occurs(occur(4, 8))).as("utf8"), 
 		literal = selection(utf8, atom).as("literal"),
 		range = seq(literal, tGap, literal('-'), tGap, literal).as("range"),
 		letter = literal('@').as("letter"),
@@ -62,7 +63,7 @@ public final class Grano {
 		cr = symbol("\\r").as("cr"),
 		shortname = selection(tab, lf, cr).as("shortname"),
 
-		utf8_class = seq(symbol("U+{"), pattern(LETTER).plus(), literal('}')).as("utf8-class"),
+		utf8_class = seq(symbol("U+{"), terminal(LETTER).plus(), literal('}')).as("utf8-class"),
 		utf8_set = seq(not.qmark(), selection(wildcard, letter, digit, hex, octal, binary, utf8_class, range, literal, whitespace, shortname)).as("utf8-set"),
 		
 		figure = selection(utf8_set, ref).as("-figure"),
@@ -72,7 +73,7 @@ public final class Grano {
 
 		symbol = seq(apo, pattern(not('\'')).occurs(occur(2, Occur.plus.max)), apo).as("symbol"),
 
-		num = pattern(DIGIT).plus().as("num"),
+		num = terminal(DIGIT).plus().as("num"),
 		star = literal('*').as("star"),
 		plus = literal('+').as("plus"),
 		qmark = literal('?').as("qmark"),
@@ -81,7 +82,7 @@ public final class Grano {
 		option = seq(literal('['), tGap, ref("selection"), tGap, literal(']'), capture).as("option"),
 		group = seq(literal('('), tGap, ref("selection"), tGap, literal(')'), capture).as("group"),
 		completion = symbol("..").as("completion"),
-		element = seq(selection(completion, group, option, symbol, terminal, literal, ref), occurrence.qmark()).as("element"),
+		element = seq(selection(completion, group, option, symbol, terminal, ref), occurrence.qmark()).as("element"),
 		
 		sequence = seq(element, seq(tIndent, element).star()).as("sequence"),
 		selection = seq(sequence, seq(tGap, literal('|'), tIndent, sequence).star()).as("selection"),

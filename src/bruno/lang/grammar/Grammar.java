@@ -159,19 +159,19 @@ public final class Grammar {
 	public static final class Rule {
 		
 		public static Rule completion() {
-			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, null, NO_CHARACTER);
+			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, NO_CHARACTER, null, null);
 		}
 		
 		public static Rule ref(String name) {
-			return new Rule(RuleType.REFERENCE, name, new Rule[0], Occur.once, null, NO_CHARACTER);
+			return new Rule(RuleType.REFERENCE, name, new Rule[0], Occur.once, NO_CHARACTER, null, null);
 		}
 		
 		public static Rule selection(Rule...elements) {
-			return new Rule(RuleType.SELECTION, "", elements, Occur.once, null, NO_CHARACTER);
+			return new Rule(RuleType.SELECTION, "", elements, Occur.once, NO_CHARACTER, null, null);
 		}
 		
 		public static Rule seq(Rule...elements) {
-			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, null, NO_CHARACTER);
+			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_CHARACTER, null, null);
 		}
 		
 		public static Rule literal( char l ) {
@@ -179,29 +179,35 @@ public final class Grammar {
 		}
 		
 		public static Rule symbol(String l) {
-			return new Rule(RuleType.LITERAL, "", new Rule[0], Occur.once, null, l.getBytes());
+			return new Rule(RuleType.LITERAL, "", new Rule[0], Occur.once, l.getBytes(), null, null);
 		}
 
 		public static Rule pattern(Pattern p) {
-			return new Rule(RuleType.PATTERN, "", new Rule[0], Occur.once, p, NO_CHARACTER);
+			return new Rule(RuleType.PATTERN, "", new Rule[0], Occur.once, NO_CHARACTER, null, p);
+		}
+		
+		public static Rule terminal(Terminal t) {
+			return new Rule(RuleType.TERMINAL, "", new Rule[0], Occur.once, NO_CHARACTER, t, null);
 		}
 		
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
 		public final Occur occur;
-		public final Pattern pattern;
 		public final byte[] literal;
+		public final Terminal terminal;
+		public final Pattern pattern;
 		private int id = 0;
 		
-		public Rule(RuleType type, String name, Rule[] elements, Occur occur, Pattern pattern, byte[] literal) {
+		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern) {
 			super();
 			this.type = type;
 			this.name = name.intern();
 			this.elements = elements;
 			this.occur = occur;
-			this.pattern = pattern;
 			this.literal = literal;
+			this.terminal = terminal;
+			this.pattern = pattern;
 		}
 		
 		public int id() {
@@ -216,10 +222,10 @@ public final class Grammar {
 		
 		public Rule as(String name) {
 			if (name.length() > 0 && name.charAt(0) == '-') {
-				return new Rule(type, name, elements, occur, pattern, literal);
+				return new Rule(type, name, elements, occur, literal, terminal, pattern);
 			}
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
-			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, null, NO_CHARACTER);
+			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, NO_CHARACTER, null, null);
 		}
 		
 		public Rule plus() {
@@ -228,11 +234,11 @@ public final class Grammar {
 		
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.ITERATION) {
-				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, pattern, literal);
+				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, literal, terminal, pattern);
 			}
 			if (occur == Occur.once)
 				return this;
-			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, null, NO_CHARACTER);
+			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, NO_CHARACTER, null, null);
 		}
 		
 		@Override
@@ -241,7 +247,7 @@ public final class Grammar {
 				return name;
 			}
 			if (type == RuleType.TERMINAL) {
-				return ""; //TODO
+				return terminal.toString();
 			}
 			if (type == RuleType.PATTERN) {
 				return pattern.toString();

@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 
 public final class UTF8 {
 
+	static final int MAX_CODE_POINT = 0x7FFFFFFF;
+	
 	static final byte utf8_lenght = (byte) 0b10000000;
 	
 	static final byte utf8_6bit = (byte) 0b11111100;
