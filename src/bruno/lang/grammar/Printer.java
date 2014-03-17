@@ -97,7 +97,7 @@ public final class Printer {
 				return;
 			}
 			Rule r = tokens.rule(index);
-			printColorBlock(in, out, ANSI.rainbow(r.id()/2-1), s, e);
+			printColorBlock(in, out, ANSI.rainbow(r.name.hashCode()/2-1), s, e);
 			out.append(ANSI.RESET);
 		}
 		

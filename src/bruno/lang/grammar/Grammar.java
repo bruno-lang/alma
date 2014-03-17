@@ -1,10 +1,8 @@
 package bruno.lang.grammar;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 
 
@@ -15,20 +13,14 @@ import java.util.NoSuchElementException;
  */
 public final class Grammar {
 
-	private final IdentityHashMap<String, Rule> rulesByName;
-	
-	//TODO get rid of rules by id and id in rules - does work without it
-	private final Rule[] rulesById;
-	
+	private final LinkedHashMap<String, Rule> rulesByName;
+
 	public Grammar(Rule... roots) {
 		super();
-		this.rulesByName = new IdentityHashMap<>();
-		List<Rule> idOrder = new ArrayList<>();
-		idOrder.add(null); // zero index is unused
+		this.rulesByName = new LinkedHashMap<>();
 		for (Rule root : roots) {
-			init(root, idOrder);
+			init(root);
 		}
-		this.rulesById = idOrder.toArray(new Rule[idOrder.size()]);
 		link(rulesByName.values().toArray(new Rule[0]), new HashSet<String>());
 		complete(roots, null, new HashSet<Rule>());
 	}
@@ -52,19 +44,15 @@ public final class Grammar {
 		}
 	}
 
-	private void init(Rule rule, List<Rule> idOrder) {
+	private void init(Rule rule) {
 		if (rule == null || rule.type == RuleType.REFERENCE) {
 			return;
 		}
 		if (!rule.name.isEmpty()) {
 			rulesByName.put(rule.name.substring(rule.name.charAt(0) == '-' ? 1 : 0), rule);
 		}
-		if (rule.id() == 0) {
-			rule.id(idOrder.size());
-			idOrder.add(rule);
-		}
 		for (Rule r : rule.elements) {
-			init(r, idOrder);
+			init(r);
 		}
 	}
 
@@ -104,10 +92,6 @@ public final class Grammar {
 			}
 		}
 	}
-	
-	public Rule rule(int id) {
-		return rulesById[id];
-	}
 
 	public Rule rule(String name) {
 		char n0 = name.charAt(0);
@@ -119,11 +103,11 @@ public final class Grammar {
 		}
 		throw new NoSuchElementException("Missing rule: "+name);
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		for (Rule r : rulesById) {
+		for (Rule r : rulesByName.values()) {
 			if (r != null && !r.name.isEmpty()) {
 			int l = 15;
 			b.append(String.format("%-"+l+"s: ", r.name));
@@ -144,40 +128,40 @@ public final class Grammar {
 
 	public static enum RuleType {
 		LITERAL("lit"), TERMINAL("trm"), PATTERN("pat"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cpl"), REFERENCE("ref"), CAPTURE("cap");
-		
+
 		public final String code;
 
 		private RuleType(String code) {
 			this.code = code;
 		}
-		
+
 	}
 
 	public static final class Rule {
-		
+
 		private static final Rule[] NO_ELEMENTS = new Rule[0];
 		private static final byte[] NO_LITERAL = new byte[0];
-		
+
 		public static Rule completion() {
 			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, NO_LITERAL, null, null);
 		}
-		
+
 		public static Rule ref(String name) {
 			return new Rule(RuleType.REFERENCE, name, NO_ELEMENTS, Occur.once, NO_LITERAL, null, null);
 		}
-		
+
 		public static Rule selection(Rule...elements) {
 			return new Rule(RuleType.SELECTION, "", elements, Occur.once, NO_LITERAL, null, null);
 		}
-		
+
 		public static Rule seq(Rule...elements) {
 			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_LITERAL, null, null);
 		}
-		
+
 		public static Rule symbol( int codePoint ) {
 			return string(new String(UTF8.bytes(codePoint)));
 		}
-		
+
 		public static Rule string(String l) {
 			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, l.getBytes(), null, null);
 		}
@@ -185,11 +169,11 @@ public final class Grammar {
 		public static Rule pattern(Pattern p) {
 			return new Rule(RuleType.PATTERN, "", NO_ELEMENTS, Occur.once, NO_LITERAL, null, p);
 		}
-		
+
 		public static Rule terminal(Terminal t) {
 			return new Rule(RuleType.TERMINAL, "", NO_ELEMENTS, Occur.once, NO_LITERAL, t, null);
 		}
-		
+
 		public final RuleType type;
 		public final String name;
 		public final Rule[] elements;
@@ -197,8 +181,7 @@ public final class Grammar {
 		public final byte[] literal;
 		public final Terminal terminal;
 		public final Pattern pattern;
-		private int id = 0;
-		
+
 		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern) {
 			super();
 			this.type = type;
@@ -209,17 +192,7 @@ public final class Grammar {
 			this.terminal = terminal;
 			this.pattern = pattern;
 		}
-		
-		public int id() {
-			return id;
-		}
-		
-		public void id(int id) {
-			if (this.id == 0) {
-				this.id = id;
-			}
-		}
-		
+
 		public Rule as(String name) {
 			if (name.length() > 0 && name.charAt(0) == '-') {
 				return new Rule(type, name, elements, occur, literal, terminal, pattern);
@@ -227,11 +200,11 @@ public final class Grammar {
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
 			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, NO_LITERAL, null, null);
 		}
-		
+
 		public Rule plus() {
 			return occurs(Occur.plus);
 		}
-		
+
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.ITERATION) {
 				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, literal, terminal, pattern);
@@ -240,7 +213,7 @@ public final class Grammar {
 				return this;
 			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, NO_LITERAL, null, null);
 		}
-		
+
 		@Override
 		public String toString() {
 			if (type == RuleType.CAPTURE) {
