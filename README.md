@@ -1,5 +1,5 @@
 
-grano - the bruno grammar
+FregeFL - the bruno grammar
 =========================
                                                       
 A general grammar used for the bruno language.

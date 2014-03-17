@@ -1,11 +1,11 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;
 import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.string;
+import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Occur.occur;
 import static bruno.lang.grammar.Patterns.GAP;
@@ -18,19 +18,15 @@ import static bruno.lang.grammar.Terminal.notCharacter;
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
- * The name <code>grano</code> is derived from grammar notation.
- * 
  * @author jan
  */
 public final class FregeFL {
 
-	//TODO use ; as "must be newline"
-	
 	static final Rule
 		g = pattern(GAP),
 		i = pattern(INDENT),
 		a = symbol('\''),
-		
+
 		name = seq(symbol('-').qmark(), symbol('\\').qmark(), terminal(LETTERS), terminal(LETTERS.and(DIGITS).and(character('_')).and(character('-'))).star()).as("name"),
 		capture = seq(symbol(':'), name.as("alias")).qmark().as("capture"),
 		ref = seq(name, capture).as("ref"),
@@ -59,7 +55,7 @@ public final class FregeFL {
 
 		category = seq(string("U+{"), terminal(LETTERS).plus(), symbol('}')).as("category"),
 		ranges = seq(not.qmark(), selection(wildcard, letter, digit, hex, octal, binary, category, range, literal, whitespace, shortname)).as("ranges"),
-		
+
 		figure = selection(ranges, ref).as("-figure"),
 		figures = seq(symbol('{'), g, seq(figure, seq(g, figure).star()) , g, symbol('}'), capture).as("figures"),
 		pattern = seq(not.qmark(), selection(gap, pad, indent, separator)).as("pattern"),
@@ -72,15 +68,15 @@ public final class FregeFL {
 		plus = symbol('+').as("plus"),
 		qmark = symbol('?').as("qmark"),
 		occurrence = selection(seq(symbol('x').qmark(), num.as("min"), terminal(character('-').and(character('+'))).as("to").qmark(), num.as("max").qmark()), qmark, star, plus).as("occurrence"),
-		
+
 		option = seq(symbol('['), g, ref("selection"), g, symbol(']'), capture).as("option"),
 		group = seq(symbol('('), g, ref("selection"), g, symbol(')'), capture).as("group"),
 		completion = string("..").as("completion"),
 		element = seq(selection(completion, group, option, string, terminal, ref), occurrence.qmark()).as("element"),
-		
+
 		sequence = seq(element, seq(i, element).star()).as("sequence"),
 		selection = seq(sequence, seq(g, symbol('|'), i, sequence).star()).as("selection"),
-		
+
 		rule = seq(name, g, selection(symbol('='), seq(symbol(':'), symbol(':').qmark(), symbol('=').qmark())), g, selection, symbol(';').qmark()).as("rule"),
 		comment = seq(symbol('%'), terminal(notCharacter('\n')).plus().as("text")).as("comment"),
 		member = selection(comment, rule).as("member"), 
