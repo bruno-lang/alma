@@ -1,7 +1,7 @@
 package bruno.lang.grammar;
 
 import static bruno.lang.grammar.Grammar.Rule.completion;
-import static bruno.lang.grammar.Grammar.Rule.literal;
+import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.seq;
 import static org.junit.Assert.assertEquals;
 
@@ -72,7 +72,7 @@ public class TestTokeniser {
 	static final Grammar COMMENTS = comments();
 
 	private static Grammar comments() {
-		return new Grammar(seq(seq(literal('%'), completion().as("text"), literal('\n')).as("comment")).plus().as("grammar"));
+		return new Grammar(seq(seq(symbol('%'), completion().as("text"), symbol('\n')).as("comment")).plus().as("grammar"));
 	}
 	
 }

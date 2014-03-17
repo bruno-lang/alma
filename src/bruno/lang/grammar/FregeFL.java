@@ -1,11 +1,11 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Rule.literal;
+import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;
 import static bruno.lang.grammar.Grammar.Rule.seq;
-import static bruno.lang.grammar.Grammar.Rule.symbol;
+import static bruno.lang.grammar.Grammar.Rule.string;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Occur.occur;
 import static bruno.lang.grammar.Patterns.GAP;
@@ -29,60 +29,60 @@ public final class FregeFL {
 	static final Rule
 		g = pattern(GAP),
 		i = pattern(INDENT),
-		a = literal('\''),
+		a = symbol('\''),
 		
-		name = seq(literal('-').qmark(), literal('\\').qmark(), terminal(LETTERS), terminal(LETTERS.and(DIGITS).and(character('_')).and(character('-'))).star()).as("name"),
-		capture = seq(literal(':'), name.as("alias")).qmark().as("capture"),
+		name = seq(symbol('-').qmark(), symbol('\\').qmark(), terminal(LETTERS), terminal(LETTERS.and(DIGITS).and(character('_')).and(character('-'))).star()).as("name"),
+		capture = seq(symbol(':'), name.as("alias")).qmark().as("capture"),
 		ref = seq(name, capture).as("ref"),
 
-		wildcard = literal('.').as("wildcard"),
-		atom = seq(a, terminal(Terminal.WILDCARD), a).as("atom"),
-		code_point = seq(symbol("U+"), terminal(HEX_NUMBER).occurs(occur(4, 8))).as("code-point"), 
-		literal = selection(code_point, atom).as("literal"),
-		range = seq(literal, g, literal('-'), g, literal).as("range"),
-		letter = literal('@').as("letter"),
-		digit = literal('#').as("digit"),
-		hex = literal('&').as("hex"),
-		octal = literal('8').as("octal"),
-		binary = literal('1').as("binary"),
-		not = literal('!').as("not"),
-		whitespace = literal('_').as("whitespace"),
-		gap = literal(',').as("gap"),
-		pad = literal('~').as("pad"),
-		indent = symbol(">>").as("indent"),
-		separator = literal('^').as("separator"),
+		wildcard = symbol('.').as("wildcard"),
+		symbol = seq(a, terminal(Terminal.WILDCARD), a).as("symbol"),
+		code_point = seq(string("U+"), terminal(HEX_NUMBER).occurs(occur(4, 8))).as("code-point"), 
+		literal = selection(code_point, symbol).as("literal"),
+		range = seq(literal, g, symbol('-'), g, literal).as("range"),
+		letter = symbol('@').as("letter"),
+		digit = symbol('#').as("digit"),
+		hex = symbol('&').as("hex"),
+		octal = symbol('8').as("octal"),
+		binary = symbol('1').as("binary"),
+		not = symbol('!').as("not"),
+		whitespace = symbol('_').as("whitespace"),
+		gap = symbol(',').as("gap"),
+		pad = symbol('~').as("pad"),
+		indent = string(">>").as("indent"),
+		separator = symbol('^').as("separator"),
 
-		tab = symbol("\\t").as("tab"),
-		lf = symbol("\\n").as("lf"),
-		cr = symbol("\\r").as("cr"),
+		tab = string("\\t").as("tab"),
+		lf = string("\\n").as("lf"),
+		cr = string("\\r").as("cr"),
 		shortname = selection(tab, lf, cr).as("shortname"),
 
-		category = seq(symbol("U+{"), terminal(LETTERS).plus(), literal('}')).as("category"),
+		category = seq(string("U+{"), terminal(LETTERS).plus(), symbol('}')).as("category"),
 		ranges = seq(not.qmark(), selection(wildcard, letter, digit, hex, octal, binary, category, range, literal, whitespace, shortname)).as("ranges"),
 		
 		figure = selection(ranges, ref).as("-figure"),
-		figures = seq(literal('{'), g, seq(figure, seq(g, figure).star()) , g, literal('}'), capture).as("figures"),
+		figures = seq(symbol('{'), g, seq(figure, seq(g, figure).star()) , g, symbol('}'), capture).as("figures"),
 		pattern = seq(not.qmark(), selection(gap, pad, indent, separator)).as("pattern"),
 		terminal = selection(pattern, ranges, figures).as("terminal"),
 
-		symbol = seq(a, terminal(notCharacter('\'')).occurs(occur(2, Occur.plus.max)), a).as("symbol"),
+		string = seq(a, terminal(notCharacter('\'')).occurs(occur(2, Occur.plus.max)), a).as("string"),
 
 		num = terminal(DIGITS).plus().as("num"),
-		star = literal('*').as("star"),
-		plus = literal('+').as("plus"),
-		qmark = literal('?').as("qmark"),
-		occurrence = selection(seq(literal('x').qmark(), num.as("min"), terminal(character('-').and(character('+'))).as("to").qmark(), num.as("max").qmark()), qmark, star, plus).as("occurrence"),
+		star = symbol('*').as("star"),
+		plus = symbol('+').as("plus"),
+		qmark = symbol('?').as("qmark"),
+		occurrence = selection(seq(symbol('x').qmark(), num.as("min"), terminal(character('-').and(character('+'))).as("to").qmark(), num.as("max").qmark()), qmark, star, plus).as("occurrence"),
 		
-		option = seq(literal('['), g, ref("selection"), g, literal(']'), capture).as("option"),
-		group = seq(literal('('), g, ref("selection"), g, literal(')'), capture).as("group"),
-		completion = symbol("..").as("completion"),
-		element = seq(selection(completion, group, option, symbol, terminal, ref), occurrence.qmark()).as("element"),
+		option = seq(symbol('['), g, ref("selection"), g, symbol(']'), capture).as("option"),
+		group = seq(symbol('('), g, ref("selection"), g, symbol(')'), capture).as("group"),
+		completion = string("..").as("completion"),
+		element = seq(selection(completion, group, option, string, terminal, ref), occurrence.qmark()).as("element"),
 		
 		sequence = seq(element, seq(i, element).star()).as("sequence"),
-		selection = seq(sequence, seq(g, literal('|'), i, sequence).star()).as("selection"),
+		selection = seq(sequence, seq(g, symbol('|'), i, sequence).star()).as("selection"),
 		
-		rule = seq(name, g, selection(literal('='), seq(literal(':'), literal(':').qmark(), literal('=').qmark())), g, selection, literal(';').qmark()).as("rule"),
-		comment = seq(literal('%'), terminal(notCharacter('\n')).plus().as("text")).as("comment"),
+		rule = seq(name, g, selection(symbol('='), seq(symbol(':'), symbol(':').qmark(), symbol('=').qmark())), g, selection, symbol(';').qmark()).as("rule"),
+		comment = seq(symbol('%'), terminal(notCharacter('\n')).plus().as("text")).as("comment"),
 		member = selection(comment, rule).as("member"), 
 		grammar = seq(member, seq(g, member).star()).as("grammar") 
 		;

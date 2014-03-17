@@ -174,11 +174,11 @@ public final class Grammar {
 			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_LITERAL, null, null);
 		}
 		
-		public static Rule literal( char l ) {
-			return symbol(String.valueOf(l));
+		public static Rule symbol( int codePoint ) {
+			return string(new String(UTF8.bytes(codePoint)));
 		}
 		
-		public static Rule symbol(String l) {
+		public static Rule string(String l) {
 			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, l.getBytes(), null, null);
 		}
 

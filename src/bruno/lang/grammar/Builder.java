@@ -89,14 +89,14 @@ public class Builder {
 			Rule t = terminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
 			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
-				return Rule.symbol(new String(UTF8.bytes(t.terminal.ranges[0]))).occurs(occur);
+				return Rule.string(new String(UTF8.bytes(t.terminal.ranges[0]))).occurs(occur);
 			}
 			return t;
 		}
-		if (r == FregeFL.symbol) {
+		if (r == FregeFL.string) {
 			//TODO reuse equal symbols
 			String text = grammar.text(token+1);
-			return Rule.symbol(text.substring(1, text.length()-1)).occurs(occur);
+			return Rule.string(text.substring(1, text.length()-1)).occurs(occur);
 		}
 		if (r == FregeFL.ref) {
 			return ref(token+1, grammar).occurs(occur);
@@ -244,7 +244,7 @@ public class Builder {
 	private static int literal(int token, Tokenised grammar) {
 		check(token, grammar, FregeFL.literal);
 		Rule r = grammar.tokens.rule(token+1);
-		if (r == FregeFL.atom) {
+		if (r == FregeFL.symbol) {
 			return grammar.text(token+1).codePointAt(1);
 		}
 		if (r == FregeFL.code_point) {

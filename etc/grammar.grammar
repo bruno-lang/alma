@@ -5,7 +5,7 @@ comment       : '%' (!\n+):text
 rule          : name, ('=' | (':' ':'? '='?)), selection ';'?
 selection     : sequence (, '|' >> sequence )*
 sequence      : element ( >> element )*
-element       : (completion | group | option | symbol |  terminal | ref ) occurrence?
+element       : (completion | group | option | string |  terminal | ref ) occurrence?
 completion    : '..'
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
@@ -20,7 +20,7 @@ ref           : name capture
 name          : '-'? '\'? @ {@ # '_' '-'}*
 capture       : [':' name:alias ]
 
-symbol        : ''' !'''x2+ '''
+string        : ''' !'''x2+ '''
 
 terminal      : pattern | ranges | figures
 pattern       : not? (gap | pad | indent | separator)
@@ -28,9 +28,9 @@ figures       : '{', -figure (, -figure )* '}' capture
 figure        : ranges | ref
 
 wildcard      : '.'
-atom          : ''' . '''
+symbol        : ''' . '''
 code-point    : 'U+' &x4-8
-literal       : code-point | atom
+literal       : code-point | symbol
 range         : literal, '-', literal
 category      : 'U+{' @+ '}'
 ranges        : not? (wildcard | letter | digit | hex | octal | binary | category | range | literal | whitespace | shortname )
