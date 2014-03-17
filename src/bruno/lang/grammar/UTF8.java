@@ -52,7 +52,7 @@ public final class UTF8 {
 		return cp;
 	}
 
-	public static int byteLength(ByteBuffer input, int position) {
+	public static int byteCount(ByteBuffer input, int position) {
 		byte b = input.get(position);
 		if (b >= 0)
 			return 1;
@@ -69,5 +69,36 @@ public final class UTF8 {
 			return 3;
 		}
 		return 2;
+	}
+
+	public static String toLiteral(int codePoint) {
+		StringBuilder b = new StringBuilder();
+		codePoint = Math.abs(codePoint);
+		if (codePoint > 31 && codePoint < 256) {
+			b.append('\'');
+			b.append((char)codePoint);
+			b.append('\'');
+		} else if (codePoint == '\t') {
+			b.append("\\t");
+		} else if (codePoint == '\n') {
+			b.append("\\n");
+		} else if (codePoint == '\r') {
+			b.append("\\r");
+		} else {
+			b.append("U+");
+			b.append(String.format("%04x", codePoint));
+		}
+		return b.toString();
+	}
+
+	public static int characters(byte[] bytes) {
+		ByteBuffer b = ByteBuffer.wrap(bytes);
+		int l = 0;
+		int pos = 0;
+		while (pos < bytes.length) {
+			pos += byteCount(b, pos);
+			l++;
+		}
+		return l;
 	}
 }

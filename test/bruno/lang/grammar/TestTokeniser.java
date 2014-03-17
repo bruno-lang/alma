@@ -14,7 +14,7 @@ public class TestTokeniser {
 
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", Grano.GRAMMAR);
+		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", FregeFL.GRAMMAR);
 		Grammar bruno = Builder.build(t);
 		Tokenised code = Tokenised.tokenise("etc/example.mod", "file", bruno);
 		Printer.rulePrinter(System.out).process(code);
@@ -22,42 +22,37 @@ public class TestTokeniser {
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
-		Grammar g0 = Grano.GRAMMAR;
-		System.out.println(g0);
+		Grammar g0 = FregeFL.GRAMMAR;
 		Tokenised t1 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g0);
-		new Printer.ParseTreePrinter(System.out).process(t1);
 		Grammar g1 = Builder.build(t1);
-		System.out.println(g1);
 		Tokenised t2 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g1);
-		System.out.println(t2.tokens);
-		new Printer.ParseTreePrinter(System.out).process(t2);
+		System.out.println(g1);
+		Printer.rulePrinter(System.out).process(t2);
 	}
 	
 	@Test
 	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
-		Tokens tokens = Tokenised.tokenise("etc/test.grammar", "grammar", Grano.GRAMMAR).tokens;
+		Tokens tokens = Tokenised.tokenise("etc/test.grammar", "grammar", FregeFL.GRAMMAR).tokens;
 		assertEquals(8, tokens.end());
 		assertEquals("terminal", tokens.rule(7).name);
 	}
 	
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/json.grammar", "grammar", Grano.GRAMMAR);
+		Tokenised t = Tokenised.tokenise("etc/json.grammar", "grammar", FregeFL.GRAMMAR);
 		Grammar json = Builder.build(t);
 		System.out.println(json);
 		Tokenised jsont = Tokenised.tokenise("etc/example.json", "json", json);
 		Printer.rulePrinter(System.out).process(jsont);
-		new Printer.ParseTreePrinter(System.out).process(jsont);
 	}
 	
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", Grano.GRAMMAR);
+		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", FregeFL.GRAMMAR);
 		Grammar xml = Builder.build(t);
 		System.out.println(xml);
 		Tokenised xmlt = Tokenised.tokenise("etc/example.xml", "document", xml);
 		Printer.rulePrinter(System.out).process(xmlt);
-		new Printer.ParseTreePrinter(System.out).process(xmlt);
 	}
 
 	@Test

@@ -63,6 +63,8 @@ public final class Printer {
 	public static abstract class ColorPrinter implements Processor {
 
 		abstract void print(Tokens tokens, ByteBuffer in, int index);
+		
+		abstract void print(String s);
 
 		@Override
 		public void process(Tokenised t) {
@@ -70,6 +72,7 @@ public final class Printer {
 			for (int i = 0; i < tokens.count(); i++) {
 				print(tokens, t.file, i);
 			}
+			print(ANSI.BLACK+"\n"+ANSI.RESET);
 		}
 	}
 	
@@ -97,6 +100,11 @@ public final class Printer {
 			printColorBlock(in, out, ANSI.rainbow(r.id()/2-1), s, e);
 			out.append(ANSI.RESET);
 		}
+		
+		@Override
+		void print(String s) {
+			out.append(s);
+		}
 	}
 	
 	private static final class LevelPrinter extends ColorPrinter {
@@ -122,6 +130,12 @@ public final class Printer {
 			}
 			printColorBlock(in, out, color, s, e);
 		}
+		
+		@Override
+		void print(String s) {
+			out.append(s);
+		}
+
 	}
 	
 	private static void printColorBlock(ByteBuffer input, PrintStream out, String color, int s, int e) {

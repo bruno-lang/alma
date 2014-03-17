@@ -7,24 +7,20 @@ public final class Patterns {
 	/**
 	 * <code>,</code>
 	 */
-	public static final Pattern gap = new Gap();
+	public static final Pattern GAP = new Gap();
 	/**
 	 * <code>~</code>
 	 */
-	public static final Pattern pad = new Pad();
+	public static final Pattern PAD = new Pad();
 	/**
 	 * <code>>></code>
 	 */
-	public static final Pattern indent = new Indent();
+	public static final Pattern INDENT = new Indent();
 	/**
 	 * <code>^</code>
 	 */
-	public static final Pattern separator = new Separator();
+	public static final Pattern SEPARATOR = new Separator();
 
-	public static byte toByte( char c ) {
-		return String.valueOf(c).getBytes()[0];
-	}
-	
 	public static Pattern not( Pattern excluded ) {
 		return new Not(excluded);
 	}
@@ -120,7 +116,7 @@ public final class Patterns {
 		@Override
 		public int length(ByteBuffer input, int position) {
 			int l = excluded.length(input, position);
-			return l < 0 ? UTF8.byteLength(input, position) : NOT_MACHTING;
+			return l < 0 ? UTF8.byteCount(input, position) : NOT_MACHTING;
 		}
 
 		@Override

@@ -145,7 +145,7 @@ public final class Tokeniser {
 		if (position >= input.limit())
 			return mismatch(position);
 		if (rule.terminal.contains(input, position)) {
-			return position + UTF8.byteLength(input, position);
+			return position + UTF8.byteCount(input, position);
 		}
 		return mismatch(position);
 	}

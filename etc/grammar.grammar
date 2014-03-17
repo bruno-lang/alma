@@ -22,11 +22,19 @@ capture       : [':' name:alias ]
 
 symbol        : ''' !'''x2+ '''
 
+terminal      : pattern | ranges | figures
+pattern       : not? (gap | pad | indent | separator)
+figures       : '{', -figure (, -figure )* '}' capture
+figure        : ranges | ref
+
 wildcard      : '.'
 atom          : ''' . '''
-utf8          : 'U+' &x4-8
-literal       : utf8 | atom
+code-point    : 'U+' &x4-8
+literal       : code-point | atom
 range         : literal, '-', literal
+category      : 'U+{' @+ '}'
+ranges        : not? (wildcard | letter | digit | hex | octal | binary | category | range | literal | whitespace | shortname )
+
 letter        : '@'
 digit         : '#'
 hex           : '&'
@@ -39,15 +47,7 @@ pad           : '~'
 indent        : '>>'
 separator     : '^'
 
+shortname     : tab | lf | cr
 tab           : '\t'
 lf            : '\n'
 cr            : '\r'
-shortname     : tab | lf | cr
-
-utf8-class    : 'U+{' @+ '}'
-utf8-set      : not? (wildcard | letter | digit | hex | octal | binary | utf8-class | range | literal | whitespace | shortname )
-
-figure        : utf8-set | ref
-figures       : '{', -figure (, -figure )* '}' capture
-pattern       : not? (gap | pad | indent | separator)
-terminal      : pattern | utf8-set | figures

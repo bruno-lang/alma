@@ -26,11 +26,11 @@ public final class Terminal {
 	public static final Terminal WHITESPACE = range(9, 13).and(character(32));
 	
 	public static final Terminal
-		DIGIT = range('0', '9'),
-		HEX = DIGIT.and(range('A', 'F')),
-		OCTAL = range('0', '7'),
-		BINARY = range('0', '1'),
-		LETTER = range('a', 'z').and(range('A','Z'));
+		DIGITS = range('0', '9'),
+		HEX_NUMBER = DIGITS.and(range('A', 'F')),
+		OCTAL_NUMBER = range('0', '7'),
+		BINARY_NUMBER = range('0', '1'),
+		LETTERS = range('a', 'z').and(range('A','Z'));
 	
 	public static Terminal notRange(int minCodePoint, int maxCodePoint) {
 		return new Terminal(new int[] { -minCodePoint, -maxCodePoint }); 
@@ -152,7 +152,15 @@ public final class Terminal {
 		if (ranges.length == 2 && ranges[0] == 0 && ranges[1] == UTF8.MAX_CODE_POINT) {
 			return ".";
 		}
-		//TODO special any whitespace _
+		if (this == WHITESPACE) {
+			return "_";
+		}
+		if (this == LETTERS) {
+			return "@";
+		}
+		if (this == DIGITS) {
+			return "#";
+		}
 		StringBuilder b = new StringBuilder();
 		if (!isSingleCharacter()) {
 			b.append("{ ");
@@ -165,34 +173,16 @@ public final class Terminal {
 				b.append('!');
 			}
 			if (ranges[i] == ranges[i+1]) {
-				appendChar(ranges[i], b);
+				b.append(UTF8.toLiteral(ranges[i]));
 			} else {
-				appendChar(ranges[i], b);
+				b.append(UTF8.toLiteral(ranges[i]));
 				b.append('-');
-				appendChar(ranges[i+1], b);
+				b.append(UTF8.toLiteral(ranges[i+1]));
 			}
 		}
 		if (!isSingleCharacter()) {
 			b.append(" }");
 		}
 		return b.toString();
-	}
-
-	private void appendChar(int codePoint, StringBuilder b) {
-		codePoint = Math.abs(codePoint);
-		if (codePoint > 31 && codePoint < 256) {
-			b.append('\'');
-			b.append((char)codePoint);
-			b.append('\'');
-		} else if (codePoint == '\t') {
-			b.append("\\t");
-		} else if (codePoint == '\n') {
-			b.append("\\n");
-		} else if (codePoint == '\r') {
-			b.append("\\r");
-		} else {
-			b.append("U+");
-			b.append(String.format("%04x", codePoint));
-		}
 	}
 }

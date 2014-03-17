@@ -22,10 +22,10 @@ public class Builder {
 		int token = 0;
 		while (token < c) {
 			Rule r = tokens.rule(token);
-			if (r == Grano.grammar) {
+			if (r == FregeFL.grammar) {
 				token++;
-			} else if (r == Grano.member) {
-				if (tokens.rule(token+1) == Grano.rule) {
+			} else if (r == FregeFL.member) {
+				if (tokens.rule(token+1) == FregeFL.rule) {
 					rules.add(rule(token+1, grammar));
 				}
 				token = tokens.next(token);
@@ -35,17 +35,17 @@ public class Builder {
 	}
 
 	private static Rule rule(int token, Tokenised grammar) {
-		check(token, grammar, Grano.rule);
+		check(token, grammar, FregeFL.rule);
 		return selection(token+2, grammar).as(grammar.text(token+1));
 	}
 
 	private static Rule selection(int token, Tokenised grammar) {
-		check(token, grammar, Grano.selection);
+		check(token, grammar, FregeFL.selection);
 		final List<Rule> alternatives = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (tokens.rule(i) == Grano.sequence && tokens.end(i) <= end) {
+		while (tokens.rule(i) == FregeFL.sequence && tokens.end(i) <= end) {
 			alternatives.add(sequence(i, grammar));
 			i = tokens.next(i);
 		}
@@ -56,12 +56,12 @@ public class Builder {
 	}
 
 	private static Rule sequence(int token, Tokenised grammar) {
-		check(token, grammar, Grano.sequence);
+		check(token, grammar, FregeFL.sequence);
 		final List<Rule> elems = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (tokens.rule(i) == Grano.element && tokens.end(i) <= end) {
+		while (tokens.rule(i) == FregeFL.element && tokens.end(i) <= end) {
 			elems.add(element(i, grammar));
 			i = tokens.next(i);
 		}
@@ -72,20 +72,20 @@ public class Builder {
 	}
 
 	private static Rule element(int token, Tokenised grammar) {
-		check(token, grammar, Grano.element);
+		check(token, grammar, FregeFL.element);
 		final Tokens tokens = grammar.tokens;
 		Occur occur = occur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
-		if (r == Grano.completion) {
+		if (r == FregeFL.completion) {
 			return Rule.completion();
 		}
-		if (r == Grano.group) {
+		if (r == FregeFL.group) {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(occur);
 		}
-		if (r == Grano.option) {
+		if (r == FregeFL.option) {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(Occur.qmark);
 		}
-		if (r == Grano.terminal) {
+		if (r == FregeFL.terminal) {
 			Rule t = terminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
 			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
@@ -93,15 +93,15 @@ public class Builder {
 			}
 			return t;
 		}
-		if (r == Grano.symbol) {
+		if (r == FregeFL.symbol) {
 			//TODO reuse equal symbols
 			String text = grammar.text(token+1);
 			return Rule.symbol(text.substring(1, text.length()-1)).occurs(occur);
 		}
-		if (r == Grano.ref) {
+		if (r == FregeFL.ref) {
 			return ref(token+1, grammar).occurs(occur);
 		}
-		throw new RuntimeException("Unexpected rule: "+r);
+		throw unexpectedRule(r);
 	}
 
 	private static Rule ref(int token, Tokenised grammar) {
@@ -109,7 +109,7 @@ public class Builder {
 	}
 
 	private static Rule capture(int token, Tokenised grammar, Rule rule) {
-		if (grammar.tokens.rule(token) == Grano.capture) {
+		if (grammar.tokens.rule(token) == FregeFL.capture) {
 			String name = grammar.text(token+1);
 			if (name.contains(":")) { 
 				throw new IllegalStateException();
@@ -120,57 +120,57 @@ public class Builder {
 	}
 
 	private static Rule terminal(int token, Tokenised grammar) {
-		check(token, grammar, Grano.terminal);
+		check(token, grammar, FregeFL.terminal);
 		Rule r = grammar.tokens.rule(token+1);
-		if (r == Grano.utf8_set) {
-			return utf8set(token+1, grammar);
+		if (r == FregeFL.ranges) {
+			return ranges(token+1, grammar);
 		}
-		if (r == Grano.figures) {
+		if (r == FregeFL.figures) {
 			return figures(token+1, grammar);
 		}
-		if (r == Grano.pattern) {
+		if (r == FregeFL.pattern) {
 			return pattern(token+1, grammar);
 		}
-		throw new RuntimeException("Unexpected rule: "+r);
+		throw unexpectedRule(r);
 	}
 
 	private static Rule pattern(int token, Tokenised grammar) {
-		check(token, grammar, Grano.pattern);
-		boolean not = grammar.tokens.rule(token+1) == Grano.not;
+		check(token, grammar, FregeFL.pattern);
+		boolean not = grammar.tokens.rule(token+1) == FregeFL.not;
 		Rule p = patternSelection(token+(not?2:1), grammar);
 		return not ? Rule.pattern(Patterns.not(p.pattern)) : p;
 	}
 
 	private static Rule patternSelection(int token, Tokenised grammar) {
 		Rule r = grammar.tokens.rule(token);
-		if (r == Grano.gap) {
-			return Rule.pattern(Patterns.gap);
+		if (r == FregeFL.gap) {
+			return Rule.pattern(Patterns.GAP);
 		}
-		if (r == Grano.pad) {
-			return Rule.pattern(Patterns.pad);
+		if (r == FregeFL.pad) {
+			return Rule.pattern(Patterns.PAD);
 		}
-		if (r == Grano.indent) {
-			return Rule.pattern(Patterns.indent);
+		if (r == FregeFL.indent) {
+			return Rule.pattern(Patterns.INDENT);
 		}
-		if (r == Grano.separator) {
-			return Rule.pattern(Patterns.separator);
+		if (r == FregeFL.separator) {
+			return Rule.pattern(Patterns.SEPARATOR);
 		}		
-		throw new RuntimeException("Unexpected rule: "+r);
+		throw unexpectedRule(r);
 	}
 
 	private static Rule figures(int token, Tokenised grammar) {
-		check(token, grammar, Grano.figures);
+		check(token, grammar, FregeFL.figures);
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token);
 		Terminal terminal = null;
 		int i = token+1;
 		List<Rule> nonTerminals = new ArrayList<>();
-		while (tokens.end(i) <= end && tokens.rule(i) != Grano.capture) {
+		while (tokens.end(i) <= end && tokens.rule(i) != FregeFL.capture) {
 			Rule figure = tokens.rule(i);
-			if (figure == Grano.utf8_set) {
-				Rule f = utf8set(i, grammar);
-				terminal = terminal == null ? f.terminal : terminal.and(f.terminal);
-			} else if (figure == Grano.ref) {
+			if (figure == FregeFL.ranges) {
+				Rule ranges = ranges(i, grammar);
+				terminal = terminal == null ? ranges.terminal : terminal.and(ranges.terminal);
+			} else if (figure == FregeFL.ref) {
 				nonTerminals.add(ref(i, grammar));
 			}
 			i = tokens.next(i);
@@ -184,48 +184,49 @@ public class Builder {
 		return capture(i, grammar, r);
 	}
 
-	private static Rule utf8set(int token, Tokenised grammar) {
-		check(token, grammar, Grano.utf8_set);
-		boolean not = grammar.tokens.rule(token+1) == Grano.not;
-		Rule utf8s = utf8setSelection(token +(not ? 2 : 1), grammar);
-		return not ? Rule.terminal(utf8s.terminal.not()) : utf8s;
+	private static Rule ranges(int token, Tokenised grammar) {
+		check(token, grammar, FregeFL.ranges);
+		boolean not = grammar.tokens.rule(token+1) == FregeFL.not;
+		Rule ranges = rangesSelection(token +(not ? 2 : 1), grammar);
+		return not ? Rule.terminal(ranges.terminal.not()) : ranges;
 	}
 
-	private static Rule utf8setSelection(int token, Tokenised grammar) {
+	private static Rule rangesSelection(int token, Tokenised grammar) {
 		Rule r = grammar.tokens.rule(token);
-		if (r == Grano.wildcard) {
+		if (r == FregeFL.wildcard) {
 			return Rule.terminal(Terminal.WILDCARD);
 		}
-		if (r == Grano.letter) {
-			return Rule.terminal(Terminal.LETTER);
+		if (r == FregeFL.letter) {
+			return Rule.terminal(Terminal.LETTERS);
 		}
-		if (r == Grano.hex) {
-			return Rule.terminal(Terminal.HEX);
+		if (r == FregeFL.hex) {
+			return Rule.terminal(Terminal.HEX_NUMBER);
 		}
-		if (r == Grano.octal) {
-			return Rule.terminal(Terminal.OCTAL);
+		if (r == FregeFL.octal) {
+			return Rule.terminal(Terminal.OCTAL_NUMBER);
 		}
-		if (r == Grano.binary) {
-			return Rule.terminal(Terminal.BINARY);
+		if (r == FregeFL.binary) {
+			return Rule.terminal(Terminal.BINARY_NUMBER);
 		}
-		if (r == Grano.digit) {
-			return Rule.terminal(Terminal.DIGIT);
+		if (r == FregeFL.digit) {
+			return Rule.terminal(Terminal.DIGITS);
 		}
-		if (r == Grano.utf8_class) {
+		if (r == FregeFL.category) {
 			//TODO
+			throw new UnsupportedOperationException("Not available yet");
 		}
-		if (r == Grano.range) {
+		if (r == FregeFL.range) {
 			return Rule.terminal(Terminal.range(literal(token+1, grammar), literal(token+3, grammar)));
 		}
-		if (r == Grano.literal) {
+		if (r == FregeFL.literal) {
 			return Rule.terminal(Terminal.character(literal(token, grammar)));
 		}
-		if (r == Grano.whitespace) {
+		if (r == FregeFL.whitespace) {
 			return Rule.terminal(Terminal.WHITESPACE);
 		}
-		if (r == Grano.shortname) {
+		if (r == FregeFL.shortname) {
 			String name = grammar.text(token+1);
-			char c = name.charAt(1); //FIXME use code point
+			int c = name.charAt(1);
 			if (c == 't') {
 				return Rule.terminal(Terminal.character('\t'));
 			}
@@ -237,34 +238,34 @@ public class Builder {
 			}
 			throw new NoSuchElementException(name);
 		}
-		throw new RuntimeException("Unexpected rule: "+r);
+		throw unexpectedRule(r);
 	}
 
 	private static int literal(int token, Tokenised grammar) {
-		check(token, grammar, Grano.literal);
+		check(token, grammar, FregeFL.literal);
 		Rule r = grammar.tokens.rule(token+1);
-		if (r == Grano.atom) {
+		if (r == FregeFL.atom) {
 			return grammar.text(token+1).codePointAt(1);
 		}
-		if (r == Grano.utf8) {
+		if (r == FregeFL.code_point) {
 			return Integer.parseInt(grammar.text(token+1).substring(2), 16);
 		}
-		throw new RuntimeException("Unexpected rule: "+r);
+		throw unexpectedRule(r);
 	}
 
 	private static Occur occur(int token, Tokenised grammar, int parent) {
 		// there might not be an occurrence token or it belongs to a outer parent 
-		if (grammar.tokens.rule(token) != Grano.occurrence || grammar.tokens.end(parent) < grammar.tokens.end(token)) {
+		if (grammar.tokens.rule(token) != FregeFL.occurrence || grammar.tokens.end(parent) < grammar.tokens.end(token)) {
 			return Occur.once;
 		}
 		Rule occur = grammar.tokens.rule(token+1);
-		if (occur == Grano.plus) {
+		if (occur == FregeFL.plus) {
 			return Occur.plus;
 		}
-		if (occur == Grano.star) {
+		if (occur == FregeFL.star) {
 			return Occur.star;
 		}
-		if (occur == Grano.qmark) {
+		if (occur == FregeFL.qmark) {
 			return Occur.qmark;
 		}
 		int min = Integer.parseInt(grammar.text(token+1));
@@ -276,6 +277,10 @@ public class Builder {
 			}
 		}
 		return Occur.occur(min, max);
+	}
+	
+	private static RuntimeException unexpectedRule(Rule r) {
+		return new RuntimeException("Unexpected rule: "+r);
 	}
 	
 	private static void check(int token, Tokenised grammar, Rule expected) {
