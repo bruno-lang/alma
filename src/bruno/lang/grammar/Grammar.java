@@ -1,105 +1,35 @@
 package bruno.lang.grammar;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 
 
 /**
- * The model of a formal grammar. 
- *  
+ * The *data* model of a formal grammar. 
+ * 
  * @author jan
  */
 public final class Grammar {
 
-	private final LinkedHashMap<String, Rule> rulesByName;
+	private final Rule[] rules;
 
-	public Grammar(Rule... roots) {
+	public Grammar(Rule... namedRules) {
 		super();
-		this.rulesByName = new LinkedHashMap<>();
-		for (Rule root : roots) {
-			init(root);
-		}
-		link(rulesByName.values().toArray(new Rule[0]), new HashSet<String>());
-		complete(roots, null, new HashSet<Rule>());
-	}
-
-	private void complete(Rule[] elements, Rule completed, java.util.Set<Rule> followed) {
-		for (Rule e : elements) {
-			if (!followed.contains(e)) {
-				followed.add(e);
-				if (e.type == RuleType.COMPLETION) {
-					if (e.elements[0] == null) {
-						e.elements[0] = completed;
-					}
-				} else if (e.type == RuleType.SEQUENCE && e.elements.length > 1) {
-					for (int i = 0; i < e.elements.length-1; i++) {
-						complete(new Rule[] { e.elements[i] }, e.elements[i+1], followed);
-					}
-				} else {
-					complete(e.elements, completed, followed);
-				}
-			}
-		}
-	}
-
-	private void init(Rule rule) {
-		if (rule == null || rule.type == RuleType.REFERENCE) {
-			return;
-		}
-		if (!rule.name.isEmpty()) {
-			rulesByName.put(rule.name.substring(rule.name.charAt(0) == '-' ? 1 : 0), rule);
-		}
-		for (Rule r : rule.elements) {
-			init(r);
-		}
-	}
-
-	private void link(Rule[] rules, java.util.Set<String> followed) {
-		for (int i = 0; i < rules.length; i++) {
-			link(rules[i], followed);
-		}
-	}
-
-	private void link(Rule rule, java.util.Set<String> followed) {
-		if (rule.type == RuleType.COMPLETION) {
-			return;
-		}
-		//FIXME below: when linked rule uses -minus to not capture the capture has to be unboxed
-		Rule[] elements = rule.elements;
-		if (elements.length > 0) { 
-			if (!followed.contains(rule.name)) {
-				if (!rule.name.isEmpty()) {
-					followed = new HashSet<>(followed);
-					followed.add(rule.name);
-				}
-				for (int i = 0; i < elements.length; i++) {
-					Rule e = elements[i];
-						if (e.type == RuleType.REFERENCE) {
-							elements[i] = rule(e.name);
-						} else {
-							link(e, followed);
-						}
-				}
-			} else {
-				for (int i = 0; i < elements.length; i++) {
-					Rule e = elements[i];
-					if (e.type == RuleType.REFERENCE) {
-						elements[i] = rule(e.name);
-					}
-				}
-			}
-		}
+		this.rules = namedRules;
 	}
 
 	public Rule rule(String name) {
 		char n0 = name.charAt(0);
 		boolean noCapture = n0 == '-' || n0 == '\\';
-		Rule r = rulesByName.get(name.substring(n0 == '-' ? 1 : 0).intern());
-		if (r != null) {
-			//TODO wenn es ein \ ist dann capture auspacken...
-			return noCapture && r.type == RuleType.CAPTURE ? r.elements[0].as(name) : r;
+		for (Rule r : rules) {
+			if (r != null) {
+				if (r.name.equals(name)) {
+					return r;
+				}
+				if ( name.equals("-"+r.name)) {
+					return noCapture && r.type == RuleType.CAPTURE ? r.elements[0].as(name) : r;
+				}
+			}
 		}
 		throw new NoSuchElementException("Missing rule: "+name);
 	}
@@ -107,7 +37,7 @@ public final class Grammar {
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		for (Rule r : rulesByName.values()) {
+		for (Rule r : rules) {
 			if (r != null && !r.name.isEmpty()) {
 			int l = 15;
 			b.append(String.format("%-"+l+"s: ", r.name));
@@ -155,6 +85,7 @@ public final class Grammar {
 		}
 
 		public static Rule seq(Rule...elements) {
+			complete(elements);
 			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_LITERAL, null, null);
 		}
 
@@ -252,6 +183,10 @@ public final class Grammar {
 				return "("+b.substring(1)+")";
 			}
 			if (type == RuleType.ITERATION) {
+				if (occur == Occur.qmark && elements[0].type == RuleType.SEQUENCE) {
+					String seq = elements[0].toString();
+					return "["+seq.substring(1, seq.length()-1)+"]";
+				}
 				String iter= occur.toString();
 				return elements[0]+iter;
 			}
@@ -266,6 +201,16 @@ public final class Grammar {
 			return occurs(Occur.qmark);
 		}
 
+		private static void complete(Rule[] elements) {
+			for (int i = 0; i < elements.length-1; i++) {
+				RuleType t = elements[i].type;
+				if (t == RuleType.COMPLETION) {
+					elements[i].elements[0] = elements[i+1];
+				} else if (t == RuleType.CAPTURE && elements[i].elements[0].type == RuleType.COMPLETION) {
+					elements[i].elements[0].elements[0] = elements[i+1];
+				}
+			}
+		}
 	}
 
 }

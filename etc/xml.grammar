@@ -5,11 +5,8 @@ node = cdata | comment | element | text
 element = '<' name attributes? , '>', nodes?, '</' name '>'
 nodes = node (, node)*
 attributes = ~ attribute (~ attribute)*
-attribute = name '=' '"' value '"'
+attribute = name '=' '"' ..:value '"'
 text = !'<'*
-value = ..
-cdata = '<![CDATA[' data ']]>'
-data = ..
-comment = '<!--' info '-->'
-info = ..
+cdata = '<![CDATA[' ..:data ']]>'
+comment = '<!--' ..:info '-->'
 name = @+

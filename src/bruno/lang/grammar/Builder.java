@@ -13,9 +13,9 @@ import bruno.lang.grammar.Grammar.RuleType;
  *  
  * @author jan
  */
-public class Builder {
+public final class Builder {
 
-	public static Grammar build(Tokenised grammar) {
+	public static Grammar grammar(Tokenised grammar) {
 		final List<Rule> rules = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
 		final int c = tokens.count();
@@ -26,12 +26,13 @@ public class Builder {
 				token++;
 			} else if (r == FregeFL.member) {
 				if (tokens.rule(token+1) == FregeFL.rule) {
-					rules.add(rule(token+1, grammar));
+					Rule rule = rule(token+1, grammar);
+					rules.add(rule);
 				}
 				token = tokens.next(token);
 			}
 		}
-		return new Grammar(rules.toArray(new Rule[rules.size()]));
+		return new Grammar(Mechanic.deploy(rules.toArray(new Rule[rules.size()])));
 	}
 
 	private static Rule rule(int token, Tokenised grammar) {
@@ -94,7 +95,6 @@ public class Builder {
 			return t;
 		}
 		if (r == FregeFL.string) {
-			//TODO reuse equal symbols
 			String text = grammar.text(token+1);
 			return Rule.string(text.substring(1, text.length()-1)).occurs(occur);
 		}
@@ -110,11 +110,7 @@ public class Builder {
 
 	private static Rule capture(int token, Tokenised grammar, Rule rule) {
 		if (grammar.tokens.rule(token) == FregeFL.capture) {
-			String name = grammar.text(token+1);
-			if (name.contains(":")) { 
-				throw new IllegalStateException();
-			}
-			return rule.as(name);
+			return rule.as(grammar.text(token+1));
 		}
 		return rule;
 	}
@@ -164,20 +160,24 @@ public class Builder {
 		final int end = tokens.end(token);
 		Terminal terminal = null;
 		int i = token+1;
-		List<Rule> nonTerminals = new ArrayList<>();
+		List<Rule> refs = new ArrayList<>();
 		while (tokens.end(i) <= end && tokens.rule(i) != FregeFL.capture) {
 			Rule figure = tokens.rule(i);
 			if (figure == FregeFL.ranges) {
 				Rule ranges = ranges(i, grammar);
 				terminal = terminal == null ? ranges.terminal : terminal.and(ranges.terminal);
-			} else if (figure == FregeFL.ref) {
-				nonTerminals.add(ref(i, grammar));
+			} else if (figure == FregeFL.name) {
+				String name = grammar.text(i);
+				if (name.charAt(0) != '-') {
+					name = "-"+name; // always do not capture these
+				}
+				refs.add(Rule.ref(name));
 			}
 			i = tokens.next(i);
 		}
-		Rule r = terminal == null ? Rule.selection(nonTerminals.toArray(new Rule[0])) : Rule.terminal(terminal);
-		if (!nonTerminals.isEmpty() && terminal != null) {
-			Rule[] a = Arrays.copyOf(nonTerminals.toArray(new Rule[0]), nonTerminals.size() + 1);
+		Rule r = terminal == null ? Rule.selection(refs.toArray(new Rule[0])) : Rule.terminal(terminal);
+		if (!refs.isEmpty() && terminal != null) {
+			Rule[] a = Arrays.copyOf(refs.toArray(new Rule[0]), refs.size() + 1);
 			a[a.length-1] = r;
 			r = Rule.selection(a);
 		}

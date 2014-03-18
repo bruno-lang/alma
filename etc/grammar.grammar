@@ -6,7 +6,7 @@ rule          : name, ('=' | (':' ':'? '='?)), selection ';'?
 selection     : sequence (, '|' >> sequence )*
 sequence      : element ( >> element )*
 element       : (completion | group | option | string |  terminal | ref ) occurrence?
-completion    : '..'
+completion    : '..' capture
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
 
@@ -25,7 +25,7 @@ string        : ''' !'''x2+ '''
 terminal      : pattern | ranges | figures
 pattern       : not? (gap | pad | indent | separator)
 figures       : '{', -figure (, -figure )* '}' capture
-figure        : ranges | ref
+figure        : ranges | name
 
 wildcard      : '.'
 symbol        : ''' . '''

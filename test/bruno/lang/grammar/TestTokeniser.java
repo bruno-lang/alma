@@ -1,8 +1,8 @@
 package bruno.lang.grammar;
 
 import static bruno.lang.grammar.Grammar.Rule.completion;
-import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.seq;
+import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -15,7 +15,7 @@ public class TestTokeniser {
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", FregeFL.GRAMMAR);
-		Grammar bruno = Builder.build(t);
+		Grammar bruno = Builder.grammar(t);
 		Tokenised code = Tokenised.tokenise("etc/example.mod", "file", bruno);
 		Printer.rulePrinter(System.out).process(code);
 	}
@@ -24,7 +24,7 @@ public class TestTokeniser {
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Grammar g0 = FregeFL.GRAMMAR;
 		Tokenised t1 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g0);
-		Grammar g1 = Builder.build(t1);
+		Grammar g1 = Builder.grammar(t1);
 		Tokenised t2 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g1);
 		System.out.println(g1);
 		Printer.rulePrinter(System.out).process(t2);
@@ -40,7 +40,7 @@ public class TestTokeniser {
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/json.grammar", "grammar", FregeFL.GRAMMAR);
-		Grammar json = Builder.build(t);
+		Grammar json = Builder.grammar(t);
 		System.out.println(json);
 		Tokenised jsont = Tokenised.tokenise("etc/example.json", "json", json);
 		Printer.rulePrinter(System.out).process(jsont);
@@ -49,7 +49,7 @@ public class TestTokeniser {
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", FregeFL.GRAMMAR);
-		Grammar xml = Builder.build(t);
+		Grammar xml = Builder.grammar(t);
 		System.out.println(xml);
 		Tokenised xmlt = Tokenised.tokenise("etc/example.xml", "document", xml);
 		Printer.rulePrinter(System.out).process(xmlt);

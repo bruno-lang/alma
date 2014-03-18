@@ -56,7 +56,7 @@ public final class FregeFL {
 		category = seq(string("U+{"), terminal(LETTERS).plus(), symbol('}')).as("category"),
 		ranges = seq(not.qmark(), selection(wildcard, letter, digit, hex, octal, binary, category, range, literal, whitespace, shortname)).as("ranges"),
 
-		figure = selection(ranges, ref).as("-figure"),
+		figure = selection(ranges, name).as("-figure"),
 		figures = seq(symbol('{'), g, seq(figure, seq(g, figure).star()) , g, symbol('}'), capture).as("figures"),
 		pattern = seq(not.qmark(), selection(gap, pad, indent, separator)).as("pattern"),
 		terminal = selection(pattern, ranges, figures).as("terminal"),
@@ -71,7 +71,7 @@ public final class FregeFL {
 
 		option = seq(symbol('['), g, ref("selection"), g, symbol(']'), capture).as("option"),
 		group = seq(symbol('('), g, ref("selection"), g, symbol(')'), capture).as("group"),
-		completion = string("..").as("completion"),
+		completion = seq(string(".."), capture).as("completion"),
 		element = seq(selection(completion, group, option, string, terminal, ref), occurrence.qmark()).as("element"),
 
 		sequence = seq(element, seq(i, element).star()).as("sequence"),
@@ -82,7 +82,12 @@ public final class FregeFL {
 		member = selection(comment, rule).as("member"), 
 		grammar = seq(member, seq(g, member).star()).as("grammar") 
 		;
-
-	static final Grammar GRAMMAR = new Grammar(grammar);
+	
+	static {
+		option.elements[0].elements[2] = selection;
+		group.elements[0].elements[2] = selection;
+	}
+	
+	static final Grammar GRAMMAR = new Grammar(Mechanic.namedRules(grammar));
 
 }
