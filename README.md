@@ -89,14 +89,18 @@ There is some _syntactic sugar_ that does not add more expressiveness but better
 - `_` = `\s` = `{ \t \n \r ' '}`
 - `,` = `_*` = `{ \t \n \r ' '}*`
 - `~` = `_+` = `{ \t \n \r ' '}+`
+- `.` = `>> { \n \r }+ >>`*
 - `>>` = `{ \t ' ' }*`
 
+_* this is not fully equivalent as the pattern allows that CR/LF do not occur if the end of the file is reached_
+
 ##### Sets of Characters
-- `#` = `'0'-'9'`
+- `9` = `'0'-'9'`
+- `7` = `'0'-'7'`
+- `1` = `'0'-'1'`
+- `#` = `{ 9 'A'-'F'}` = `{ '0'-'9' 'A'-'F'}`
 - `@` = `{ 'a'-'z' 'A'-'Z' }`
-- `X` = `{ # 'A'-'F'}` = `{ '0'-'9' 'A'-'F'}`
-- `8` = `'0'-'7'`
-- `.` = `{ \u0000-\u7FFFFFFF }` (that is any UTF-8)
+- `$` = `{ \u0000-\u7FFFFFFF }` (that is any UTF-8)
 
 ##### Occurrence
 - `+` = `x1+`

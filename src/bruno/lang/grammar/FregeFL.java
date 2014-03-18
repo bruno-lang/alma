@@ -10,6 +10,7 @@ import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Occur.occur;
 import static bruno.lang.grammar.Patterns.GAP;
 import static bruno.lang.grammar.Patterns.INDENT;
+import static bruno.lang.grammar.Patterns.WRAP;
 import static bruno.lang.grammar.Terminal.DIGITS;
 import static bruno.lang.grammar.Terminal.HEX_NUMBER;
 import static bruno.lang.grammar.Terminal.LETTERS;
@@ -25,26 +26,28 @@ public final class FregeFL {
 	static final Rule
 		g = pattern(GAP),
 		i = pattern(INDENT),
+		w = pattern(WRAP),
 		a = symbol('\''),
 
 		name = seq(symbol('-').qmark(), symbol('\\').qmark(), terminal(LETTERS), terminal(LETTERS.and(DIGITS).and(character('_')).and(character('-'))).star()).as("name"),
 		capture = seq(symbol(':'), name.as("alias")).qmark().as("capture"),
 		ref = seq(name, capture).as("ref"),
 
-		wildcard = symbol('.').as("wildcard"),
+		wildcard = symbol('$').as("wildcard"),
 		symbol = seq(a, terminal(Terminal.WILDCARD), a).as("symbol"),
 		code_point = seq(string("U+"), terminal(HEX_NUMBER).occurs(occur(4, 8))).as("code-point"), 
 		literal = selection(code_point, symbol).as("literal"),
 		range = seq(literal, g, symbol('-'), g, literal).as("range"),
 		letter = symbol('@').as("letter"),
-		digit = symbol('#').as("digit"),
-		hex = symbol('&').as("hex"),
-		octal = symbol('8').as("octal"),
+		digit = symbol('9').as("digit"),
+		hex = symbol('#').as("hex"),
+		octal = symbol('7').as("octal"),
 		binary = symbol('1').as("binary"),
 		not = symbol('!').as("not"),
 		whitespace = symbol('_').as("whitespace"),
 		gap = symbol(',').as("gap"),
 		pad = symbol('~').as("pad"),
+		wrap = symbol('.').as("wrap"),
 		indent = string(">>").as("indent"),
 		separator = symbol('^').as("separator"),
 
@@ -58,7 +61,7 @@ public final class FregeFL {
 
 		figure = selection(ranges, name).as("-figure"),
 		figures = seq(symbol('{'), g, seq(figure, seq(g, figure).star()) , g, symbol('}'), capture).as("figures"),
-		pattern = seq(not.qmark(), selection(gap, pad, indent, separator)).as("pattern"),
+		pattern = seq(not.qmark(), selection(gap, pad, indent, separator, wrap)).as("pattern"),
 		terminal = selection(pattern, ranges, figures).as("terminal"),
 
 		string = seq(a, terminal(notCharacter('\'')).occurs(occur(2, Occur.plus.max)), a).as("string"),
@@ -77,7 +80,7 @@ public final class FregeFL {
 		sequence = seq(element, seq(i, element).star()).as("sequence"),
 		selection = seq(sequence, seq(g, symbol('|'), i, sequence).star()).as("selection"),
 
-		rule = seq(name, g, selection(symbol('='), seq(symbol(':'), symbol(':').qmark(), symbol('=').qmark())), g, selection, symbol(';').qmark()).as("rule"),
+		rule = seq(name, g, selection(symbol('='), seq(symbol(':'), symbol(':').qmark(), symbol('=').qmark())), g, selection, symbol(';').qmark(), w).as("rule"),
 		comment = seq(symbol('%'), terminal(notCharacter('\n')).plus().as("text")).as("comment"),
 		member = selection(comment, rule).as("member"), 
 		grammar = seq(member, seq(g, member).star()).as("grammar") 

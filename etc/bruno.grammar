@@ -1,10 +1,10 @@
 % Fragments
-Dashed         : { '-' 'a' - 'z' # }* { 'a' - 'z' # }?
+Dashed         : { '-' 'a' - 'z' 9 }* { 'a' - 'z' 9 }?
 Verb           : 'a' - 'z' -Dashed?
-Noun           : 'A' - 'Z' { @ '-' } { @  # }*
+Noun           : 'A' - 'Z' { @ '-' } { @  9 }*
 
 % Identifiers
-Field          : { 'a' - 'z' # } -Dashed?
+Field          : { 'a' - 'z' 9 } -Dashed?
 Constant       : ':' -Field
 Variable       : -Field '''*
 
@@ -15,7 +15,7 @@ Library        : -Verb
 Namespace      : -Verb
 Fault          : -Verb '!'
 
-TypeVariable   : 'A' - 'Z' #?
+TypeVariable   : 'A' - 'Z' 9?
 Protocol       : -Noun
 Data           : -Noun
 System         : -Noun
@@ -37,9 +37,9 @@ UnitSymbol     : { ''' '%' '$' '€' '@' '/' '°' '"' ' ' }
 
 % Literals
 Literal        : LiteralLogic | LiteralText | LiteralBinary
-LiteralLogic   : ''' (#+ | .. Measure)
+LiteralLogic   : ''' (9+ | .. Measure)
 LiteralText    : '"' !'"'* '"'
-LiteralBinary  : '#' ('b' 1+ | 'o' 8+ | 'd' #+ | 'x' &+ )
+LiteralBinary  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ )
 
 Range          : RangeLiteral | RangeConstant
 RangeLiteral   : Literal [ >> '..' >> Literal ] | '..' >> Literal
@@ -53,7 +53,7 @@ Reference      : Variable | Constant | Literal
 Type           : TypeBase TypeDimension? TypeVariant? | TOp
 TypeVariant    : { '!' '?' '~' '*' }
 TypeBase       : Value | TList | TSet | TTuple | TFn | TypeVariable
-TypeDimension  : '[' #* ']'
+TypeDimension  : '[' 9* ']'
 TArray         : TypeBase TypeDimension
 TList          : '[' TypeBase ']'
 TSet           : '{' TypeBase '}'
@@ -65,7 +65,7 @@ TOp            : Operation TFn
 instances      : 'instances', TypeVariable, '::', Operation*, Kind
 Kind           : KindBase KindDimension? TypeVariant? | KOp
 KindBase       : '_' | TypeBase | KList | KSet | KTuple | KFn
-KindDimension  : '[' #* [ '-' #* ] ']'
+KindDimension  : '[' 9* [ '-' 9* ] ']'
 KArray         : KindBase KindDimension
 KList          : '[' KindBase ']'
 KSet           : '{' KindBase '}'

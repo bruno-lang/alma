@@ -20,7 +20,12 @@ public final class Patterns {
 	 * <code>^</code>
 	 */
 	public static final Pattern SEPARATOR = new Separator();
+	/**
+	 * <code>.</code>
+	 */
+	public static final Pattern WRAP = new Wrap();
 
+	
 	public static Pattern not( Pattern excluded ) {
 		return new Not(excluded);
 	}
@@ -31,6 +36,36 @@ public final class Patterns {
 		if (b == null)
 			return a;
 		return new Or(a, b);
+	}
+	
+	static final class Wrap implements Pattern {
+
+		@Override
+		public int length(ByteBuffer input, int position) {
+			final int l = input.limit();
+			int p = position;
+			while (p  < l && isIndent(input.get(p))) { p++; }
+			if (p >= l) {
+				return p - position;
+			}
+			int w = p;
+			while (p < l && isWrap(input.get(p))) { p++; }
+			if (w == p) {
+				return NOT_MACHTING;
+			}
+			while (p < l && isIndent(input.get(p))) { p++; }
+			return p - position;
+		}
+		
+		private boolean isWrap(int b) {
+			return b == '\n' || b == '\r';
+		}
+
+		@Override
+		public String toString() {
+			return ".";
+		}
+		
 	}
 	
 	static final class Separator implements Pattern {

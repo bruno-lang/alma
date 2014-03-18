@@ -150,7 +150,7 @@ public final class Terminal {
 	@Override
 	public String toString() {
 		if (ranges.length == 2 && ranges[0] == 0 && ranges[1] == UTF8.MAX_CODE_POINT) {
-			return ".";
+			return "$";
 		}
 		if (this == WHITESPACE) {
 			return "_";
@@ -159,6 +159,9 @@ public final class Terminal {
 			return "@";
 		}
 		if (this == DIGITS) {
+			return "9";
+		}
+		if (this == HEX_NUMBER) {
 			return "#";
 		}
 		StringBuilder b = new StringBuilder();

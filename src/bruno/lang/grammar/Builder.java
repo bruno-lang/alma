@@ -150,7 +150,10 @@ public final class Builder {
 		}
 		if (r == FregeFL.separator) {
 			return Rule.pattern(Patterns.SEPARATOR);
-		}		
+		}
+		if (r == FregeFL.wrap) {
+			return Rule.pattern(Patterns.WRAP);
+		}
 		throw unexpectedRule(r);
 	}
 

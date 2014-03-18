@@ -2,7 +2,7 @@
 grammar       : member (, member)*
 member        : comment | rule
 comment       : '%' (!\n+):text
-rule          : name, ('=' | (':' ':'? '='?)), selection ';'?
+rule          : name, ('=' | (':' ':'? '='?)), selection ';'? .
 selection     : sequence (, '|' >> sequence )*
 sequence      : element ( >> element )*
 element       : (completion | group | option | string |  terminal | ref ) occurrence?
@@ -11,39 +11,40 @@ group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
 
 occurrence    : 'x'? num:min {'-' '+'}:to? num:max? | qmark | star | plus
-num           : #+
+num           : 9+
 qmark         : '?'
 star          : '*'
 plus          : '+'
 
 ref           : name capture
-name          : '-'? '\'? @ {@ # '_' '-'}*
+name          : '-'? '\'? @ {@ 9 '_' '-'}*
 capture       : [':' name:alias ]
 
 string        : ''' !'''x2+ '''
 
 terminal      : pattern | ranges | figures
-pattern       : not? (gap | pad | indent | separator)
+pattern       : not? (gap | pad | indent | separator | wrap)
 figures       : '{', -figure (, -figure )* '}' capture
 figure        : ranges | name
 
-wildcard      : '.'
-symbol        : ''' . '''
-code-point    : 'U+' &x4-8
+wildcard      : '$'
+symbol        : ''' $ '''
+code-point    : 'U+' #x4-8
 literal       : code-point | symbol
 range         : literal, '-', literal
 category      : 'U+{' @+ '}'
 ranges        : not? (wildcard | letter | digit | hex | octal | binary | category | range | literal | whitespace | shortname )
 
 letter        : '@'
-digit         : '#'
-hex           : '&'
-octal         : '8'
+digit         : '9'
+hex           : '#'
+octal         : '7'
 binary        : '1'
 not           : '!'
 whitespace    : '_'
 gap           : ','
 pad           : '~'
+wrap          : '.'
 indent        : '>>'
 separator     : '^'
 
