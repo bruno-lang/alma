@@ -1,6 +1,9 @@
 
-NOA FL - Not Only Another Formal Language
-=========================
+NOA FL
+======
+
+Not Only Another Formal Language
+--------------------------------
                                                       
 A general grammar used for the bruno language.
 
