@@ -1,5 +1,5 @@
 
-FregeFL - the bruno grammar
+NOA FL - Not Only Another Formal Language
 =========================
                                                       
 A general grammar used for the bruno language.

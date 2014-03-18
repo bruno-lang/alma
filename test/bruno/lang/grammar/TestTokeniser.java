@@ -14,7 +14,7 @@ public class TestTokeniser {
 
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", FregeFL.GRAMMAR);
+		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
 		Grammar bruno = Builder.grammar(t);
 		Tokenised code = Tokenised.tokenise("etc/example.mod", "file", bruno);
 		Printer.rulePrinter(System.out).process(code);
@@ -22,24 +22,24 @@ public class TestTokeniser {
 	
 	@Test
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
-		Grammar g0 = FregeFL.GRAMMAR;
-		Tokenised t1 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g0);
+		Grammar g0 = NOA.GRAMMAR;
+		Tokenised t1 = Tokenised.tokenise("etc/noa.grammar", "grammar", g0);
 		Grammar g1 = Builder.grammar(t1);
-		Tokenised t2 = Tokenised.tokenise("etc/grammar.grammar", "grammar", g1);
+		Tokenised t2 = Tokenised.tokenise("etc/noa.grammar", "grammar", g1);
 		System.out.println(g1);
 		Printer.rulePrinter(System.out).process(t2);
 	}
 	
 	@Test
 	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
-		Tokens tokens = Tokenised.tokenise("etc/test.grammar", "grammar", FregeFL.GRAMMAR).tokens;
+		Tokens tokens = Tokenised.tokenise("etc/test.grammar", "grammar", NOA.GRAMMAR).tokens;
 		assertEquals(8, tokens.end());
 		assertEquals("terminal", tokens.rule(7).name);
 	}
 	
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/json.grammar", "grammar", FregeFL.GRAMMAR);
+		Tokenised t = Tokenised.tokenise("etc/json.grammar", "grammar", NOA.GRAMMAR);
 		Grammar json = Builder.grammar(t);
 		System.out.println(json);
 		Tokenised jsont = Tokenised.tokenise("etc/example.json", "json", json);
@@ -48,7 +48,7 @@ public class TestTokeniser {
 	
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", FregeFL.GRAMMAR);
+		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", NOA.GRAMMAR);
 		Grammar xml = Builder.grammar(t);
 		System.out.println(xml);
 		Tokenised xmlt = Tokenised.tokenise("etc/example.xml", "document", xml);
@@ -66,8 +66,7 @@ public class TestTokeniser {
 	}
 
 	/**
-	 * A minimal grammar for just comments to test completion feature working as
-	 * it is not needed for the {@link BNF} grammar.
+	 * A minimal grammar for just comments to test completion feature.
 	 */
 	static final Grammar COMMENTS = comments();
 

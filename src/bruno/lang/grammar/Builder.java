@@ -22,10 +22,10 @@ public final class Builder {
 		int token = 0;
 		while (token < c) {
 			Rule r = tokens.rule(token);
-			if (r == FregeFL.grammar) {
+			if (r == NOA.grammar) {
 				token++;
-			} else if (r == FregeFL.member) {
-				if (tokens.rule(token+1) == FregeFL.rule) {
+			} else if (r == NOA.member) {
+				if (tokens.rule(token+1) == NOA.rule) {
 					Rule rule = rule(token+1, grammar);
 					rules.add(rule);
 				}
@@ -36,17 +36,17 @@ public final class Builder {
 	}
 
 	private static Rule rule(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.rule);
+		check(token, grammar, NOA.rule);
 		return selection(token+2, grammar).as(grammar.text(token+1));
 	}
 
 	private static Rule selection(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.selection);
+		check(token, grammar, NOA.selection);
 		final List<Rule> alternatives = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (tokens.rule(i) == FregeFL.sequence && tokens.end(i) <= end) {
+		while (tokens.rule(i) == NOA.sequence && tokens.end(i) <= end) {
 			alternatives.add(sequence(i, grammar));
 			i = tokens.next(i);
 		}
@@ -57,12 +57,12 @@ public final class Builder {
 	}
 
 	private static Rule sequence(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.sequence);
+		check(token, grammar, NOA.sequence);
 		final List<Rule> elems = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (tokens.rule(i) == FregeFL.element && tokens.end(i) <= end) {
+		while (tokens.rule(i) == NOA.element && tokens.end(i) <= end) {
 			elems.add(element(i, grammar));
 			i = tokens.next(i);
 		}
@@ -73,20 +73,20 @@ public final class Builder {
 	}
 
 	private static Rule element(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.element);
+		check(token, grammar, NOA.element);
 		final Tokens tokens = grammar.tokens;
 		Occur occur = occur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
-		if (r == FregeFL.completion) {
+		if (r == NOA.completion) {
 			return Rule.completion();
 		}
-		if (r == FregeFL.group) {
+		if (r == NOA.group) {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(occur);
 		}
-		if (r == FregeFL.option) {
+		if (r == NOA.option) {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(Occur.qmark);
 		}
-		if (r == FregeFL.terminal) {
+		if (r == NOA.terminal) {
 			Rule t = terminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
 			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
@@ -94,11 +94,11 @@ public final class Builder {
 			}
 			return t;
 		}
-		if (r == FregeFL.string) {
+		if (r == NOA.string) {
 			String text = grammar.text(token+1);
 			return Rule.string(text.substring(1, text.length()-1)).occurs(occur);
 		}
-		if (r == FregeFL.ref) {
+		if (r == NOA.ref) {
 			return ref(token+1, grammar).occurs(occur);
 		}
 		throw unexpectedRule(r);
@@ -109,67 +109,67 @@ public final class Builder {
 	}
 
 	private static Rule capture(int token, Tokenised grammar, Rule rule) {
-		if (grammar.tokens.rule(token) == FregeFL.capture) {
+		if (grammar.tokens.rule(token) == NOA.capture) {
 			return rule.as(grammar.text(token+1));
 		}
 		return rule;
 	}
 
 	private static Rule terminal(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.terminal);
+		check(token, grammar, NOA.terminal);
 		Rule r = grammar.tokens.rule(token+1);
-		if (r == FregeFL.ranges) {
+		if (r == NOA.ranges) {
 			return ranges(token+1, grammar);
 		}
-		if (r == FregeFL.figures) {
+		if (r == NOA.figures) {
 			return figures(token+1, grammar);
 		}
-		if (r == FregeFL.pattern) {
+		if (r == NOA.pattern) {
 			return pattern(token+1, grammar);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule pattern(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.pattern);
-		boolean not = grammar.tokens.rule(token+1) == FregeFL.not;
+		check(token, grammar, NOA.pattern);
+		boolean not = grammar.tokens.rule(token+1) == NOA.not;
 		Rule p = patternSelection(token+(not?2:1), grammar);
 		return not ? Rule.pattern(Patterns.not(p.pattern)) : p;
 	}
 
 	private static Rule patternSelection(int token, Tokenised grammar) {
 		Rule r = grammar.tokens.rule(token);
-		if (r == FregeFL.gap) {
+		if (r == NOA.gap) {
 			return Rule.pattern(Patterns.GAP);
 		}
-		if (r == FregeFL.pad) {
+		if (r == NOA.pad) {
 			return Rule.pattern(Patterns.PAD);
 		}
-		if (r == FregeFL.indent) {
+		if (r == NOA.indent) {
 			return Rule.pattern(Patterns.INDENT);
 		}
-		if (r == FregeFL.separator) {
+		if (r == NOA.separator) {
 			return Rule.pattern(Patterns.SEPARATOR);
 		}
-		if (r == FregeFL.wrap) {
+		if (r == NOA.wrap) {
 			return Rule.pattern(Patterns.WRAP);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule figures(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.figures);
+		check(token, grammar, NOA.figures);
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token);
 		Terminal terminal = null;
 		int i = token+1;
 		List<Rule> refs = new ArrayList<>();
-		while (tokens.end(i) <= end && tokens.rule(i) != FregeFL.capture) {
+		while (tokens.end(i) <= end && tokens.rule(i) != NOA.capture) {
 			Rule figure = tokens.rule(i);
-			if (figure == FregeFL.ranges) {
+			if (figure == NOA.ranges) {
 				Rule ranges = ranges(i, grammar);
 				terminal = terminal == null ? ranges.terminal : terminal.and(ranges.terminal);
-			} else if (figure == FregeFL.name) {
+			} else if (figure == NOA.name) {
 				String name = grammar.text(i);
 				if (name.charAt(0) != '-') {
 					name = "-"+name; // always do not capture these
@@ -188,46 +188,46 @@ public final class Builder {
 	}
 
 	private static Rule ranges(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.ranges);
-		boolean not = grammar.tokens.rule(token+1) == FregeFL.not;
+		check(token, grammar, NOA.ranges);
+		boolean not = grammar.tokens.rule(token+1) == NOA.not;
 		Rule ranges = rangesSelection(token +(not ? 2 : 1), grammar);
 		return not ? Rule.terminal(ranges.terminal.not()) : ranges;
 	}
 
 	private static Rule rangesSelection(int token, Tokenised grammar) {
 		Rule r = grammar.tokens.rule(token);
-		if (r == FregeFL.wildcard) {
+		if (r == NOA.wildcard) {
 			return Rule.terminal(Terminal.WILDCARD);
 		}
-		if (r == FregeFL.letter) {
+		if (r == NOA.letter) {
 			return Rule.terminal(Terminal.LETTERS);
 		}
-		if (r == FregeFL.hex) {
+		if (r == NOA.hex) {
 			return Rule.terminal(Terminal.HEX_NUMBER);
 		}
-		if (r == FregeFL.octal) {
+		if (r == NOA.octal) {
 			return Rule.terminal(Terminal.OCTAL_NUMBER);
 		}
-		if (r == FregeFL.binary) {
+		if (r == NOA.binary) {
 			return Rule.terminal(Terminal.BINARY_NUMBER);
 		}
-		if (r == FregeFL.digit) {
+		if (r == NOA.digit) {
 			return Rule.terminal(Terminal.DIGITS);
 		}
-		if (r == FregeFL.category) {
+		if (r == NOA.category) {
 			//TODO
 			throw new UnsupportedOperationException("Not available yet");
 		}
-		if (r == FregeFL.range) {
+		if (r == NOA.range) {
 			return Rule.terminal(Terminal.range(literal(token+1, grammar), literal(token+3, grammar)));
 		}
-		if (r == FregeFL.literal) {
+		if (r == NOA.literal) {
 			return Rule.terminal(Terminal.character(literal(token, grammar)));
 		}
-		if (r == FregeFL.whitespace) {
+		if (r == NOA.whitespace) {
 			return Rule.terminal(Terminal.WHITESPACE);
 		}
-		if (r == FregeFL.shortname) {
+		if (r == NOA.shortname) {
 			String name = grammar.text(token+1);
 			int c = name.charAt(1);
 			if (c == 't') {
@@ -245,12 +245,12 @@ public final class Builder {
 	}
 
 	private static int literal(int token, Tokenised grammar) {
-		check(token, grammar, FregeFL.literal);
+		check(token, grammar, NOA.literal);
 		Rule r = grammar.tokens.rule(token+1);
-		if (r == FregeFL.symbol) {
+		if (r == NOA.symbol) {
 			return grammar.text(token+1).codePointAt(1);
 		}
-		if (r == FregeFL.code_point) {
+		if (r == NOA.code_point) {
 			return Integer.parseInt(grammar.text(token+1).substring(2), 16);
 		}
 		throw unexpectedRule(r);
@@ -258,17 +258,17 @@ public final class Builder {
 
 	private static Occur occur(int token, Tokenised grammar, int parent) {
 		// there might not be an occurrence token or it belongs to a outer parent 
-		if (grammar.tokens.rule(token) != FregeFL.occurrence || grammar.tokens.end(parent) < grammar.tokens.end(token)) {
+		if (grammar.tokens.rule(token) != NOA.occurrence || grammar.tokens.end(parent) < grammar.tokens.end(token)) {
 			return Occur.once;
 		}
 		Rule occur = grammar.tokens.rule(token+1);
-		if (occur == FregeFL.plus) {
+		if (occur == NOA.plus) {
 			return Occur.plus;
 		}
-		if (occur == FregeFL.star) {
+		if (occur == NOA.star) {
 			return Occur.star;
 		}
-		if (occur == FregeFL.qmark) {
+		if (occur == NOA.qmark) {
 			return Occur.qmark;
 		}
 		int min = Integer.parseInt(grammar.text(token+1));

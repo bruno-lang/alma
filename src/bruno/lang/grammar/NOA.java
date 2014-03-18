@@ -19,9 +19,13 @@ import static bruno.lang.grammar.Terminal.notCharacter;
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
+ * Not Only Another Formal Language
+ * 
+ * NOA FL
+ * 
  * @author jan
  */
-public final class FregeFL {
+public final class NOA {
 
 	static final Rule
 		g = pattern(GAP),
