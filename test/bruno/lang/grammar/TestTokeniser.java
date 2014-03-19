@@ -15,7 +15,7 @@ public class TestTokeniser {
 	@Test
 	public void thatBrunoLangCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
-		Grammar bruno = Builder.grammar(t);
+		Grammar bruno = grammar(t);
 		Tokenised code = Tokenised.tokenise("etc/example.mod", "file", bruno);
 		Printer.rulePrinter(System.out).process(code);
 	}
@@ -24,7 +24,7 @@ public class TestTokeniser {
 	public void thatGrammarGrammarCanBeTokenised() throws IOException {
 		Grammar g0 = NOA.GRAMMAR;
 		Tokenised t1 = Tokenised.tokenise("etc/noa.grammar", "grammar", g0);
-		Grammar g1 = Builder.grammar(t1);
+		Grammar g1 = grammar(t1);
 		Tokenised t2 = Tokenised.tokenise("etc/noa.grammar", "grammar", g1);
 		System.out.println(g1);
 		Printer.rulePrinter(System.out).process(t2);
@@ -40,7 +40,7 @@ public class TestTokeniser {
 	@Test
 	public void thatJSONGrammarCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/json.grammar", "grammar", NOA.GRAMMAR);
-		Grammar json = Builder.grammar(t);
+		Grammar json = grammar(t);
 		System.out.println(json);
 		Tokenised jsont = Tokenised.tokenise("etc/example.json", "json", json);
 		Printer.rulePrinter(System.out).process(jsont);
@@ -49,7 +49,7 @@ public class TestTokeniser {
 	@Test
 	public void thatXMLGrammarCanBeTokenised() throws IOException {
 		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", NOA.GRAMMAR);
-		Grammar xml = Builder.grammar(t);
+		Grammar xml = grammar(t);
 		System.out.println(xml);
 		Tokenised xmlt = Tokenised.tokenise("etc/example.xml", "document", xml);
 		Printer.rulePrinter(System.out).process(xmlt);
@@ -63,6 +63,10 @@ public class TestTokeniser {
 		assertEquals(5, tokens.count());
 		assertEquals(" this is the comments text", input.substring(tokens.start(2), tokens.end(2)));
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
+	}
+	
+	private static Grammar grammar(Tokenised t) {
+		return new Grammar(Mechanic.finish(Builder.grammar(t), true));		
 	}
 
 	/**

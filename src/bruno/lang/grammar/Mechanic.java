@@ -15,7 +15,11 @@ public final class Mechanic {
 		LinkedHashMap<String, Rule> namedRules = new LinkedHashMap<>();
 		Set<Rule> followed = new HashSet<>();
 		namedRules(roots, namedRules, followed);
-		// TODO remove those with - where a variant with - and without is known
+		for (String name : new HashSet<>(namedRules.keySet())) {
+			if (name.startsWith("-") && namedRules.containsKey(name.substring(1))) {
+				namedRules.remove(name);
+			}
+		}
 		return namedRules.values().toArray(new Rule[0]);
 	}
 	
@@ -31,27 +35,52 @@ public final class Mechanic {
 		}
 	}
 	
-	public static Rule[] deploy(Rule[] namedRules) {
+	public static Rule[] finish(Rule[] namedRules, boolean deduplicate) {
 		final LinkedHashMap<String,Rule> rules = new LinkedHashMap<>();
 		for (Rule r : namedRules) {
 			rules.put(r.name, r);
 		}
 		Map<String, Rule> literals = new HashMap<>();
+		Set<Rule> followedContract = new HashSet<>();
+		Set<Rule> followedDereference = new HashSet<>();
 		for (int i = 0; i < namedRules.length; i++) {
 			Rule r = namedRules[i];
-			r = deduplicate(r, literals);
-			r = dereference(r, rules);
-			r = contract(r);
+			if (deduplicate) {
+				r = deduplicate(r, literals);
+			}
+			r = dereference(r, rules, followedDereference);
+			r = compact(r, followedContract);
 			namedRules[i] = r;
 		}		
 		return namedRules;
 	}
 	
 	
-	public static Rule contract(Rule rule) {
+	public static Rule compact(Rule rule, Set<Rule> followed) {
+		if (followed.contains(rule)) {
+			return rule;
+		}
+		followed.add(rule);
 		if (rule.type == RuleType.SELECTION) {
-			// find multiple terminals within it
-			// merge terminals in one, build new selection
+			int c = 0;
+			for (Rule e : rule.elements) {
+				if (e.type == RuleType.TERMINAL) {
+					c++;
+				}
+			}
+			if (c == rule.elements.length) {
+				Terminal t = rule.elements[0].terminal;
+				for (int i = 1; i < rule.elements.length; i++) {
+					t = t.and(rule.elements[i].terminal);
+				}
+				return Rule.terminal(t);
+			}
+			//TODO a better version that also merges just single char literals and terminals together
+		} 
+		if (rule.elements.length > 0) {
+			for (int i = 0; i < rule.elements.length; i++) {
+				rule.elements[i] = compact(rule.elements[i], followed);
+			}
 		}
 		return rule;
 	}
@@ -73,7 +102,11 @@ public final class Mechanic {
 		
 	}
 
-	public static Rule dereference(Rule rule, Map<String,Rule> namedRules) {
+	public static Rule dereference(Rule rule, Map<String,Rule> namedRules, Set<Rule> followed) {
+		if (followed.contains(rule)) {
+			return rule;
+		}
+		followed.add(rule);
 		if (rule.type == RuleType.REFERENCE) {
 			boolean noCapture = rule.name.charAt(0) == '-';
 			String name = rule.name.substring(noCapture ? 1:0);
@@ -81,7 +114,7 @@ public final class Mechanic {
 			return noCapture ? r.elements[0] : r;
 		} else if (rule.elements.length > 0) {
 			for (int i = 0; i < rule.elements.length; i++) {
-				rule.elements[i] = dereference(rule.elements[i], namedRules);
+				rule.elements[i] = dereference(rule.elements[i], namedRules, followed);
 			}
 		}
 		return rule;

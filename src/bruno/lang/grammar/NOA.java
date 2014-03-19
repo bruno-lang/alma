@@ -7,6 +7,8 @@ import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.string;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
+import static bruno.lang.grammar.Mechanic.finish;
+import static bruno.lang.grammar.Mechanic.namedRules;
 import static bruno.lang.grammar.Occur.occur;
 import static bruno.lang.grammar.Patterns.GAP;
 import static bruno.lang.grammar.Patterns.INDENT;
@@ -90,11 +92,6 @@ public final class NOA {
 		grammar = seq(member, seq(g, member).star()).as("grammar") 
 		;
 	
-	static {
-		option.elements[0].elements[2] = selection;
-		group.elements[0].elements[2] = selection;
-	}
-	
-	static final Grammar GRAMMAR = new Grammar(Mechanic.namedRules(grammar));
+	static final Grammar GRAMMAR = new Grammar(finish(namedRules(grammar), false));
 
 }

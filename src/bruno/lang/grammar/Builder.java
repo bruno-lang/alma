@@ -15,7 +15,7 @@ import bruno.lang.grammar.Grammar.RuleType;
  */
 public final class Builder {
 
-	public static Grammar grammar(Tokenised grammar) {
+	public static Rule[] grammar(Tokenised grammar) {
 		final List<Rule> rules = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
 		final int c = tokens.count();
@@ -32,7 +32,7 @@ public final class Builder {
 				token = tokens.next(token);
 			}
 		}
-		return new Grammar(Mechanic.deploy(rules.toArray(new Rule[rules.size()])));
+		return rules.toArray(new Rule[0]);
 	}
 
 	private static Rule rule(int token, Tokenised grammar) {
