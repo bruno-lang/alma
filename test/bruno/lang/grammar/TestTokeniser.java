@@ -66,7 +66,7 @@ public class TestTokeniser {
 	}
 	
 	private static Grammar grammar(Tokenised t) {
-		return new Grammar(Mechanic.finish(Builder.grammar(t), true));		
+		return new Grammar(Mechanic.finish(Builder.grammar(t)));		
 	}
 
 	/**

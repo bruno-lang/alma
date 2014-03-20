@@ -92,6 +92,6 @@ public final class NOA {
 		grammar = seq(member, seq(g, member).star()).as("grammar") 
 		;
 	
-	static final Grammar GRAMMAR = new Grammar(finish(namedRules(grammar), false));
+	static final Grammar GRAMMAR = new Grammar(finish(namedRules(grammar)));
 
 }

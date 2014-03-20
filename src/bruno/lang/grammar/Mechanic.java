@@ -4,13 +4,26 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
+/**
+ * The {@link Mechanic} is a utility that optimizes and finishes a set of
+ * {@link Rule}s used to build a {@link Grammar}.
+ * 
+ * Such a set is usually created by the {@link Builder} that does not deliver a
+ * working grammar but the set of rules as objects as given in a grammar file.
+ * 
+ * @author jan
+ */
 public final class Mechanic {
 
+	/**
+	 * Creates a set of named {@link Rule}s reachable from any of the given roots.  
+	 */
 	public static Rule[] namedRules(Rule...roots) {
 		LinkedHashMap<String, Rule> namedRules = new LinkedHashMap<>();
 		Set<Rule> followed = new HashSet<>();
@@ -35,7 +48,7 @@ public final class Mechanic {
 		}
 	}
 	
-	public static Rule[] finish(Rule[] namedRules, boolean deduplicate) {
+	public static Rule[] finish(Rule[] namedRules) {
 		final LinkedHashMap<String,Rule> rules = new LinkedHashMap<>();
 		for (Rule r : namedRules) {
 			rules.put(r.name, r);
@@ -43,39 +56,70 @@ public final class Mechanic {
 		Map<String, Rule> literals = new HashMap<>();
 		Set<Rule> followedContract = new HashSet<>();
 		Set<Rule> followedDereference = new HashSet<>();
+		Set<Rule> followedUnpack = new HashSet<>();
+		Set<Rule> followedDeduplicate = new HashSet<>();
 		for (int i = 0; i < namedRules.length; i++) {
 			Rule r = namedRules[i];
-			if (deduplicate) {
-				r = deduplicate(r, literals);
-			}
+			r = deduplicate(r, literals, followedDeduplicate);
 			r = dereference(r, rules, followedDereference);
+			r = unpack(r, followedUnpack);
 			r = compact(r, followedContract);
 			namedRules[i] = r;
 		}		
 		return namedRules;
 	}
 	
+	/**
+	 * Strips out unnecessary single element sequences and selections as well as
+	 * non capturing captures.
+	 */
+	public static Rule unpack(Rule rule, Set<Rule> followed) {
+		if (followed.contains(rule)) {
+			return rule;
+		}
+		followed.add(rule);
+		if ((rule.type == RuleType.SEQUENCE || rule.type == RuleType.SELECTION) && rule.elements.length == 1) {
+			return rule.elements[0];
+		}
+		if (rule.type == RuleType.CAPTURE && rule.name.startsWith("-")) {
+			return rule.elements[0];
+		}
+		return rule;
+	}
 	
+	/**
+	 * Contracts selections with just {@link Terminal}s and 1 character literals
+	 * to a single {@link Terminal}. A selection of just literal characters will
+	 * also be contracted to a single terminal.
+	 */
 	public static Rule compact(Rule rule, Set<Rule> followed) {
 		if (followed.contains(rule)) {
 			return rule;
 		}
 		followed.add(rule);
 		if (rule.type == RuleType.SELECTION) {
-			int c = 0;
+			int ts = 0;
+			int ls = 0;
 			for (Rule e : rule.elements) {
 				if (e.type == RuleType.TERMINAL) {
-					c++;
+					ts++;
+				}
+				if (e.type == RuleType.LITERAL && UTF8.characters(e.literal) == 1) {
+					ls++;
 				}
 			}
-			if (c == rule.elements.length) {
+			if (ts+ls == rule.elements.length) {
 				Terminal t = rule.elements[0].terminal;
 				for (int i = 1; i < rule.elements.length; i++) {
-					t = t.and(rule.elements[i].terminal);
+					Rule r = rule.elements[i];
+					if (r.type == RuleType.TERMINAL) {
+						t = t.and(r.terminal);
+					} else {
+						t = t.and(Terminal.character(UTF8.codePoint(r.literal)));
+					}
 				}
 				return Rule.terminal(t);
 			}
-			//TODO a better version that also merges just single char literals and terminals together
 		} 
 		if (rule.elements.length > 0) {
 			for (int i = 0; i < rule.elements.length; i++) {
@@ -85,7 +129,15 @@ public final class Mechanic {
 		return rule;
 	}
 	
-	public static Rule deduplicate(Rule rule, Map<String, Rule> literals) {
+	/**
+	 * Reuses same instance of a {@link RuleType#LITERAL} {@link Rule} for equal
+	 * {@link String} literals.
+	 */
+	public static Rule deduplicate(Rule rule, Map<String, Rule> literals, Set<Rule> followed) {
+		if (followed.contains(rule)) {
+			return rule;
+		}
+		followed.add(rule);
 		if (rule.type == RuleType.LITERAL) {
 			String l = new String(rule.literal);
 			Rule r = literals.get(l);
@@ -95,13 +147,16 @@ public final class Mechanic {
 			literals.put(l, rule);
 		} else if (rule.elements.length > 0) {
 			for (int i = 0; i < rule.elements.length; i++) {
-				rule.elements[i] = deduplicate(rule.elements[i], literals);
+				rule.elements[i] = deduplicate(rule.elements[i], literals, followed);
 			}
 		}
 		return rule;
 		
 	}
 
+	/**
+	 * Substitutes {@link RuleType#REFERENCE} {@link Rule}s with the actual rule.
+	 */
 	public static Rule dereference(Rule rule, Map<String,Rule> namedRules, Set<Rule> followed) {
 		if (followed.contains(rule)) {
 			return rule;
@@ -109,8 +164,14 @@ public final class Mechanic {
 		followed.add(rule);
 		if (rule.type == RuleType.REFERENCE) {
 			boolean noCapture = rule.name.charAt(0) == '-';
-			String name = rule.name.substring(noCapture ? 1:0);
-			Rule r = namedRules.get(name); //FIXME try with minus first (in case rule is also named like that)
+			Rule r = namedRules.get(rule.name);
+			if (r == null) {
+				String name = rule.name.substring(noCapture ? 1:0);
+				r = namedRules.get(name);
+			}
+			if (r == null) {
+				throw new NoSuchElementException("No such rule: `"+r.name+"`\nKnown rules are: "+namedRules.keySet());
+			}
 			return noCapture ? r.elements[0] : r;
 		} else if (rule.elements.length > 0) {
 			for (int i = 0; i < rule.elements.length; i++) {
