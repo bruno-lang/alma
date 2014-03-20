@@ -1,9 +1,13 @@
-package bruno.lang.grammar;
+package bruno.lang.grammar.print;
 
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import bruno.lang.grammar.Grammar;
+import bruno.lang.grammar.Processor;
+import bruno.lang.grammar.Tokenised;
+import bruno.lang.grammar.Tokens;
 import bruno.lang.grammar.Grammar.Rule;
 
 public final class Printer {
@@ -32,9 +36,9 @@ public final class Printer {
 				byte[] indent = new byte[Math.abs(tokens.level(i))];
 				Arrays.fill(indent, (byte)' ');
 				out.append(new String(indent));
-				printColor(out, ANSI.GREEN, tokens.rule(i).name);
+				printColor(out, ANSIColor.GREEN, tokens.rule(i).name);
 				out.append(' ');
-				printColor(t.file, out, ANSI.BLUE, tokens.start(i), tokens.end(i));
+				printColor(t.file, out, ANSIColor.BLUE, tokens.start(i), tokens.end(i));
 				out.append('\n');
 			}
 		}
@@ -54,7 +58,7 @@ public final class Printer {
 		public void process(Tokenised t) {
 			final Tokens tokens = t.tokens.sequential();
 			for (int i = 0; i < tokens.count(); i++) {
-				printColor(t.file, out, ANSI.rainbow(color++), tokens.start(i), tokens.end(i));
+				printColor(t.file, out, ANSIColor.rainbow(color++), tokens.start(i), tokens.end(i));
 			}
 		}
 		
@@ -72,7 +76,7 @@ public final class Printer {
 			for (int i = 0; i < tokens.count(); i++) {
 				print(tokens, t.file, i);
 			}
-			print(ANSI.BLACK+"\n"+ANSI.RESET);
+			print(ANSIColor.BLACK+"\n"+ANSIColor.RESET);
 		}
 	}
 	
@@ -93,12 +97,12 @@ public final class Printer {
 			}
 			int l = tokens.level(index);
 			if (l < 0) {
-				printColor(in, out, ANSI.BLACK+ANSI.BOLD, s, e);
+				printColor(in, out, ANSIColor.BLACK+ANSIColor.BOLD, s, e);
 				return;
 			}
 			Rule r = tokens.rule(index);
-			printColorBlock(in, out, ANSI.rainbow(r.name.hashCode()/2-1), s, e);
-			out.append(ANSI.RESET);
+			printColorBlock(in, out, ANSIColor.rainbow(r.name.hashCode()/2-1), s, e);
+			out.append(ANSIColor.RESET);
 		}
 		
 		@Override
@@ -123,7 +127,7 @@ public final class Printer {
 				return;
 			}
 			int l = tokens.level(index);
-			String color = ANSI.rainbow(l);
+			String color = ANSIColor.rainbow(l);
 			if (l < 0) {
 				printColor(in, out, color, s, e);
 				return;
@@ -140,11 +144,11 @@ public final class Printer {
 	
 	private static void printColorBlock(ByteBuffer input, PrintStream out, String color, int s, int e) {
 		if (s+1 == e) {
-			printColor(input, out, color + ANSI.BOLD+ ANSI.UNDERLINED, s, e);
+			printColor(input, out, color + ANSIColor.BOLD+ ANSIColor.UNDERLINED, s, e);
 		} else {
-			printColor(input, out, color+ANSI.BOLD, s, s+1);
+			printColor(input, out, color+ANSIColor.BOLD, s, s+1);
 			printColor(input, out, color, s+1, e-1);
-			printColor(input, out, color+ANSI.UNDERLINED, e-1, e);
+			printColor(input, out, color+ANSIColor.UNDERLINED, e-1, e);
 		}
 	}
 
@@ -157,7 +161,7 @@ public final class Printer {
 	private static void printColor(PrintStream out, String color, String text) {
 		out.append(color);
 		out.append(text);
-		out.append(ANSI.RESET);
+		out.append(ANSIColor.RESET);
 	}
 
 	private static String string(ByteBuffer input, int start, int end) {

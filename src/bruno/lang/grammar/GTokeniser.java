@@ -28,7 +28,7 @@ public final class GTokeniser {
 			input.position(pos);
 			byte[] x = new byte[Math.min(20, input.limit()-pos)];
 			input.get(x);
-			System.err.println(ANSI.RESET+new String(x)+ANSI.RESET);
+			System.err.println(new String(x));
 			throw new RuntimeException(msg);
 		}
 		//TODO verify and visualize errors

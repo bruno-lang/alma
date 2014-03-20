@@ -1,7 +1,7 @@
-package bruno.lang.grammar;
+package bruno.lang.grammar.print;
 
 
-public class ANSI {
+public class ANSIColor {
 
 	// Foreground color for ANSI black
 	static final String BLACK = new String("\033[30m");
