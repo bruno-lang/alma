@@ -59,14 +59,14 @@ public class TestTokeniser {
 	public void thatCompletionWorks() {
 		String input = "% this is the comments text\n% this is another one\n";
 		Grammar grammar = COMMENTS;
-		Tokens tokens = Tokeniser.tokenise(ByteBuffer.wrap(input.getBytes()), grammar.rule("grammar".intern()));
+		Tokens tokens = GTokeniser.tokenise(ByteBuffer.wrap(input.getBytes()), grammar.rule("grammar".intern()));
 		assertEquals(5, tokens.count());
 		assertEquals(" this is the comments text", input.substring(tokens.start(2), tokens.end(2)));
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
 	}
 	
 	private static Grammar grammar(Tokenised t) {
-		return new Grammar(Mechanic.finish(Builder.grammar(t)));		
+		return new Grammar(GMechanic.finish(GBuilder.grammar(t)));		
 	}
 
 	/**

@@ -7,6 +7,8 @@ import java.util.NoSuchElementException;
 /**
  * The *data* model of a formal grammar. 
  * 
+ * A grammar is literally a set of named {@link Rule}s.
+ * 
  * @author jan
  */
 public final class Grammar {
@@ -136,6 +138,14 @@ public final class Grammar {
 			return occurs(Occur.plus);
 		}
 
+		public Rule star() {
+			return occurs(Occur.star);
+		}
+
+		public Rule qmark() {
+			return occurs(Occur.qmark);
+		}
+		
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.ITERATION) {
 				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, literal, terminal, pattern);
@@ -144,6 +154,17 @@ public final class Grammar {
 				return this;
 			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, NO_LITERAL, null, null);
 		}
+
+		private static void complete(Rule[] elements) {
+			for (int i = 0; i < elements.length-1; i++) {
+				RuleType t = elements[i].type;
+				if (t == RuleType.COMPLETION) {
+					elements[i].elements[0] = elements[i+1];
+				} else if (t == RuleType.CAPTURE && elements[i].elements[0].type == RuleType.COMPLETION) {
+					elements[i].elements[0].elements[0] = elements[i+1];
+				}
+			}
+		}		
 
 		@Override
 		public String toString() {
@@ -192,25 +213,5 @@ public final class Grammar {
 			}
 			return type+" "+Arrays.toString(elements);
 		}
-
-		public Rule star() {
-			return occurs(Occur.star);
-		}
-
-		public Rule qmark() {
-			return occurs(Occur.qmark);
-		}
-
-		private static void complete(Rule[] elements) {
-			for (int i = 0; i < elements.length-1; i++) {
-				RuleType t = elements[i].type;
-				if (t == RuleType.COMPLETION) {
-					elements[i].elements[0] = elements[i+1];
-				} else if (t == RuleType.CAPTURE && elements[i].elements[0].type == RuleType.COMPLETION) {
-					elements[i].elements[0].elements[0] = elements[i+1];
-				}
-			}
-		}
 	}
-
 }

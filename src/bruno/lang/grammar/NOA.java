@@ -1,5 +1,7 @@
 package bruno.lang.grammar;
 
+import static bruno.lang.grammar.GMechanic.finish;
+import static bruno.lang.grammar.GMechanic.namedRules;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;
@@ -7,8 +9,6 @@ import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.string;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
-import static bruno.lang.grammar.Mechanic.finish;
-import static bruno.lang.grammar.Mechanic.namedRules;
 import static bruno.lang.grammar.Occur.occur;
 import static bruno.lang.grammar.Patterns.GAP;
 import static bruno.lang.grammar.Patterns.INDENT;
@@ -21,9 +21,7 @@ import static bruno.lang.grammar.Terminal.notCharacter;
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
- * Not Only Another Formal Language
- * 
- * NOA FL
+ * Bootstrap {@link Grammar} of Noa FL.
  * 
  * @author jan
  */

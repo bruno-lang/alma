@@ -1,5 +1,5 @@
 
-NOA FL
+Noa FL
 ======
 
 Not Only Another Formal Language

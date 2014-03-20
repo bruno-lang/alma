@@ -13,7 +13,7 @@ import bruno.lang.grammar.Grammar.RuleType;
  *  
  * @author jan
  */
-public final class Builder {
+public final class GBuilder {
 
 	public static Rule[] grammar(Tokenised grammar) {
 		final List<Rule> rules = new ArrayList<>();

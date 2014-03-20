@@ -35,7 +35,7 @@ public final class Tokenised {
 		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
 		try {
 			buffer.load();
-			Tokens tokens = Tokeniser.tokenise(buffer, grammar.rule(start.intern()));
+			Tokens tokens = GTokeniser.tokenise(buffer, grammar.rule(start.intern()));
 			return new Tokenised(buffer, tokens);
 		} finally {
 			buffer.clear();

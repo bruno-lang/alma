@@ -10,7 +10,7 @@ import bruno.lang.grammar.Grammar.Rule;
  * 
  * @author jan
  */
-public final class Tokeniser {
+public final class GTokeniser {
 
 	public static Tokens tokenise(ByteBuffer input, Rule start) {
 		Tokens tokens = new Tokens(Math.max(512, input.capacity()));
