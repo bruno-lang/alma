@@ -13,7 +13,7 @@ import bruno.lang.grammar.Grammar.Rule;
 public final class GTokeniser {
 
 	public static Tokens tokenise(ByteBuffer input, Rule start) {
-		Tokens tokens = new Tokens(Math.max(512, input.capacity()));
+		Tokens tokens = new Tokens(Math.max(512, input.capacity() * 2 / 3));
 		int t = 0;
 		try {
 			t = tokenise(start, input, 0, tokens);

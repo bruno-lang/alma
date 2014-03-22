@@ -1,5 +1,12 @@
 module math ::
 	
+	-auto eq =<> equals Int
+	-auto [Digit] =<> Digits
+	-auto [] =<> NoElements
+	
+	-invariant Digits ! non-empty
+	-invariant Int ! positive
+	
 	instances F1 :: (T -> T -> Bool)
 
 	instances X :: (Int[3], [T])
@@ -7,7 +14,7 @@ module math ::
 	instances T :: _
 	instances E :: _
 
-	op foo :: ({([T], E[])} e -> E)
+	fn foo* :: ({([T], E[])} e -> E) = x
 
 	op cons [+] :: ([T] l -> E e -> [T])
 	
@@ -25,7 +32,8 @@ module math ::
 	
 	unit Seconds [sec] :: Time
 
-	val :january :: Int = '1
+	val :january :: Int '1
+	val :day :: Hours '24h
 	
 	protocol List :: { cons, size }	
 	
@@ -37,3 +45,11 @@ module math ::
 		[Member] members,
 		Foo bar 
 	) <-> Byte[] <-> (X, Y) = [ :foo, :bar ]
+	
+	unit system SI :: =
+		ratio Time :: [
+			'1h   = '60min,
+			'1min = '60sec,
+			'1sec = '1000ms 
+		]
+		ratio XY :: [ 'x$ = 'y%	]
