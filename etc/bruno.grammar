@@ -64,14 +64,14 @@ TOp            : Operation TFn
 % Type Variables / Kinds
 instances      : 'instances', TypeVariable, '::', Operation*, Kind
 Kind           : KindBase KindDimension? TypeVariant? | KOp
-KindBase       : '_' | TypeBase | KList | KSet | KTuple | KFn
-KindDimension  : '[' 9* [ '-' 9* ] ']'
+KindBase       : '_' | Value | KList | KSet | KTuple | KFn | TypeVariable
+KindDimension  : '[' (9*):min [ '-' (9*):max ] ']'
 KArray         : KindBase KindDimension
 KList          : '[' KindBase ']'
 KSet           : '{' KindBase '}'
 KElement       : '..' | Kind
 KTuple         : '(,)' | '(' [ KElement ( ',' >> KElement )* ]  ')'
-KFn            : '(->)' | '(' Kind >> '->' ( >> Kind >> '->' )* >> Kind ')'
+KFn            : '(->)' | '(' Kind >> '->' ( >> Kind >> '->' )*  >> Kind ')'
 KOp            : ( '_' | Operation ) KFn
 
 % Modularisation
@@ -122,14 +122,15 @@ fault          : 'fault' >> Fault >> '::', Value, Range?
 
 notation       : 'notation' >> Notation >> '::', Type?, [ '=', '{', Type, (',', Type,) '}' ]
 
-fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, conditional*, return, [ 'where', term >> \n (term >> \n)* ]
+fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, conditional*, return, [ fn-where ]
 signature      : signature1 | '(' signature1 ')'
 signature1     : parameter >> '->' >> ( parameter >> '->' >> )* Type
 parameter      : Type >> Variable:name
 conditional    : '=', expr, '?', expr
 return         : '=', expr
-term           : variable | deduction
-variable       : Type >> Variable >> '=' >> expr
+fn-where       : 'where', declaration >> \n (declaration >> \n)*
+declaration    : variable | deduction
+variable       : Type ^ Variable >> '=' >> expr
 
 op             : 'op' >> Operation >> ['[' Operator ']'] >> '::', Operation?, signature
 

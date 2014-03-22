@@ -1,7 +1,13 @@
 module math ::
+	
+	instances F1 :: (T -> T -> Bool)
+
+	instances X :: (Int[3], [T])
 
 	instances T :: _
 	instances E :: _
+
+	op foo :: ({([T], E[])} e -> E)
 
 	op cons [+] :: ([T] l -> E e -> [T])
 	

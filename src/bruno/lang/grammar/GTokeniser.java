@@ -72,6 +72,7 @@ public final class GTokeniser {
 				return position;
 			}
 		}
+		tokens.erase(position);
 		return mismatch(l);
 	}
 
@@ -108,6 +109,7 @@ public final class GTokeniser {
 			}
 			end = Math.min(end, endPosition);
 		}
+		tokens.erase(position);
 		return end;
 	}
 
@@ -117,6 +119,7 @@ public final class GTokeniser {
 			Rule r = rule.elements[i];
 			end = tokenise(r, input, end, tokens);
 			if (end < 0) {
+				tokens.erase(position);
 				return end;
 			}
 		}
@@ -129,6 +132,7 @@ public final class GTokeniser {
 		while (c < rule.occur.max) {
 			int endPosition = tokenise(rule.elements[0], input, end, tokens);
 			if (endPosition < 0) {
+				tokens.erase(end);
 				if (c < rule.occur.min) {
 					return endPosition;
 				}

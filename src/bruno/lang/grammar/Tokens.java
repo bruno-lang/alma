@@ -84,6 +84,12 @@ public final class Tokens {
 		ends[indexStack[level]] = end;
 		level--;
 	}
+	
+	public void erase(int position) {
+		while (starts[top] > position) {
+			top--;
+		}
+	}
 
 	/*
 	 * further processing utility functions below.
@@ -183,4 +189,5 @@ public final class Tokens {
 		starts[top] = start;
 		ends[top] = end;
 	}
+
 }
