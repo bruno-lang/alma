@@ -137,4 +137,4 @@ list           : '[]' | '[', -exprs ']'
 set            : '{}' | '{' -exprs '}'
 tuple          : '()' | '(' -exprs ')'
 exprs          : group (, ',', group )*
-group          : expr ( ^ expr )*
+group          : expr ( ~ expr )*
