@@ -44,9 +44,6 @@ RangeLiteral   : literal [ >> '..' >> literal ] | '..' >> literal
 RangeSet       : '{' >> literal >> (',' >> literal >> )* '}'
 RangeConstant  : Constant [ >> '..' >> Constant ] | '..' >> Constant
 
-% References
-Reference      : Variable | Constant | literal
-
 % Types
 TypeVariant    : { '!' '?' '~' '*' }
 TypeDimension  : '[' 9* ']'
@@ -134,12 +131,10 @@ op             : 'op' >> Operation >> ['[' Operator ']'] >> '::', Operation?, si
 
 protocol       : 'protocol' >> Protocol >> '::', '{', Operation, (',', Operation,) '}'
 
-expr           : tuple | list | set |  group | Reference 
-
-invoke         : expr ' ' ( Operator | Function ) [ expr (,',', expr) ]
-specialisation : expr >> '=>' >> ( type | Operation )
-
-group          : '(', expr, ')'
-list           : '[]' | '[', expr, (',', expr,) ']'
-set            : '{}' | '{' expr, (',', expr,) '}'
-tuple          : '()' | '(' expr, (',', expr,) ')'
+% Expressions
+expr           : tuple | list | set |  literal | Constant | Variable
+list           : '[]' | '[', -exprs ']'
+set            : '{}' | '{' -exprs '}'
+tuple          : '()' | '(' -exprs ')'
+exprs          : group (, ',', group )*
+group          : expr ( ^ expr )*
