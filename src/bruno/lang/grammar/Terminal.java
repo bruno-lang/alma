@@ -30,7 +30,10 @@ public final class Terminal {
 		HEX_NUMBER = DIGITS.and(range('A', 'F')),
 		OCTAL_NUMBER = range('0', '7'),
 		BINARY_NUMBER = range('0', '1'),
-		LETTERS = range('a', 'z').and(range('A','Z'));
+		UPPER_LETTERS = range('A','Z'),
+		LOWER_LETTERS = range('a', 'z'), 
+		LETTERS = UPPER_LETTERS.and(LOWER_LETTERS)
+		;
 	
 	public static Terminal notRange(int minCodePoint, int maxCodePoint) {
 		return new Terminal(new int[] { -minCodePoint, -maxCodePoint }); 
@@ -157,6 +160,12 @@ public final class Terminal {
 		}
 		if (this == LETTERS) {
 			return "@";
+		}
+		if (this == LOWER_LETTERS) {
+			return "z";
+		}
+		if (this == UPPER_LETTERS) {
+			return "Z";
 		}
 		if (this == DIGITS) {
 			return "9";

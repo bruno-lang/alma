@@ -21,9 +21,6 @@ module math ::
 	fn div [/] :: Int a -> Int b -> Int!
 		= a
 		
-	fn mod :: (Int a -> Int b -> Int)
-		= b
-		
 	unit Digit :: Char '0 .. '9
 
 	dimension Bit :: = [ :0, :1 ]
@@ -53,3 +50,24 @@ module math ::
 			'1sec = '1000ms 
 		]
 		ratio XY :: [ 'x$ = 'y%	]
+
+
+	fn max :: (Int a -> Int b -> Int) 
+	  \ a > b \ = a 	
+	  = b
+		
+		
+	fn quicksort :: [T] list -> [T] 
+		\ list # < '1 \
+			= list 
+		= (less ++ equal ++ more)
+	where
+            T pivot   = list head
+            [T] less  = list filter pivot >  | quicksort
+            [T] equal = list filter pivot ==
+            [T] more  = list filter pivot <  | quicksort
+            
+	fn something :: [T] list -> {(T, T)}
+		= { a => b, 
+		    c => d }
+		

@@ -1,10 +1,10 @@
 % Fragments
-Dashed         : { '-' 'a' - 'z' 9 }* { 'a' - 'z' 9 }?
-Verb           : 'a' - 'z' -Dashed?
-Noun           : 'A' - 'Z' { @ '-' } { @  9 }*
+Dashed         : { '-' z 9 }* { z 9 }?
+Verb           : z -Dashed?
+Noun           : Z { @ '-' } { @  9 }*
 
 % Identifiers
-Field          : { 'a' - 'z' 9 } -Dashed?
+Field          : { z 9 } -Dashed?
 Constant       : ':' -Field
 Variable       : -Field '''*
 
@@ -15,7 +15,7 @@ Library        : -Verb
 Namespace      : -Verb
 Fault          : -Verb '!'
 
-TypeVariable   : 'A' - 'Z' 9?
+TypeVariable   : Z 9?
 Protocol       : -Noun
 Data           : -Noun
 System         : -Noun
@@ -26,8 +26,8 @@ Notation       : -Noun
 Type           : -Noun
 
 % Operators
-Operator       : (OperatorSymbol)x1-3
-OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' }
+Operator       : (-OperatorSymbol)x1-3
+OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' }
 
 % Symbols
 Measure        : { @ UnitSymbol }+
@@ -47,7 +47,7 @@ RangeConstant  : Constant [ >> '..' >> Constant ] | '..' >> Constant
 % Types
 TypeVariant    : { '!' '?' '~' '*' }
 TypeDimension  : '[' 9* ']'
-type           : base-type TypeDimension? TypeVariant? | op-type
+type           : -base-type TypeDimension? TypeVariant? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 array-type     : base-type TypeDimension
 list-type      : '[' base-type? ']'
@@ -119,22 +119,20 @@ notation       : 'notation' >> Notation >> '::', type?, [ '=', '{', type, (',', 
 fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, implementation, [ where ]
 signature      : signature1 | '(' >> signature1 >> ')'
 signature1     : parameter >> '->' >> ( parameter >> '->' >> )* type
-implementation : conditional*, return
 parameter      : type ^ Variable:name
-conditional    : '=', expr, '?', expr .
-return         : '=', expr .
-where          : 'where', declaration >> \n (declaration >> \n)*
+implementation : ('\' >> -exprs >> '\', '=' >> group . )* '=' >> group .
+where          : 'where', declaration >> (declaration >> )*
 declaration    : variable | deduction
-variable       : type ^ Variable >> '=' >> expr
+variable       : type ^ Variable >> '=' >> group .
 
 op             : 'op' >> Operation >> ['[' Operator ']'] >> '::', Operation?, signature
 
 protocol       : 'protocol' >> Protocol >> '::', '{', Operation, (',', Operation,) '}'
 
 % Expressions
-expr           : tuple | list | set |  literal | Constant | Variable
-list           : '[]' | '[', -exprs ']'
-set            : '{}' | '{' -exprs '}'
-tuple          : '()' | '(' -exprs ')'
+expr           : tuple | list | set |  literal | Constant | Operator | Variable | Type | Fault
+list           : '[]' | '[', -exprs, ']'
+set            : '{}' | '{', -exprs, '}'
+tuple          : '()' | '(', -exprs, ')'
 exprs          : group (, ',', group )*
-group          : expr ( ~ expr )*
+group          : expr ( >> expr )*

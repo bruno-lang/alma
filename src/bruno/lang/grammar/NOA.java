@@ -43,6 +43,8 @@ public final class NOA {
 		literal = selection(code_point, symbol).as("literal"),
 		range = seq(literal, g, symbol('-'), g, literal).as("range"),
 		letter = symbol('@').as("letter"),
+		upper = symbol('Z').as("upper"),
+		lower = symbol('z').as("lower"),
 		digit = symbol('9').as("digit"),
 		hex = symbol('#').as("hex"),
 		octal = symbol('7').as("octal"),
@@ -61,7 +63,7 @@ public final class NOA {
 		shortname = selection(tab, lf, cr).as("shortname"),
 
 		category = seq(string("U+{"), terminal(LETTERS).plus(), symbol('}')).as("category"),
-		ranges = seq(not.qmark(), selection(wildcard, letter, digit, hex, octal, binary, category, range, literal, whitespace, shortname)).as("ranges"),
+		ranges = seq(not.qmark(), selection(wildcard, letter, upper, lower, digit, hex, octal, binary, category, range, literal, whitespace, shortname)).as("ranges"),
 
 		figure = selection(ranges, name).as("-figure"),
 		figures = seq(symbol('{'), g, seq(figure, seq(g, figure).star()) , g, symbol('}'), capture).as("figures"),

@@ -202,6 +202,12 @@ public final class GBuilder {
 		if (r == NOA.letter) {
 			return Rule.terminal(Terminal.LETTERS);
 		}
+		if (r == NOA.upper) {
+			return Rule.terminal(Terminal.UPPER_LETTERS);
+		}
+		if (r == NOA.lower) {
+			return Rule.terminal(Terminal.LOWER_LETTERS);
+		}
 		if (r == NOA.hex) {
 			return Rule.terminal(Terminal.HEX_NUMBER);
 		}
