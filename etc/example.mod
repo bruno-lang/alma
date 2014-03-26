@@ -70,4 +70,9 @@ module math ::
 	fn something :: [T] list -> {(T, T)}
 		= { a => b, 
 		    c => d }
+
+	fn switch :: Weekday d -> String
+    	/ d == :monday  /= "Monday"
+        / d == :tuesday /= "Tusday"
+        //= "Sunday"
 		
