@@ -120,7 +120,7 @@ fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, impl
 signature      : signature1 | '(' >> signature1 >> ')'
 signature1     : parameter >> '->' >> ( parameter >> '->' >> )* type
 parameter      : type ^ Variable:name
-implementation : ('\' >> -exprs >> '\', '=' >> group . )* '=' >> group .
+implementation : ('\' >> -exprs >> '\', '=' >> group . )* ['\' >> '\'] '=' >> group .
 where          : 'where', declaration >> (declaration >> )*
 declaration    : variable | deduction
 variable       : type ^ Variable >> '=' >> group .
