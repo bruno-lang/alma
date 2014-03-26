@@ -71,8 +71,9 @@ module math ::
 		= { a => b, 
 		    c => d }
 
-	fn switch :: Weekday d -> String
-    	/ d == :monday  /= "Monday"
-        / d == :tuesday /= "Tusday"
-        //= "Sunday"
+	fn switch :: (Weekday d -> String)
+		\ d == ?
+		\ :monday \= "Monday"
+		\ :tuesday \= "Tuesday" 
+		
 		
