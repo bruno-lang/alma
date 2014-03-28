@@ -116,23 +116,24 @@ fault          : 'fault' >> Fault >> '::', Type, Range?
 
 notation       : 'notation' >> Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]
 
-fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, implementation, [ where ]
-signature      : signature1 | '(' >> signature1 >> ')'
-signature1     : parameter >> '->' >> ( parameter >> '->' >> )* type
-parameter      : type ^ Variable:name
-implementation : ['\' >> group >> '?' .] ('\' >> -exprs >> '\', '=' >> group . )* [['\' >> '\'] '=' >> group . ]
-where          : 'where', declaration >> (declaration >> )*
-declaration    : variable | deduction
-variable       : type ^ Variable >> '=' >> group .
+protocol       : 'protocol' >> Protocol >> '::', '{', Operation, (',', Operation,) '}'
 
 op             : 'op' >> Operation >> ['[' Operator ']'] >> '::', Operation?, signature
 
-protocol       : 'protocol' >> Protocol >> '::', '{', Operation, (',', Operation,) '}'
+fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, implementation, [ where ]
+signature      : -descriptor | '(' >> -descriptor >> ')'
+descriptor     : ( parameter >> '->' >> )+ type
+parameter      : type ^ Variable:name
+implementation : ['\' >> expr >> '?' .] ('\' >> -expressions >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
+where          : 'where', declaration >> (declaration >> )*
+declaration    : variable | deduction
+variable       : type ^ Variable >> '=' >> expr .
 
 % Expressions
-expr           : tuple | list | set |  literal | Constant | Operator | Variable | Type | Fault
-list           : '[]' | '[', -exprs, ']'
-set            : '{}' | '{', -exprs, '}'
-tuple          : '()' | '(', -exprs, ')'
-exprs          : group (, ',', group )*
-group          : expr ( >> expr )*
+expr           : expr1 ( >> expr1 )*
+expr1          : tuple | list | set | atom
+list           : '[]' | '[', -expressions, ']'
+set            : '{}' | '{', -expressions, '}'
+tuple          : '()' | '(', -expressions, ')'
+expressions    : expr (, ',', expr )*
+atom           : literal | Constant | Operator | Variable | Type | Fault
