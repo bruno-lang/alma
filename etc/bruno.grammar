@@ -39,6 +39,7 @@ LiteralLogic   : ''' (9+ Measure? | {@ 9}+ UnitSymbol)
 LiteralText    : '"' !'"'* '"'
 LiteralBinary  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ )
 
+%TODO naming: terminal vs non-terminal
 Range          : RangeLiteral | RangeConstant
 RangeLiteral   : literal [ >> '..' >> literal ] | '..' >> literal
 RangeSet       : '{' >> literal >> (',' >> literal >> )* '}'
@@ -101,6 +102,7 @@ item-set       : '{', item, (',', item,)* '}'
 item-list      : '[', item, (',', item,)* ']'
 item-range     : Constant >> '..' >> Constant
 item           : Constant >> expr?
+%TODO maybe just use expr here?
 
 dimension      : 'dimension' >> simple, enumeration?
 
@@ -136,4 +138,4 @@ list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
 expressions    : expr (, ',', expr )*
-atom           : literal | Constant | Operator | Variable | Type | Fault
+atom           : Range | literal | Constant | Operator | Variable | Type | Fault
