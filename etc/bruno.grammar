@@ -27,30 +27,29 @@ Type           : -Noun
 
 % Operators
 Operator       : (-OperatorSymbol)x1-3
-OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' }
+OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' ':' }
 
 % Symbols
 Measure        : { @ UnitSymbol }+
 UnitSymbol     : { ''' '%' '$' '€' '@' '/' '°' '"' }
 
 % Literals
-literal        : LiteralLogic | LiteralText | LiteralBinary
-LiteralLogic   : ''' (9+ Measure? | {@ 9}+ UnitSymbol)
-LiteralText    : '"' !'"'* '"'
-LiteralBinary  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ )
+literal        : LogicLiteral | TestLiteral | BinaryLiteral
+LogicLiteral   : ''' ( (9+ Measure?):number | ({@ 9}+ UnitSymbol):value )
+TestLiteral    : '"' (!'"'*):text '"'
+BinaryLiteral  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
 
-%TODO naming: terminal vs non-terminal
-Range          : RangeLiteral | RangeConstant
-RangeLiteral   : literal [ >> '..' >> literal ] | '..' >> literal
-RangeSet       : '{' >> literal >> (',' >> literal >> )* '}'
-RangeConstant  : Constant [ >> '..' >> Constant ] | '..' >> Constant
+range          : literal-set | literal-range | constant-range
+literal-range  : literal [ >> '..' >> literal ] | '..' >> literal
+constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
+literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
 
 % Types
 TypeVariant    : { '!' '?' '~' '*' }
 TypeDimension  : '[' 9* ']'
 type           : -base-type TypeDimension? TypeVariant? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
-array-type     : base-type TypeDimension
+array-type     : -base-type TypeDimension
 list-type      : '[' base-type? ']'
 set-type       : '{' base-type? '}'
 tuple-type     : '(' [ type ( ',' >> type )* ] ')'
@@ -60,9 +59,9 @@ op-type        : Operation fn-type
 % Type Variables / Kinds
 KindDimension  : '[' (9*):min [ '-' (9*):max ] ']'
 instances      : 'instances', TypeVariable, '::', Operation*, kind
-kind           : base-kind KindDimension? TypeVariant? | op-kind
+kind           : -base-kind KindDimension? TypeVariant? | op-kind
 base-kind      : '_' | Type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
-array-kind     : base-kind KindDimension
+array-kind     : -base-kind KindDimension
 list-kind      : '[' base-kind? ']'
 set-kind       : '{' base-kind? '}'
 tuple-kind1    : '..' | kind
@@ -108,13 +107,13 @@ dimension      : 'dimension' >> simple, enumeration?
 
 unit           : 'unit' >> simple
 
-simple         : Type >> ['[' Measure ']'] >> '::', Type? >> Range?, format*
+simple         : Type >> ['[' Measure ']'] >> '::', Type? >> range?, format*
 
 system         : 'unit' ^ 'system' ^ System >> '::', '=', (ratio,)*
 ratio          : 'ratio' ^ Ratio >> '::', '[', equation, (',', equation,)* ']' .
 equation       : literal >> '=' >> literal
 
-fault          : 'fault' >> Fault >> '::', Type, Range?
+fault          : 'fault' >> Fault >> '::', Type, range?
 
 notation       : 'notation' >> Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]
 
@@ -122,7 +121,7 @@ protocol       : 'protocol' >> Protocol >> '::', '{', Operation, (',', Operation
 
 op             : 'op' >> Operation >> ['[' Operator ']'] >> '::', Operation?, signature
 
-fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, implementation, [ where ]
+fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, ('native' | implementation, [ where ]) 
 signature      : -descriptor | '(' >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ Variable:name
@@ -138,4 +137,4 @@ list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
 expressions    : expr (, ',', expr )*
-atom           : Range | literal | Constant | Operator | Variable | Type | Fault
+atom           : range | literal | Constant | Operator | Variable | Type | Fault

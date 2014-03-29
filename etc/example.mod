@@ -76,4 +76,10 @@ module math ::
 		\ :monday \= "Monday"
 		\ :tuesday \= "Tuesday" 
 		
-		
+	fn a-native-fn :: (String s -> String) native
+	
+	fn another :: [Int] n -> Int idx -> Int
+		\ n == ?
+		\ []   \= '0
+		\ ['1] \= '1
+		\      \= n at idx	
