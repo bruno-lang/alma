@@ -78,17 +78,17 @@ import         : '-use' ~ ['shared' ~] ['strict' ~] Library >> include?,  alias?
 include        : ':' >> Module (>> Module)* >> \n
 alias          : 'where', ( Type >> '=' >> Type, | Operation >> '=' >> Operation, )+
 
-module         : 'module', Module, '::', auto*, invariant*, member+
-member         : (val | instances | fn | op | protocol | fault | notation | data | unit | dimension | system),
-
-auto           : '-auto' ^ deduction .
-deduction      : bind | refinement
-refinement     : type >> '=<>' >> Type
-bind           : Function >> '=<>' >> Operation (>> type)*
+auto           : '-auto' ^ specialisation
+specialisation : bind | refinement
+refinement     : type >> '=<>' >> Type .
+bind           : Function >> '=<>' >> Operation (>> type)* .
 
 invariant      : '-invariant' ^ Type >> '!' >> Function .
 
 % Implementation
+module         : 'module', Module, '::', auto*, invariant*, member+
+member         : (val | instances | fn | op | protocol | fault | notation | data | unit | dimension | system),
+
 val            : 'val' >> Constant >> '::' >> type >> expr
 
 data           : 'data' ^ Data >> '::', '(', element, (',', element,)* ')' , format*, enumeration?
@@ -122,7 +122,7 @@ signature1     : parameter >> '->' >> ( parameter >> '->' >> )* type
 parameter      : type ^ Variable:name
 implementation : ['\' >> group >> '?' .] ('\' >> -exprs >> '\', '=' >> group . )* [['\' >> '\'] '=' >> group . ]
 where          : 'where', declaration >> (declaration >> )*
-declaration    : variable | deduction
+declaration    : variable | specialisation
 variable       : type ^ Variable >> '=' >> group .
 
 op             : 'op' >> Operation >> ['[' Operator ']'] >> '::', Operation?, signature
@@ -136,3 +136,4 @@ set            : '{}' | '{', -exprs, '}'
 tuple          : '()' | '(', -exprs, ')'
 exprs          : group (, ',', group )*
 group          : expr ( >> expr )*
+%TODO group has to be reworked so that a expr can be a group but just one list/set/tupel etc
