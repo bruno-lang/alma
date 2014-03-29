@@ -69,6 +69,7 @@ public final class GTokeniser {
 			if (end < 0) {
 				position++;
 			} else {
+				tokens.erase(position);
 				return position;
 			}
 		}

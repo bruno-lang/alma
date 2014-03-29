@@ -34,9 +34,9 @@ Measure        : { @ UnitSymbol }+
 UnitSymbol     : { ''' '%' '$' '€' '@' '/' '°' '"' }
 
 % Literals
-literal        : LogicLiteral | TestLiteral | BinaryLiteral
-LogicLiteral   : ''' ( (9+ Measure?):number | ({@ 9}+ UnitSymbol):value )
-TestLiteral    : '"' (!'"'*):text '"'
+literal        : LogicLiteral | TextLiteral | BinaryLiteral
+LogicLiteral   : ''' ( (9+ Measure?):number | ($ .. UnitSymbol):value )
+TextLiteral    : '"' (!'"'*):text '"'
 BinaryLiteral  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
 
 range          : literal-set | literal-range | constant-range
@@ -46,7 +46,7 @@ literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
 
 % Types
 TypeVariant    : { '!' '?' '~' '*' }
-TypeDimension  : '[' 9* ']'
+TypeDimension  : '[' 9* ['-'9+] ']' | '..'
 type           : -base-type TypeDimension? TypeVariant? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 array-type     : -base-type TypeDimension
@@ -57,7 +57,7 @@ fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
 % Type Variables / Kinds
-KindDimension  : '[' (9*):min [ '-' (9*):max ] ']'
+KindDimension  : '[' (9*):min [ '-' (9*):max ] ']' | '..'
 instances      : 'instances', TypeVariable, '::', Operation*, kind
 kind           : -base-kind KindDimension? TypeVariant? | op-kind
 base-kind      : '_' | Type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
@@ -89,25 +89,18 @@ invariant      : '-invariant' ^ Type >> '!' >> Function .
 module         : 'module', Module, '::', auto*, invariant*, member+
 member         : (val | instances | fn | op | protocol | fault | notation | data | unit | dimension | system),
 
+% Values
 val            : 'val' >> Constant >> '::' >> type >> expr
 
-data           : 'data' ^ Data >> '::', '(', element, (',', element,)* ')' , format*, enumeration?
+data           : 'data' ^ Data >> '::', (struct | type)
+struct         : '(', element, (',', element,)* ')' , format*, enumeration?
 element        : type >> Field
-
 format         : '<->', ( tuple-type | array-type | Data ),
+enumeration    : '=', expr1
 
-enumeration    : '=', ( item-set | item-list | item-range )
-item-set       : '{', item, (',', item,)* '}'
-item-list      : '[', item, (',', item,)* ']'
-item-range     : Constant >> '..' >> Constant
-item           : Constant >> expr?
-%TODO maybe just use expr here?
-
-dimension      : 'dimension' >> simple, enumeration?
-
-unit           : 'unit' >> simple
-
-simple         : Type >> ['[' Measure ']'] >> '::', Type? >> range?, format*
+dimension      : 'dimension' >> -primitive, enumeration?
+unit           : 'unit' >> -primitive
+primitive      : Type >> ['[' Measure ']'] >> '::', [Type >> range?], format*
 
 system         : 'unit' ^ 'system' ^ System >> '::', '=', (ratio,)*
 ratio          : 'ratio' ^ Ratio >> '::', '[', equation, (',', equation,)* ']' .

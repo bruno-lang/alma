@@ -91,3 +91,19 @@ module math ::
 	
 	fn clojure? :: [] e -> () = &native
 	
+	fn range :: () x -> [Int]
+		= '0 .. '12 
+	
+	dimension Suit :: = { :spades, :hearts, :diamonds, :clubs }
+	
+	dimension Month :: Int '1 .. '12 = [:januar, :februar, :december]
+	
+	unit Int :: Number <-> (Sign?, Digits)
+	unit Float :: Number <-> (Int, Dot, Digits)
+
+	dimension Char ['] :: Number #x0000 .. #xFFFF
+	unit Digit :: Char '0' .. '9'
+
+	data Digits :: Digit..
+
+	unit Sign :: Char {'+', '-'}
