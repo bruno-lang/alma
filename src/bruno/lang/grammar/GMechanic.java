@@ -170,7 +170,7 @@ public final class GMechanic {
 				r = namedRules.get(name);
 			}
 			if (r == null) {
-				throw new NoSuchElementException("No such rule: `"+r.name+"`\nKnown rules are: "+namedRules.keySet());
+				throw new NoSuchElementException("No such rule: `"+rule.name+"`\nKnown rules are: "+namedRules.keySet());
 			}
 			return noCapture ? r.elements[0] : r;
 		} else if (rule.elements.length > 0) {

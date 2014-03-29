@@ -128,7 +128,7 @@ descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ Variable:name
 implementation : ['\' >> expr >> '?' .] ('\' >> -expressions >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
 where          : 'where', declaration >> (declaration >> )*
-declaration    : variable | deduction
+declaration    : variable | specialisation
 variable       : type ^ Variable >> '=' >> expr .
 
 % Expressions
