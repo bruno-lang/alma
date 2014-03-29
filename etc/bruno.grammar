@@ -121,10 +121,10 @@ protocol       : 'protocol' >> Protocol >> '::', '{', Operation, (',', Operation
 
 op             : 'op' >> Operation >> ['[' Operator ']'] >> '::', Operation?, signature
 
-fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, ('native' | implementation, [ where ]) 
+fn             : 'fn' >> Function >> ['[' Operator ']'] >> '::', signature, ( '=', '&native' | implementation, [ where ]) 
 signature      : -descriptor | '(' >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
-parameter      : type ^ Variable:name
+parameter      : type ^ -Variable:name
 implementation : ['\' >> expr >> '?' .] ('\' >> -expressions >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
 where          : 'where', declaration >> (declaration >> )*
 declaration    : variable | specialisation

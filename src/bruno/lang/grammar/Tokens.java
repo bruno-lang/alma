@@ -86,7 +86,7 @@ public final class Tokens {
 	}
 	
 	public void erase(int position) {
-		while (starts[top] > position) {
+		while (ends[top] > position) {
 			top--;
 		}
 	}
