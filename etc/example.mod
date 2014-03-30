@@ -107,3 +107,75 @@ module math ::
 	data Digits :: Digit..
 
 	unit Sign :: Char {'+', '-'}
+	
+	dimension Time :: Int
+	unit Days :: relative Time 
+	unit DayOfMonth :: absolute Time
+	
+	instances E :: _
+	instances L :: [E]
+	
+	op cons :: L l -> E e -> L
+	op append :: L l -> E e -> L
+	op concat :: L l -> L other -> L
+	op take :: L l -> Count c -> L
+	op drop :: L l -> Count c -> L
+	op remove :: L l -> Index i -> L
+	op insert :: L l -> Index i -> L
+	op at :: L l -> Index i -> E?
+	op slice :: L l -> Index from -> Index to -> L
+	
+	protocol List :: {force, cons, append, concat, take, 
+	                                    drop, remove, insert, at, slice}
+	                                    
+	                                    
+	instances E :: _
+
+	data Elements :: (
+	    Length length,
+	    E[]~ elements,
+	    [E] tail
+	)
+	
+	fn at :: Elements list -> Index i -> E?
+	    \ i < list length \= list at i
+	    \                 \= list tail at (i - list length)
+	
+	fn insert :: Elements list -> Index i -> T e -> [E]
+	    \ i == '0 \= list prepand e
+	    \ i == '1 \= list take '1 append e ++ (list drop '1)
+	    \ i >= list length \= (list length + '1, elements, tail insert at (i - list length))
+	    = (list take i) ++ (drop i prepand e)
+	    
+	instances P :: (,)
+	instances A :: _
+	instances B :: _
+
+	fn lazy :: (A -> P -> B) f -> A v -> P p -> (() -> B)
+	    = () -> (a f p)
+        
+        
+	val :1hour :: Milliseconds = '1h
+	val :x :: Seconds = '2h + '42min
+	
+	instances T :: _
+	fn or-default :: T? v -> T default -> T 
+	    \ v exists \= v
+	    \          \= default	
+	    
+	instances T :: _ & eq
+	fn first :: [T] list -> T sample -> Index start -> T
+	    \ sample == list @ start \= e
+	    \                         \= list first sample (start + '1) 
+	    
+	dimension Coordinate :: Int
+	dimension X- :: Coordinate
+	dimension Y- :: Coordinate
+	unit Colon :: Char {':'}
+	data Point :: (X- x, Y- y) <-> (X-, Colon, Y-)
+	data Points :: [Point]
+	
+	val :p1 :: Point = "2:3"
+	
+	data String :: [Char]
+	data Octal :: Char[8]
