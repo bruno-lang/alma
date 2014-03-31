@@ -5,7 +5,8 @@ comment       : '%' (!\n+):text
 rule          : name, ('=' | (':' ':'? '='?)), selection ';'? .
 selection     : sequence (, '|' >> sequence )*
 sequence      : element ( >> element )*
-element       : (completion | group | option | string |  terminal | ref ) occurrence?
+element       : (determination | completion | group | option | string |  terminal | ref ) occurrence?
+determination : '<'
 completion    : '..' capture
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture

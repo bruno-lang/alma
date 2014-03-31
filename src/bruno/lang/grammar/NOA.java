@@ -81,7 +81,8 @@ public final class NOA {
 		option = seq(symbol('['), g, ref("selection"), g, symbol(']'), capture).as("option"),
 		group = seq(symbol('('), g, ref("selection"), g, symbol(')'), capture).as("group"),
 		completion = seq(string(".."), capture).as("completion"),
-		element = seq(selection(completion, group, option, string, terminal, ref), occurrence.qmark()).as("element"),
+		determination = symbol('<').as("determination"),
+		element = seq(selection(determination, completion, group, option, string, terminal, ref), occurrence.qmark()).as("element"),
 
 		sequence = seq(element, seq(i, element).star()).as("sequence"),
 		selection = seq(sequence, seq(g, symbol('|'), i, sequence).star()).as("selection"),

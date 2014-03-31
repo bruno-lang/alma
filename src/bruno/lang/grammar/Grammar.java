@@ -71,24 +71,25 @@ public final class Grammar {
 
 	public static final class Rule {
 
+		public static final int NO_DETERMINATION = Integer.MAX_VALUE;
 		private static final Rule[] NO_ELEMENTS = new Rule[0];
 		private static final byte[] NO_LITERAL = new byte[0];
 
 		public static Rule completion() {
-			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, NO_LITERAL, null, null, 0);
 		}
 
 		public static Rule ref(String name) {
-			return new Rule(RuleType.REFERENCE, name, NO_ELEMENTS, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.REFERENCE, name, NO_ELEMENTS, Occur.once, NO_LITERAL, null, null, 0);
 		}
 
 		public static Rule selection(Rule...elements) {
-			return new Rule(RuleType.SELECTION, "", elements, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.SELECTION, "", elements, Occur.once, NO_LITERAL, null, null, 0);
 		}
 
 		public static Rule seq(Rule...elements) {
 			complete(elements);
-			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_LITERAL, null, null, NO_DETERMINATION);
 		}
 
 		public static Rule symbol( int codePoint ) {
@@ -96,15 +97,15 @@ public final class Grammar {
 		}
 
 		public static Rule string(String l) {
-			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, l.getBytes(), null, null);
+			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, l.getBytes(), null, null, 0);
 		}
 
 		public static Rule pattern(Pattern p) {
-			return new Rule(RuleType.PATTERN, "", NO_ELEMENTS, Occur.once, NO_LITERAL, null, p);
+			return new Rule(RuleType.PATTERN, "", NO_ELEMENTS, Occur.once, NO_LITERAL, null, p, 0);
 		}
 
 		public static Rule terminal(Terminal t) {
-			return new Rule(RuleType.TERMINAL, "", NO_ELEMENTS, Occur.once, NO_LITERAL, t, null);
+			return new Rule(RuleType.TERMINAL, "", NO_ELEMENTS, Occur.once, NO_LITERAL, t, null, 0);
 		}
 
 		public final RuleType type;
@@ -114,8 +115,9 @@ public final class Grammar {
 		public final byte[] literal;
 		public final Terminal terminal;
 		public final Pattern pattern;
+		public final int determination;
 
-		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern) {
+		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern, int determination) {
 			super();
 			this.type = type;
 			this.name = name.intern();
@@ -124,14 +126,15 @@ public final class Grammar {
 			this.literal = literal;
 			this.terminal = terminal;
 			this.pattern = pattern;
+			this.determination = determination;
 		}
 
 		public Rule as(String name) {
 			if (name.length() > 0 && name.charAt(0) == '-') {
-				return new Rule(type, name, elements, occur, literal, terminal, pattern);
+				return new Rule(type, name, elements, occur, literal, terminal, pattern, determination);
 			}
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
-			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, NO_LITERAL, null, null, 0);
 		}
 
 		public Rule plus() {
@@ -148,11 +151,15 @@ public final class Grammar {
 		
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.ITERATION) {
-				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, literal, terminal, pattern);
+				return occur == Occur.once ? elements[0] : new Rule(RuleType.ITERATION, name, elements, occur, literal, terminal, pattern, 0);
 			}
 			if (occur == Occur.once)
 				return this;
-			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, NO_LITERAL, null, null);
+			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, NO_LITERAL, null, null, 0);
+		}
+		
+		public Rule determines(int index) {
+			return new Rule(type, name, elements, occur, literal, terminal, pattern, index);
 		}
 
 		private static void complete(Rule[] elements) {

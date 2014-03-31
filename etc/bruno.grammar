@@ -92,7 +92,7 @@ member         : (val | instances | fn | op | protocol | fault | notation | data
 % Values
 val            : 'val' >> Constant >> '::' >> type >> '='? >> expr
 
-data           : 'data' ^ Data >> '::', (struct | type)
+data           : 'data' ^ Data >> '::', < (struct | type)
 struct         : '(', element, (',', element,)* ')' , format*, enumeration?
 element        : type >> Field
 format         : '<->', ( tuple-type | array-type | Data ),

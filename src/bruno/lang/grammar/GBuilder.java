@@ -15,6 +15,13 @@ import bruno.lang.grammar.Grammar.RuleType;
  */
 public final class GBuilder {
 
+	/**
+	 * Used to indicate the determination index as a {@link Rule} that is
+	 * detected by its identity. It has just this workaround helper
+	 * functionality within the builder.
+	 */
+	private static final Rule DETERMINATION = Rule.seq();
+	
 	public static Rule[] grammar(Tokenised grammar) {
 		final List<Rule> rules = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
@@ -61,15 +68,21 @@ public final class GBuilder {
 		final List<Rule> elems = new ArrayList<>();
 		final Tokens tokens = grammar.tokens;
 		final int end = tokens.end(token)+1;
+		int determinationIndex = Rule.NO_DETERMINATION;
 		int i = token+1;
 		while (tokens.rule(i) == NOA.element && tokens.end(i) <= end) {
-			elems.add(element(i, grammar));
+			Rule e = element(i, grammar);
+			if (e != DETERMINATION) {
+				elems.add(e);
+			} else {
+				determinationIndex = elems.size();
+			}
 			i = tokens.next(i);
 		}
 		if (elems.size() == 1) {
 			return elems.get(0);
 		}
-		return Rule.seq(elems.toArray(new Rule[0]));
+		return Rule.seq(elems.toArray(new Rule[0])).determines(determinationIndex);
 	}
 
 	private static Rule element(int token, Tokenised grammar) {
@@ -77,6 +90,9 @@ public final class GBuilder {
 		final Tokens tokens = grammar.tokens;
 		Occur occur = occur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
+		if (r == NOA.determination) {
+			return DETERMINATION;
+		}
 		if (r == NOA.completion) {
 			return Rule.completion();
 		}

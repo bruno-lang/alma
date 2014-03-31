@@ -17,6 +17,8 @@ public final class GTokeniser {
 		int t = 0;
 		try {
 			t = tokenise(start, input, 0, tokens);
+		} catch (ParseException e) { 
+			t = e.errorPosition;
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
@@ -26,6 +28,7 @@ public final class GTokeniser {
 			System.err.println(msg);
 			System.err.println(tokens.debug());
 			input.position(pos);
+			//FIXME what if end of file...
 			byte[] x = new byte[Math.min(20, input.limit()-pos)];
 			input.get(x);
 			System.err.println(new String(x));
@@ -118,11 +121,15 @@ public final class GTokeniser {
 		int end = position;
 		for (int i = 0; i < rule.elements.length; i++) {
 			Rule r = rule.elements[i];
-			end = tokenise(r, input, end, tokens);
-			if (end < 0) {
+			int endPosition = tokenise(r, input, end, tokens);
+			if (endPosition < 0) {
+				if (rule.determination <= i) {
+					throw new ParseException(end, endPosition);
+				}
 				tokens.erase(position);
-				return end;
+				return endPosition;
 			}
+			end = endPosition;
 		}
 		return end;
 	}
