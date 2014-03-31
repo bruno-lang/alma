@@ -7,20 +7,20 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
-public final class Tokenised {
+public final class Parsed {
 
 	public final ByteBuffer file;
-	public final Tokens tokens;
+	public final ParseTree tree;
 	
-	public Tokenised(ByteBuffer file, Tokens tokens) {
+	public Parsed(ByteBuffer file, ParseTree tree) {
 		super();
 		this.file = file;
-		this.tokens = tokens;
+		this.tree = tree;
 	}
 	
 	public String text(int index) {
-		int s = tokens.start(index);
-		int e = tokens.end(index);
+		int s = tree.start(index);
+		int e = tree.end(index);
 		int l = e-s;
 		byte[] dst = new byte[l];
 		file.position(s);
@@ -28,15 +28,15 @@ public final class Tokenised {
 		return new String(dst);
 	}
 
-	public static Tokenised tokenise(String src, String start, Grammar grammar)
+	public static Parsed parse(String src, String start, Grammar grammar)
 			throws FileNotFoundException, IOException {
 		RandomAccessFile aFile = new RandomAccessFile(src, "r");
 		FileChannel in = aFile.getChannel();
 		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
 		try {
 			buffer.load();
-			Tokens tokens = GTokeniser.tokenise(buffer, grammar.rule(start.intern()));
-			return new Tokenised(buffer, tokens);
+			ParseTree tree = Parser.parse(buffer, grammar.rule(start.intern()));
+			return new Parsed(buffer, tree);
 		} finally {
 			buffer.clear();
 			in.close();

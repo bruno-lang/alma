@@ -11,15 +11,15 @@ import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
 /**
- * The {@link GMechanic} is a utility that optimizes and finishes a set of
+ * The {@link Mechanic} is a utility that optimizes and finishes a set of
  * {@link Rule}s used to build a {@link Grammar}.
  * 
- * Such a set is usually created by the {@link GBuilder} that does not deliver a
+ * Such a set is usually created by the {@link Builder} that does not deliver a
  * working grammar but the set of rules as objects as given in a grammar file.
  * 
  * @author jan
  */
-public final class GMechanic {
+public final class Mechanic {
 
 	/**
 	 * Creates a set of named {@link Rule}s reachable from any of the given roots.  

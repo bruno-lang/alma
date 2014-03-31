@@ -12,48 +12,48 @@ import org.junit.Test;
 
 import bruno.lang.grammar.print.Printer;
 
-public class TestTokeniser {
+public class TestParser {
 
 	@Test
-	public void thatBrunoLangCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
+	public void thatBrunoLangCanBeParsed() throws IOException {
+		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
 		Grammar bruno = grammar(t);
-		Tokenised code = Tokenised.tokenise("etc/example.mod", "file", bruno);
+		Parsed code = Parsed.parse("etc/example.mod", "file", bruno);
 		Printer.rulePrinter(System.out).process(code);
 	}
 	
 	@Test
-	public void thatGrammarGrammarCanBeTokenised() throws IOException {
+	public void thatGrammarGrammarCanBeParsed() throws IOException {
 		Grammar g0 = NOA.GRAMMAR;
-		Tokenised t1 = Tokenised.tokenise("etc/noa.grammar", "grammar", g0);
+		Parsed t1 = Parsed.parse("etc/noa.grammar", "grammar", g0);
 		Grammar g1 = grammar(t1);
-		Tokenised t2 = Tokenised.tokenise("etc/noa.grammar", "grammar", g1);
+		Parsed t2 = Parsed.parse("etc/noa.grammar", "grammar", g1);
 		System.out.println(g1);
 		Printer.rulePrinter(System.out).process(t2);
 	}
 	
 	@Test
 	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
-		Tokens tokens = Tokenised.tokenise("etc/test.grammar", "grammar", NOA.GRAMMAR).tokens;
+		ParseTree tokens = Parsed.parse("etc/test.grammar", "grammar", NOA.GRAMMAR).tree;
 		assertEquals(8, tokens.end());
 		assertEquals("terminal", tokens.rule(7).name);
 	}
 	
 	@Test
-	public void thatJSONGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/json.grammar", "grammar", NOA.GRAMMAR);
+	public void thatJSONGrammarCanBeParsed() throws IOException {
+		Parsed t = Parsed.parse("etc/json.grammar", "grammar", NOA.GRAMMAR);
 		Grammar json = grammar(t);
 		System.out.println(json);
-		Tokenised jsont = Tokenised.tokenise("etc/example.json", "json", json);
+		Parsed jsont = Parsed.parse("etc/example.json", "json", json);
 		Printer.rulePrinter(System.out).process(jsont);
 	}
 	
 	@Test
-	public void thatXMLGrammarCanBeTokenised() throws IOException {
-		Tokenised t = Tokenised.tokenise("etc/xml.grammar", "grammar", NOA.GRAMMAR);
+	public void thatXMLGrammarCanBeParsed() throws IOException {
+		Parsed t = Parsed.parse("etc/xml.grammar", "grammar", NOA.GRAMMAR);
 		Grammar xml = grammar(t);
 		System.out.println(xml);
-		Tokenised xmlt = Tokenised.tokenise("etc/example.xml", "document", xml);
+		Parsed xmlt = Parsed.parse("etc/example.xml", "document", xml);
 		Printer.rulePrinter(System.out).process(xmlt);
 	}
 
@@ -61,14 +61,14 @@ public class TestTokeniser {
 	public void thatCompletionWorks() {
 		String input = "% this is the comments text\n% this is another one\n";
 		Grammar grammar = COMMENTS;
-		Tokens tokens = GTokeniser.tokenise(ByteBuffer.wrap(input.getBytes()), grammar.rule("grammar".intern()));
+		ParseTree tokens = Parser.parse(ByteBuffer.wrap(input.getBytes()), grammar.rule("grammar".intern()));
 		assertEquals(5, tokens.count());
 		assertEquals(" this is the comments text", input.substring(tokens.start(2), tokens.end(2)));
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
 	}
 	
-	private static Grammar grammar(Tokenised t) {
-		return new Grammar(GMechanic.finish(GBuilder.grammar(t)));		
+	private static Grammar grammar(Parsed t) {
+		return new Grammar(Mechanic.finish(Builder.grammar(t)));		
 	}
 
 	/**

@@ -6,8 +6,8 @@ import java.util.Arrays;
 
 import bruno.lang.grammar.Grammar;
 import bruno.lang.grammar.Processor;
-import bruno.lang.grammar.Tokenised;
-import bruno.lang.grammar.Tokens;
+import bruno.lang.grammar.Parsed;
+import bruno.lang.grammar.ParseTree;
 import bruno.lang.grammar.Grammar.Rule;
 
 public final class Printer {
@@ -30,8 +30,8 @@ public final class Printer {
 		}
 
 		@Override
-		public void process(Tokenised t) {
-			final Tokens tokens = t.tokens.sequential();
+		public void process(Parsed t) {
+			final ParseTree tokens = t.tree.sequential();
 			for (int i = 0; i < tokens.count(); i++) {
 				byte[] indent = new byte[Math.abs(tokens.level(i))];
 				Arrays.fill(indent, (byte)' ');
@@ -55,8 +55,8 @@ public final class Printer {
 		}
 		
 		@Override
-		public void process(Tokenised t) {
-			final Tokens tokens = t.tokens.sequential();
+		public void process(Parsed t) {
+			final ParseTree tokens = t.tree.sequential();
 			for (int i = 0; i < tokens.count(); i++) {
 				printColor(t.file, out, ANSIColor.rainbow(color++), tokens.start(i), tokens.end(i));
 			}
@@ -66,13 +66,13 @@ public final class Printer {
 	
 	public static abstract class ColorPrinter implements Processor {
 
-		abstract void print(Tokens tokens, ByteBuffer in, int index);
+		abstract void print(ParseTree tokens, ByteBuffer in, int index);
 		
 		abstract void print(String s);
 
 		@Override
-		public void process(Tokenised t) {
-			Tokens tokens = t.tokens.sequential();
+		public void process(Parsed t) {
+			ParseTree tokens = t.tree.sequential();
 			for (int i = 0; i < tokens.count(); i++) {
 				print(tokens, t.file, i);
 			}
@@ -89,7 +89,7 @@ public final class Printer {
 		}
 
 		@Override
-		public void print(Tokens tokens, ByteBuffer in, int index) {
+		public void print(ParseTree tokens, ByteBuffer in, int index) {
 			int s = tokens.start(index);
 			int e = tokens.end(index);
 			if (e == s) {
@@ -120,7 +120,7 @@ public final class Printer {
 		}
 		
 		@Override
-		public void print(Tokens tokens, ByteBuffer in, int index) {
+		public void print(ParseTree tokens, ByteBuffer in, int index) {
 			int s = tokens.start(index);
 			int e = tokens.end(index);
 			if (e == s) {

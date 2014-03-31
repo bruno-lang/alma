@@ -9,11 +9,11 @@ import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
 /**
- * Builds a {@link Grammar} from a given {@link Tokenised} grammar file.
+ * Builds a {@link Grammar} from a given {@link Parsed} grammar file.
  *  
  * @author jan
  */
-public final class GBuilder {
+public final class Builder {
 
 	/**
 	 * Used to indicate the determination index as a {@link Rule} that is
@@ -22,9 +22,9 @@ public final class GBuilder {
 	 */
 	private static final Rule DETERMINATION = Rule.seq();
 	
-	public static Rule[] grammar(Tokenised grammar) {
+	public static Rule[] grammar(Parsed grammar) {
 		final List<Rule> rules = new ArrayList<>();
-		final Tokens tokens = grammar.tokens;
+		final ParseTree tokens = grammar.tree;
 		final int c = tokens.count();
 		int token = 0;
 		while (token < c) {
@@ -42,15 +42,15 @@ public final class GBuilder {
 		return rules.toArray(new Rule[0]);
 	}
 
-	private static Rule rule(int token, Tokenised grammar) {
+	private static Rule rule(int token, Parsed grammar) {
 		check(token, grammar, NOA.rule);
 		return selection(token+2, grammar).as(grammar.text(token+1));
 	}
 
-	private static Rule selection(int token, Tokenised grammar) {
+	private static Rule selection(int token, Parsed grammar) {
 		check(token, grammar, NOA.selection);
 		final List<Rule> alternatives = new ArrayList<>();
-		final Tokens tokens = grammar.tokens;
+		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token)+1;
 		int i = token+1;
 		while (tokens.rule(i) == NOA.sequence && tokens.end(i) <= end) {
@@ -63,10 +63,10 @@ public final class GBuilder {
 		return Rule.selection(alternatives.toArray(new Rule[0]));
 	}
 
-	private static Rule sequence(int token, Tokenised grammar) {
+	private static Rule sequence(int token, Parsed grammar) {
 		check(token, grammar, NOA.sequence);
 		final List<Rule> elems = new ArrayList<>();
-		final Tokens tokens = grammar.tokens;
+		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token)+1;
 		int determinationIndex = Rule.NO_DETERMINATION;
 		int i = token+1;
@@ -85,9 +85,9 @@ public final class GBuilder {
 		return Rule.seq(elems.toArray(new Rule[0])).determines(determinationIndex);
 	}
 
-	private static Rule element(int token, Tokenised grammar) {
+	private static Rule element(int token, Parsed grammar) {
 		check(token, grammar, NOA.element);
-		final Tokens tokens = grammar.tokens;
+		final ParseTree tokens = grammar.tree;
 		Occur occur = occur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
 		if (r == NOA.determination) {
@@ -120,20 +120,20 @@ public final class GBuilder {
 		throw unexpectedRule(r);
 	}
 
-	private static Rule ref(int token, Tokenised grammar) {
+	private static Rule ref(int token, Parsed grammar) {
 		return capture(token+2, grammar, Rule.ref(grammar.text(token+1)));
 	}
 
-	private static Rule capture(int token, Tokenised grammar, Rule rule) {
-		if (grammar.tokens.rule(token) == NOA.capture) {
+	private static Rule capture(int token, Parsed grammar, Rule rule) {
+		if (grammar.tree.rule(token) == NOA.capture) {
 			return rule.as(grammar.text(token+1));
 		}
 		return rule;
 	}
 
-	private static Rule terminal(int token, Tokenised grammar) {
+	private static Rule terminal(int token, Parsed grammar) {
 		check(token, grammar, NOA.terminal);
-		Rule r = grammar.tokens.rule(token+1);
+		Rule r = grammar.tree.rule(token+1);
 		if (r == NOA.ranges) {
 			return ranges(token+1, grammar);
 		}
@@ -146,15 +146,15 @@ public final class GBuilder {
 		throw unexpectedRule(r);
 	}
 
-	private static Rule pattern(int token, Tokenised grammar) {
+	private static Rule pattern(int token, Parsed grammar) {
 		check(token, grammar, NOA.pattern);
-		boolean not = grammar.tokens.rule(token+1) == NOA.not;
+		boolean not = grammar.tree.rule(token+1) == NOA.not;
 		Rule p = patternSelection(token+(not?2:1), grammar);
 		return not ? Rule.pattern(Patterns.not(p.pattern)) : p;
 	}
 
-	private static Rule patternSelection(int token, Tokenised grammar) {
-		Rule r = grammar.tokens.rule(token);
+	private static Rule patternSelection(int token, Parsed grammar) {
+		Rule r = grammar.tree.rule(token);
 		if (r == NOA.gap) {
 			return Rule.pattern(Patterns.GAP);
 		}
@@ -173,9 +173,9 @@ public final class GBuilder {
 		throw unexpectedRule(r);
 	}
 
-	private static Rule figures(int token, Tokenised grammar) {
+	private static Rule figures(int token, Parsed grammar) {
 		check(token, grammar, NOA.figures);
-		final Tokens tokens = grammar.tokens;
+		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token);
 		Terminal terminal = null;
 		int i = token+1;
@@ -203,15 +203,15 @@ public final class GBuilder {
 		return capture(i, grammar, r);
 	}
 
-	private static Rule ranges(int token, Tokenised grammar) {
+	private static Rule ranges(int token, Parsed grammar) {
 		check(token, grammar, NOA.ranges);
-		boolean not = grammar.tokens.rule(token+1) == NOA.not;
+		boolean not = grammar.tree.rule(token+1) == NOA.not;
 		Rule ranges = rangesSelection(token +(not ? 2 : 1), grammar);
 		return not ? Rule.terminal(ranges.terminal.not()) : ranges;
 	}
 
-	private static Rule rangesSelection(int token, Tokenised grammar) {
-		Rule r = grammar.tokens.rule(token);
+	private static Rule rangesSelection(int token, Parsed grammar) {
+		Rule r = grammar.tree.rule(token);
 		if (r == NOA.wildcard) {
 			return Rule.terminal(Terminal.WILDCARD);
 		}
@@ -266,9 +266,9 @@ public final class GBuilder {
 		throw unexpectedRule(r);
 	}
 
-	private static int literal(int token, Tokenised grammar) {
+	private static int literal(int token, Parsed grammar) {
 		check(token, grammar, NOA.literal);
-		Rule r = grammar.tokens.rule(token+1);
+		Rule r = grammar.tree.rule(token+1);
 		if (r == NOA.symbol) {
 			return grammar.text(token+1).codePointAt(1);
 		}
@@ -278,12 +278,12 @@ public final class GBuilder {
 		throw unexpectedRule(r);
 	}
 
-	private static Occur occur(int token, Tokenised grammar, int parent) {
+	private static Occur occur(int token, Parsed grammar, int parent) {
 		// there might not be an occurrence token or it belongs to a outer parent 
-		if (grammar.tokens.rule(token) != NOA.occurrence || grammar.tokens.end(parent) < grammar.tokens.end(token)) {
+		if (grammar.tree.rule(token) != NOA.occurrence || grammar.tree.end(parent) < grammar.tree.end(token)) {
 			return Occur.once;
 		}
-		Rule occur = grammar.tokens.rule(token+1);
+		Rule occur = grammar.tree.rule(token+1);
 		if (occur == NOA.plus) {
 			return Occur.plus;
 		}
@@ -295,9 +295,9 @@ public final class GBuilder {
 		}
 		int min = Integer.parseInt(grammar.text(token+1));
 		int max = min;
-		if ("to".equals(grammar.tokens.rule(token+2).name)) {
+		if ("to".equals(grammar.tree.rule(token+2).name)) {
 			max = Occur.plus.max;
-			if ("max".equals(grammar.tokens.rule(token+3).name)) {
+			if ("max".equals(grammar.tree.rule(token+3).name)) {
 				max = Integer.parseInt(grammar.text(token+3));
 			}
 		}
@@ -308,9 +308,9 @@ public final class GBuilder {
 		return new RuntimeException("Unexpected rule: "+r);
 	}
 	
-	private static void check(int token, Tokenised grammar, Rule expected) {
-		if (grammar.tokens.rule(token) != expected) {
-			throw new RuntimeException("expected "+expected+" but got: "+grammar.tokens.rule(token));
+	private static void check(int token, Parsed grammar, Rule expected) {
+		if (grammar.tree.rule(token) != expected) {
+			throw new RuntimeException("expected "+expected+" but got: "+grammar.tree.rule(token));
 		}
 	}
 }

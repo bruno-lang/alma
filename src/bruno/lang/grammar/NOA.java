@@ -1,7 +1,7 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.GMechanic.finish;
-import static bruno.lang.grammar.GMechanic.namedRules;
+import static bruno.lang.grammar.Mechanic.finish;
+import static bruno.lang.grammar.Mechanic.namedRules;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Grammar.Rule.ref;
 import static bruno.lang.grammar.Grammar.Rule.selection;

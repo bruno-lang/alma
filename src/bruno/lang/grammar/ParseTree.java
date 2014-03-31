@@ -7,11 +7,11 @@ import bruno.lang.grammar.Grammar.Rule;
 
 
 /**
- * A sequence of tokens for a particular {@link Grammar}.
+ * A parse tree as a sequence of tokens for a particular {@link Grammar}.
  * 
  * @author jan
  */
-public final class Tokens {
+public final class ParseTree {
 
 	private final Rule[] rules;
 	private final int[] starts;
@@ -23,7 +23,7 @@ public final class Tokens {
 	private int level = -1;
 	private int top = -1;
 	
-	public Tokens(int length) {
+	public ParseTree(int length) {
 		super();
 		this.rules = new Rule[length];
 		this.starts = new int[length];
@@ -31,7 +31,7 @@ public final class Tokens {
 		this.levels = new int[length];
 	}
 	
-	private Tokens(Rule[] rules, int[] starts, int[] ends, int[] levels,
+	private ParseTree(Rule[] rules, int[] starts, int[] ends, int[] levels,
 			int level, int top) {
 		super();
 		this.rules = rules;
@@ -142,22 +142,22 @@ public final class Tokens {
 		return starts[1] == ends[0];
 	}
 	
-	public Tokens sequential() {
+	public ParseTree sequential() {
 		if (isSequential()) {
 			return this;
 		}
-		Tokens l = new Tokens(rules.length);
+		ParseTree l = new ParseTree(rules.length);
 		sequential(l, 0);
 		return l;
 	}
 	
-	public Tokens debug() {
+	public ParseTree debug() {
 		int t = 0;
 		while (rules[t] != null) { t++; }
-		return new Tokens(rules, starts, ends, levels, 0, t-1);
+		return new ParseTree(rules, starts, ends, levels, 0, t-1);
 	}
 	
-	private int sequential(Tokens dest, final int index) {
+	private int sequential(ParseTree dest, final int index) {
 		int i = index;
 		final int level = level(i);
 		final int nextLevel = level+1; // the level we are looking for
