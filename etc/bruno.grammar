@@ -36,7 +36,7 @@ UnitSymbol     : { ''' '%' '$' '€' '/' '°' '"' }
 % Literals
 literal        : LogicLiteral | TextLiteral | BinaryLiteral
 LogicLiteral   : ''' ( (9+ Measure?):number | ($ .. UnitSymbol):value )
-TextLiteral    : '"' (!'"'*):text '"'
+TextLiteral    : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
 BinaryLiteral  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
 
 range          : literal-set | literal-range | constant-range

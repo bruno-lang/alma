@@ -183,4 +183,9 @@ module math ::
 	instances T :: _
 	instances S :: T
 	fn specialise [=<>] :: T value -> $S type -> S
+	
+	val :bla :: String = """
+	
+	something very long with "quotes"
+	"""
 	  
