@@ -180,3 +180,7 @@ module math ::
 	data String :: [Char]
 	data Octal :: Char[8]
 	
+	instances T :: _
+	instances S :: T
+	fn specialise [=<>] :: T value -> $S type -> S
+	  

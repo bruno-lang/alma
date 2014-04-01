@@ -81,6 +81,7 @@ public final class Mechanic {
 		if ((rule.type == RuleType.SEQUENCE || rule.type == RuleType.SELECTION) && rule.elements.length == 1) {
 			return rule.elements[0];
 		}
+		//TODO unpack sequences in sequences
 		if (rule.type == RuleType.CAPTURE && rule.name.startsWith("-")) {
 			return rule.elements[0];
 		}

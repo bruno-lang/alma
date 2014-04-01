@@ -47,7 +47,7 @@ literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
 % Types
 TypeVariant    : { '!' '?' '~' '*' }
 TypeDimension  : '[' 9* ['-'9+] ']' | '..'
-type           : -base-type TypeDimension? TypeVariant? | op-type
+type           : '$'? -base-type TypeDimension? TypeVariant? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 array-type     : -base-type TypeDimension
 list-type      : '[' base-type? ']'
@@ -98,9 +98,9 @@ element        : type >> Field
 format         : '<->', ( tuple-type | array-type | Data ),
 enumeration    : '=', expr1
 
-dimension      : 'dimension' >> < -primitive, enumeration?
+dimension      : 'dimension' >> -primitive, enumeration?
 unit           : 'unit' >> -primitive
-primitive      : Type >> ['[' Measure ']'] >> '::', ['relative'|'absolute']:aspect >> [Type >> range?], format*
+primitive      : Type < >> ['[' Measure ']'] >> '::', ['relative'|'absolute']:aspect >> [Type >> range?], format*
 
 system         : 'unit' ^ 'system' ^ System >> '::', < '=', (ratio,)*
 ratio          : 'ratio' ^ Ratio >> '::', < '[', equation, (',', equation,)* ']' .

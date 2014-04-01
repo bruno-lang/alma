@@ -1,3 +1,5 @@
 module math ::
 	
+	unit Foo & :: Int &asasa
+	
 	fn clojure? :: [] e -> () native
