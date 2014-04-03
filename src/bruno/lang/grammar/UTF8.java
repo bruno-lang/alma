@@ -1,8 +1,11 @@
 package bruno.lang.grammar;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 public final class UTF8 {
+
+	private static final Charset CHARSET = Charset.forName("UTF-8");
 
 	static final int MAX_CODE_POINT = 0x7FFFFFFF;
 	
@@ -17,7 +20,11 @@ public final class UTF8 {
 	public static byte[] bytes(int codePoint) {
 		StringBuilder b = new StringBuilder();
 		b.appendCodePoint(codePoint);
-		return b.toString().getBytes();
+		return bytes(b.toString());
+	}
+	
+	public static byte[] bytes(String s) {
+		return s.getBytes(CHARSET);
 	}
 	
 	public static int codePoint(byte... bytes) {
@@ -101,4 +108,5 @@ public final class UTF8 {
 		}
 		return l;
 	}
+
 }

@@ -153,7 +153,7 @@ public class TestTerminal {
 
 	private void assertContainsCharacters(Terminal t, String characters, boolean contains) {
 		for (char c : characters.toCharArray()) {
-			assertEquals(String.valueOf(c), contains, t.contains(ByteBuffer.wrap(String.valueOf(c).getBytes()), 0));
+			assertEquals(String.valueOf(c), contains, t.contains(ByteBuffer.wrap(UTF8.bytes(c)), 0));
 		}
 	}
 	

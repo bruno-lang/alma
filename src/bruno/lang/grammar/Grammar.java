@@ -97,7 +97,7 @@ public final class Grammar {
 		}
 
 		public static Rule string(String l) {
-			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, l.getBytes(), null, null, 0);
+			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, UTF8.bytes(l), null, null, 0);
 		}
 
 		public static Rule pattern(Pattern p) {

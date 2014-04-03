@@ -186,6 +186,6 @@ module math ::
 	
 	val :bla :: String = """
 	
-	something very long with "quotes"
+	something very long with "quotes" in it also having empty "" double quotes and such 
 	"""
 	  
