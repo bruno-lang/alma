@@ -22,15 +22,17 @@ module math ::
 		= a
 		
 	unit Digit :: Char '0 .. '9
+	
+	dimension Bool :: = [False, True]
 
-	dimension Bit :: = [ :0, :1 ]
+	dimension Bit :: = [ '0, '1 ]
 	
 	dimension Time [T] :: Natural
 	
 	unit Seconds [sec] :: Time
 
-	val :january :: Int '1
-	val :day :: Hours '24h
+	val January :: Int = '1
+	val Day :: Hours='24h
 	
 	protocol List :: { cons, size }	
 	
@@ -41,7 +43,7 @@ module math ::
 	data Object :: ( 
 		[Member] members,
 		Foo bar 
-	) <-> Byte[] <-> (X, Y) = [ :foo, :bar ]
+	) <-> Byte[150] <-> (X, Y) = [ Foo, Bar ]
 	
 	unit system SI :: =
 		ratio Time :: [
@@ -58,7 +60,7 @@ module math ::
 		
 		
 	fn quicksort :: [T] list -> [T] 
-		\ list # < '1 \
+		\ list # <= '1 \
 			= list 
 		= (less ++ equal ++ more)
 	where
@@ -72,14 +74,14 @@ module math ::
 		    c => d }
 
 	fn switch :: (Weekday d -> String)
-		\ d == ?
-		\ :monday \= "Monday"
-		\ :tuesday \= "Tuesday" 
+		\ d == :
+		\ Monday \= "Monday"
+		\ Tuesday \= "Tuesday" 
 		
 	fn a-native-fn :: (String s -> String) = &native
 	
 	fn another :: [Int] n -> Int idx -> Int
-		\ n == ?
+		\ n == :
 		\ []   \= '0
 		\ ['1] \= '1
 		\      \= n at idx	
@@ -94,9 +96,9 @@ module math ::
 	fn range :: () x -> [Int]
 		= '0 .. '12 
 	
-	dimension Suit :: = { :spades, :hearts, :diamonds, :clubs }
+	dimension Suit :: = { Spades, Hearts, Diamonds, Clubs }
 	
-	dimension Month :: Int '1 .. '12 = [:januar, :februar, :december]
+	dimension Month :: Int '1 .. '12 = [Januar, Februar, December]
 	
 	unit Int :: Number <-> (Sign?, Digits)
 	unit Float :: Number <-> (Int, Dot, Digits)
@@ -155,8 +157,8 @@ module math ::
 	    = () -> (a f p)
         
         
-	val :1hour :: Milliseconds = '1h
-	val :x :: Seconds = '2h + '42min
+	val Hour :: Milliseconds = '1h
+	val Xyz :: Seconds = '2h + '42min
 	
 	instances T :: _
 	fn or-default :: T? v -> T default -> T 
@@ -166,7 +168,7 @@ module math ::
 	instances T :: _ & eq
 	fn first :: [T] list -> T sample -> Index start -> T
 	    \ sample == list @ start \= e
-	    \                         \= list first sample (start + '1) 
+	    \                        \= list first sample (start + '1) 
 	    
 	dimension Coordinate :: Int
 	dimension X- :: Coordinate
@@ -175,7 +177,7 @@ module math ::
 	data Point :: (X- x, Y- y) <-> (X-, Colon, Y-)
 	data Points :: [Point]
 	
-	val :p1 :: Point = "2:3"
+	val Max :: Point = "2:3"
 	
 	data String :: [Char]
 	data Octal :: Char[8]
@@ -184,8 +186,19 @@ module math ::
 	instances S :: T
 	fn specialise [=<>] :: T value -> $S type -> S
 	
-	val :bla :: String = """
+	val Bla :: String = """
 	
 	something very long with "quotes" in it also having empty "" double quotes and such 
 	"""
+	
+	instances A :: _
+	instances B :: _
+	instances F :: (A -> P -> B)
+	
+	fn invoke :: F f -> A a -> P p -> B = a f p
+	
+	fn map :: [A] l -> (A -> B) fn -> [B]
+	fn singleton :: A v -> {A}
+	
+	val SETIFY :: ([A] -> [{A}]) = (_ map singleton)
 	  

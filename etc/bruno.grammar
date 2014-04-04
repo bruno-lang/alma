@@ -5,7 +5,7 @@ Noun           : Z { @ '-' } { @  9 }*
 
 % Identifiers
 Field          : { z 9 } -Dashed?
-Constant       : ':' -Field
+Constant       : -Noun
 Variable       : -Field '''*
 
 Operation      : -Verb '?'?
@@ -27,7 +27,7 @@ Type           : -Noun
 
 % Operators
 Operator       : (-OperatorSymbol)x1-3
-OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' ':' '@' }
+OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' '@' }
 
 % Symbols
 Measure        : { @ UnitSymbol }+
@@ -90,7 +90,7 @@ module         : 'module', Module, '::', auto*, invariant*, member+
 member         : (val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension ),
 
 % Values
-val            : 'val' >> Constant >> '::' < >> type >> '='? >> expr
+val            : 'val' >> Constant >> '::' < >> type >> '=' >> expr
 
 data           : 'data' ^ Data >> '::', < (struct | type)
 struct         : '(', element, (',', element,)* ')' , format*, enumeration?
@@ -118,14 +118,14 @@ fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature, ( 
 signature      : -descriptor | '(' >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ -Variable:name
-implementation : ['\' >> expr >> '?' .] ('\' >> -expressions >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
+implementation : ['\' >> expr >> ':' .] ('\' >> -expressions >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
 where          : 'where', declaration >> (declaration >> )*
 declaration    : variable | specialisation
 variable       : type ^ Variable >> '=' >> expr .
 
 % Expressions
 expr           : expr1 ( >> expr1 )*
-expr1          : tuple | list | set | atom
+expr1          : '_' | tuple | list | set | atom
 list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
