@@ -3,14 +3,14 @@ namespace math ::
 	-use lang
 	-use strict util
 	
-	-use shared strict vector
-	-use shared foo : x y
-	-use shared strict vector : a
+	-share strict vector
+	-share foo : x y
+	-share strict vector : a
 		where 
 			Int = Number
 			Float = Real
 			eq = equal 
 
-	-auto [] =<> EmptyList
+	-auto [] ~> EmptyList
 
-	-invariant Int ! even
+	-invariant Int <~ even

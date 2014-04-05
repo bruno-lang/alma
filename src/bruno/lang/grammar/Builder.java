@@ -16,11 +16,11 @@ import bruno.lang.grammar.Grammar.RuleType;
 public final class Builder {
 
 	/**
-	 * Used to indicate the determination index as a {@link Rule} that is
+	 * Used to indicate the distinct from index as a {@link Rule} that is
 	 * detected by its identity. It has just this workaround helper
 	 * functionality within the builder.
 	 */
-	private static final Rule DETERMINATION = Rule.seq();
+	private static final Rule DISTINCT_FROM = Rule.seq();
 	
 	public static Rule[] grammar(Parsed grammar) {
 		final List<Rule> rules = new ArrayList<>();
@@ -68,21 +68,21 @@ public final class Builder {
 		final List<Rule> elems = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token)+1;
-		int determinationIndex = Rule.NO_DETERMINATION;
+		int distinctFrom = Rule.UNDISTINGUISHABLE;
 		int i = token+1;
 		while (tokens.rule(i) == NOA.element && tokens.end(i) <= end) {
 			Rule e = element(i, grammar);
-			if (e != DETERMINATION) {
+			if (e != DISTINCT_FROM) {
 				elems.add(e);
 			} else {
-				determinationIndex = elems.size();
+				distinctFrom = elems.size();
 			}
 			i = tokens.next(i);
 		}
 		if (elems.size() == 1) {
 			return elems.get(0);
 		}
-		return Rule.seq(elems.toArray(new Rule[0])).determines(determinationIndex);
+		return Rule.seq(elems.toArray(new Rule[0])).distinctFrom(distinctFrom);
 	}
 
 	private static Rule element(int token, Parsed grammar) {
@@ -90,8 +90,8 @@ public final class Builder {
 		final ParseTree tokens = grammar.tree;
 		Occur occur = occur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
-		if (r == NOA.determination) {
-			return DETERMINATION;
+		if (r == NOA.distinction) {
+			return DISTINCT_FROM;
 		}
 		if (r == NOA.completion) {
 			return Rule.completion();

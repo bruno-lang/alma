@@ -1,8 +1,11 @@
 package bruno.lang.grammar;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -75,19 +78,44 @@ public final class Mechanic {
 	 */
 	public static Rule unpack(Rule rule, Set<Rule> followed) {
 		if (followed.contains(rule)) {
+			// TODO return the unpacked version of the rule 
 			return rule;
 		}
 		followed.add(rule);
 		if ((rule.type == RuleType.SEQUENCE || rule.type == RuleType.SELECTION) && rule.elements.length == 1) {
 			return rule.elements[0];
 		}
-		//TODO unpack sequences in sequences
+		if (rule.type == RuleType.SEQUENCE) { // inline nested sequences
+			if (!rule.isDistinctive() && hasSequenceElement(rule)) {
+				List<Rule> elems = new ArrayList<>();
+				for (Rule e : rule.elements) {
+					Rule u = unpack(e, followed);
+					if (u.type == RuleType.SEQUENCE && !u.isDistinctive()) {
+						elems.addAll(Arrays.asList(u.elements));
+					} else {
+						elems.add(u);
+					}
+				}
+				return Rule.seq(elems.toArray(new Rule[0]));
+			}
+		}
 		if (rule.type == RuleType.CAPTURE && rule.name.startsWith("-")) {
 			return rule.elements[0];
 		}
+		//TODO recursion? unpacked rules also have to be collected to they are replaced everywhere referenced
 		return rule;
 	}
 	
+	private static boolean hasSequenceElement(Rule rule) {
+		for (int i = 0; i < rule.elements.length; i++) {
+			Rule e = rule.elements[i];
+			if (e.type == RuleType.SEQUENCE && !e.isDistinctive()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Contracts selections with just {@link Terminal}s and 1 character literals
 	 * to a single {@link Terminal}. A selection of just literal characters will

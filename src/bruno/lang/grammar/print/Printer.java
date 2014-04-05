@@ -4,11 +4,10 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import bruno.lang.grammar.Grammar;
-import bruno.lang.grammar.Processor;
-import bruno.lang.grammar.Parsed;
-import bruno.lang.grammar.ParseTree;
 import bruno.lang.grammar.Grammar.Rule;
+import bruno.lang.grammar.ParseTree;
+import bruno.lang.grammar.Parsed;
+import bruno.lang.grammar.Processor;
 
 public final class Printer {
 
@@ -159,9 +158,17 @@ public final class Printer {
 	}
 
 	private static void printColor(PrintStream out, String color, String text) {
-		out.append(color);
-		out.append(text);
-		out.append(ANSIColor.RESET);
+		final int l = text.length();
+		int lf = text.indexOf('\n');
+		int s = 0;
+		while (lf >= 0 || s < l) {
+			int e = lf < 0 ? l : lf+1;
+			out.append(color);
+			out.append(text, s, e);
+			s = e;
+			lf = text.indexOf('\n', e);
+			out.append(ANSIColor.RESET);
+		}
 	}
 
 	private static String string(ByteBuffer input, int start, int end) {

@@ -19,7 +19,10 @@ public class TestParser {
 		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
 		Grammar bruno = grammar(t);
 		Parsed code = Parsed.parse("etc/example.mod", "file", bruno);
-		Printer.rulePrinter(System.out).process(code);
+		Processor printer = Printer.rulePrinter(System.out);
+		printer.process(code);
+		Parsed ns = Parsed.parse("etc/example.ns", "file", bruno);
+		printer.process(ns);
 	}
 	
 	@Test

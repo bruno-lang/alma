@@ -7,6 +7,7 @@ Noun           : Z { @ '-' } { @  9 }*
 Field          : { z 9 } -Dashed?
 Constant       : -Noun
 Variable       : -Field '''*
+Atom           : '`' { @ 9 '-' '_' OperatorSymbol UnitSymbol }+
 
 Operation      : -Verb '?'?
 Function       : -Verb {'?' '*'}?
@@ -27,7 +28,7 @@ Type           : -Noun
 
 % Operators
 Operator       : (-OperatorSymbol)x1-3
-OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' '@' }
+OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' '@' '~' }
 
 % Symbols
 Measure        : { @ UnitSymbol }+
@@ -74,28 +75,32 @@ file           : (library | namespace | module) ,
 library        : 'library', Library, '::', '{', Module, (',', Module,)* '}'
 
 namespace      : 'namespace', Namespace, '::', import*, auto*, invariant*
-import         : '-use' ~ ['shared' ~] ['strict' ~] Library >> include?,  alias?
-include        : ':' >> Module (>> Module)* >> \n
-alias          : 'where', ( Type >> '=' >> Type, | Operation >> '=' >> Operation, )+
+import         : ('-use' | '-share') ~ ['strict' ~] resource 
+resource       : Library >> confinement?, aliases?
+confinement    : ':' >> Module (>> Module)* .
+aliases        : 'where', alias, (','?, alias,)+
+alias          : Type >> '=' >> Type | Operation >> '=' >> Operation
 
-auto           : '-auto' ^ specialisation
-specialisation : bind | refinement
-refinement     : type >> '=<>' >> Type .
-bind           : Function >> '=<>' >> Operation (>> type)* .
+auto           : '-auto' ^ < specialisation
+specialisation : bind | promotion
+promotion      : type >> '~>' >> Type .
+bind           : Function >> '~>' >> Operation (>> type)* .
 
-invariant      : '-invariant' ^ Type >> '!' >> Function .
+invariant      : '-invariant' ^ < Type >> '<~' (>> Function)+ .
 
 % Implementation
-module         : 'module', Module, '::', auto*, invariant*, member+
+%TODO also allow import in moduel (use only)
+module         : 'module', Module, '::', include*, auto*, invariant*, member+
+include        : '-use' ^ < resource
 member         : (val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension ),
 
 % Values
-val            : 'val' >> Constant >> '::' < >> type >> '=' >> expr
+val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
 
-data           : 'data' ^ Data >> '::', < (struct | type)
-struct         : '(', element, (',', element,)* ')' , format*, enumeration?
-element        : type >> Field
-format         : '<->', ( tuple-type | array-type | Data ),
+data           : 'data' ^ Data >> '::', < (record | type), format*, enumeration?
+record         : '(', field, (',', field,)* ')'
+field          : type ^ Field
+format         : '<~>', ( tuple-type | array-type | Data ),
 enumeration    : '=', expr1
 
 dimension      : 'dimension' >> -primitive, enumeration?
@@ -125,9 +130,9 @@ variable       : type ^ Variable >> '=' >> expr .
 
 % Expressions
 expr           : expr1 ( >> expr1 )*
-expr1          : '_' | tuple | list | set | atom
+expr1          : tuple | list | set | element
 list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
 expressions    : expr (, ',', expr )*
-atom           : range | literal | Constant | Operator | Variable | Type | Fault
+element        : '_' | Atom | range | literal | Constant | Operator | Variable | Type | Fault

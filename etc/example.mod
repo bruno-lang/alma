@@ -1,11 +1,14 @@
 module math ::
 	
-	-auto eq =<> equals Int
-	-auto [Digit] =<> Digits
-	-auto [] =<> NoElements
+	-use util
+	-use bar where Foo = Baz, Que = Mim
 	
-	-invariant Digits ! non-empty
-	-invariant Int ! positive
+	-auto eq      ~> equals Int
+	-auto [Digit] ~> Digits
+	-auto []      ~> NoElements
+	
+	-invariant Digits <~ non-empty
+	-invariant Int    <~ positive odd
 	
 	instances F1 :: (T -> T -> Bool)
 
@@ -25,7 +28,7 @@ module math ::
 	
 	dimension Bool :: = [False, True]
 
-	dimension Bit :: = [ '0, '1 ]
+	dimension Bit :: = [ `0, `1 ]
 	
 	dimension Time [T] :: Natural
 	
@@ -40,10 +43,10 @@ module math ::
 	
 	notation JSON :: 
 	
-	data Object :: ( 
-		[Member] members,
-		Foo bar 
-	) <-> Byte[150] <-> (X, Y) = [ Foo, Bar ]
+	unit Year [Y] :: Int <~> (Digit, Digit, Digit, Digit)
+	
+	data Point :: (X- x, Y- y) <~> (X-, Colon, Y-)
+	data Points :: [Point]
 	
 	unit system SI :: =
 		ratio Time :: [
@@ -100,8 +103,8 @@ module math ::
 	
 	dimension Month :: Int '1 .. '12 = [Januar, Februar, December]
 	
-	unit Int :: Number <-> (Sign?, Digits)
-	unit Float :: Number <-> (Int, Dot, Digits)
+	unit Int :: Number <~> (Sign?, Digits)
+	unit Float :: Number <~> (Int, Dot, Digits)
 
 	dimension Char ['] :: Number #x0000 .. #xFFFF
 	unit Digit :: Char '0' .. '9'
@@ -174,7 +177,7 @@ module math ::
 	dimension X- :: Coordinate
 	dimension Y- :: Coordinate
 	unit Colon :: Char {':'}
-	data Point :: (X- x, Y- y) <-> (X-, Colon, Y-)
+	data Point :: (X- x, Y- y) <~> (X-, Colon, Y-)
 	data Points :: [Point]
 	
 	val Max :: Point = "2:3"
@@ -184,11 +187,15 @@ module math ::
 	
 	instances T :: _
 	instances S :: T
-	fn specialise [=<>] :: T value -> $S type -> S
+	fn specialise [~>] :: T value -> $S type -> S
 	
 	val Bla :: String = """
 	
-	something very long with "quotes" in it also having empty "" double quotes and such 
+something very long with "quotes" in it; also having empty double quotes "" 
+or even source code like 
+
+	fn foo :: (A a -> B) = a bar
+  
 	"""
 	
 	instances A :: _
@@ -201,4 +208,6 @@ module math ::
 	fn singleton :: A v -> {A}
 	
 	val SETIFY :: ([A] -> [{A}]) = (_ map singleton)
+	
+	val Something :: = `some-thing
 	  
