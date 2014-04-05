@@ -4,6 +4,7 @@ Verb           : z -Dashed?
 Noun           : Z { @ '-' } { @  9 }*
 
 % Identifiers
+Artifact       : '.' {Z 9} {@ 9 '-' '_'}*
 Field          : { z 9 } -Dashed?
 Constant       : -Noun
 Variable       : -Field '''*
@@ -11,10 +12,11 @@ Atom           : '`' { @ 9 '-' '_' OperatorSymbol UnitSymbol }+
 
 Operation      : -Verb '?'?
 Function       : -Verb {'?' '*'}?
-Module         : -Verb
-Library        : -Verb
-Namespace      : -Verb
 Fault          : -Verb '!'
+
+Module         : -Artifact
+Library        : -Artifact
+Namespace      : -Artifact
 
 TypeVariable   : Z 9?
 Protocol       : -Noun
@@ -32,7 +34,7 @@ OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' '@' '~' }
 
 % Symbols
 Measure        : { @ UnitSymbol }+
-UnitSymbol     : { ''' '%' '$' '€' '/' '°' '"' }
+UnitSymbol     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
 literal        : LogicLiteral | TextLiteral | BinaryLiteral
@@ -72,14 +74,14 @@ op-kind        : ( '_' | Operation ) fn-kind
 
 % Modularisation
 file           : (library | namespace | module) ,
-library        : 'library', Library, '::', '{', Module, (',', Module,)* '}'
+library        : 'library', Library+, '::', '{', Module, (',', Module,)* '}'
 
-namespace      : 'namespace', Namespace, '::', import*, auto*, invariant*
-import         : ('-use' | '-share') ~ ['strict' ~] resource 
-resource       : Library >> confinement?, aliases?
-confinement    : ':' >> Module (>> Module)* .
-aliases        : 'where', alias, (','?, alias,)+
-alias          : Type >> '=' >> Type | Operation >> '=' >> Operation
+namespace      : 'namespace', Namespace+, '::', import*, auto*, invariant*
+import         : ('-use' | '-share') ~ ['strict' ~] resource ,
+resource       : Library+ >> confinement?, aliases?
+confinement    : '[' >> Module (>> Module)*, ']'
+aliases        : '(', alias, (','?, alias,)* ')'
+alias          : Type >> ['as' >>] Type | Operation >> ['as'? >>] Operation
 
 auto           : '-auto' ^ < specialisation
 specialisation : bind | promotion
@@ -89,8 +91,7 @@ bind           : Function >> '~>' >> Operation (>> type)* .
 invariant      : '-invariant' ^ < Type >> '<~' (>> Function)+ .
 
 % Implementation
-%TODO also allow import in moduel (use only)
-module         : 'module', Module, '::', include*, auto*, invariant*, member+
+module         : 'module', Module+, '::', include*, auto*, invariant*, member+
 include        : '-use' ^ < resource
 member         : (val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension ),
 

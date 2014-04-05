@@ -1,15 +1,15 @@
-namespace math ::
+namespace .Math ::
 
-	-use lang
-	-use strict util
+	-use .Lang
+	-use strict .Lang.Util 
 	
-	-share strict vector
-	-share foo : x y
-	-share strict vector : a
-		where 
-			Int = Number
-			Float = Real
-			eq = equal 
+	-share strict .Lang.Util.Vector
+	-share .Foo [.X .Z] (Mathematics Math, Characters Chars)
+	-share strict .Vector [.A] ( 
+			Int as Number
+			Float as Real
+			eq as equal
+	)
 
 	-auto [] ~> EmptyList
 

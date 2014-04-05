@@ -1,7 +1,7 @@
-module math ::
+module .Math ::
 	
-	-use util
-	-use bar where Foo = Baz, Que = Mim
+	-use .Util
+	-use .Bar (Original as Alias, Que as Foo)
 	
 	-auto eq      ~> equals Int
 	-auto [Digit] ~> Digits
@@ -54,7 +54,7 @@ module math ::
 			'1min = '60sec,
 			'1sec = '1000ms 
 		]
-		ratio XY :: [ 'x$ = 'y%	]
+		ratio XY :: [ 'x$ = 'y€	]
 
 
 	fn max :: (Int a -> Int b -> Int) 
@@ -65,12 +65,12 @@ module math ::
 	fn quicksort :: [T] list -> [T] 
 		\ list # <= '1 \
 			= list 
-		= (less ++ equal ++ more)
+		= (less ++ same ++ more)
 	where
-            T pivot   = list head
-            [T] less  = list filter pivot >  | quicksort
-            [T] equal = list filter pivot ==
-            [T] more  = list filter pivot <  | quicksort
+            T pivot  = list head
+            [T] less = list filter pivot >  | quicksort
+            [T] same = list filter pivot ==
+            [T] more = list filter pivot <  | quicksort
             
 	fn something :: [T] list -> {(T, T)}
 		= { a => b, 
@@ -96,8 +96,8 @@ module math ::
 	
 	fn clojure? :: [] e -> () = &native
 	
-	fn range :: () x -> [Int]
-		= '0 .. '12 
+	fn range :: Int low -> Int high -> [Int]
+		= [low .. high] 
 	
 	dimension Suit :: = { Spades, Hearts, Diamonds, Clubs }
 	
@@ -179,6 +179,9 @@ module math ::
 	unit Colon :: Char {':'}
 	data Point :: (X- x, Y- y) <~> (X-, Colon, Y-)
 	data Points :: [Point]
+	
+	fn move :: Point p -> Int dx -> Int dy -> Point
+		= (p `x + dx, p `y + dy)
 	
 	val Max :: Point = "2:3"
 	
