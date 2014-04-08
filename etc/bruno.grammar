@@ -2,13 +2,14 @@
 Dashed         : { '-' z 9 }* { z 9 }?
 Verb           : z -Dashed?
 Noun           : Z { @ '-' } { @  9 }*
+Number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number
 
 % Identifiers
 Artifact       : '.' {Z 9} {@ 9 '-' '_'}*
 Field          : { z 9 } -Dashed?
 Constant       : -Noun
 Variable       : -Field '''*
-Atom           : '`' { @ 9 '-' '_' OperatorSymbol UnitSymbol }+
+Atom           : '`' { !_ }+
 
 Operation      : -Verb '?'?
 Function       : -Verb {'?' '*'}?
@@ -38,7 +39,7 @@ UnitSymbol     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
 literal        : LogicLiteral | TextLiteral | BinaryLiteral
-LogicLiteral   : ''' ( (9+ Measure?):number | ($ .. UnitSymbol):value )
+LogicLiteral   : ''' ( (-Number['e'Number:exponent] Measure?) | ($ .. UnitSymbol):value )
 TextLiteral    : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
 BinaryLiteral  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
 
@@ -79,9 +80,9 @@ library        : 'library', Library+, '::', '{', Module, (',', Module,)* '}'
 namespace      : 'namespace', Namespace+, '::', import*, auto*, invariant*
 import         : ('-use' | '-share') ~ ['strict' ~] resource ,
 resource       : Library+ >> confinement?, aliases?
-confinement    : '[' >> Module (>> Module)*, ']'
-aliases        : '(', alias, (','?, alias,)* ')'
-alias          : Type >> ['as' >>] Type | Operation >> ['as'? >>] Operation
+confinement    : '[' >> Module (>>','?>> Module)*, ']'
+aliases        : '{', alias, (','?, alias,)* '}'
+alias          : Type >> '=>' >> Type | Operation >> '=>' >> Operation
 
 auto           : '-auto' ^ < specialisation
 specialisation : bind | promotion
@@ -136,4 +137,4 @@ list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
 expressions    : expr (, ',', expr )*
-element        : '_' | Atom | range | literal | Constant | Operator | Variable | Type | Fault
+element        : '_' | Atom | range | literal | Artifact | Constant | Operator | Variable | Type | Fault

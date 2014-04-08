@@ -4,12 +4,12 @@ namespace .Math ::
 	-use strict .Lang.Util 
 	
 	-share strict .Lang.Util.Vector
-	-share .Foo [.X .Z] (Mathematics Math, Characters Chars)
-	-share strict .Vector [.A] ( 
-			Int as Number
-			Float as Real
-			eq as equal
-	)
+	-share .Foo [.X, .Z] {Mathematics => Math, Characters => Chars}
+	-share strict .Vector [.A] { 
+			Int => Number
+			Float => Real
+			eq => equal
+	}
 
 	-auto [] ~> EmptyList
 

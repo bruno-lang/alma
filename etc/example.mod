@@ -1,7 +1,7 @@
 module .Math ::
 	
 	-use .Util
-	-use .Bar (Original as Alias, Que as Foo)
+	-use .Bar {Original => Alias, Que => Foo}
 	
 	-auto eq      ~> equals Int
 	-auto [Digit] ~> Digits
@@ -213,4 +213,37 @@ or even source code like
 	val SETIFY :: ([A] -> [{A}]) = (_ map singleton)
 	
 	val Something :: = `some-thing
-	  
+	
+	fn test :: Int i -> Int = .Math
+	
+	
+	
+	notation JSON ::
+
+	fn show :: JSON v -> String 
+		= "?"
+	
+	data Array :: ( [JSON] elements )
+	
+	fn show :: Array a -> String
+		= a elements show
+	
+	data Object :: ( [Member] members )
+	data Member :: ( Name name, JSON value )
+	
+	fn show :: Object o -> String
+		= o members show
+	
+	fn show :: Member m -> String
+		= m name ++ "," ++ m value show
+		
+	instances T :: (Name, ..)
+	notation Tag :: T 
+	
+	fn signum :: Relation v -> Int
+		\ v is Less \= '-1
+		\ v is More \= '1
+		             = '0
+		             
+	fn real :: Int v -> Real
+		= '100,000.00e-34

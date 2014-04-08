@@ -1,1 +1,1 @@
-library .Util :: { .Collection, .Math }
+library .Lang.Util :: { .Collection, .Math }
