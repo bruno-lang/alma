@@ -5,7 +5,8 @@ Noun           : Z { @ '-' } { @  9 }*
 Number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number
 
 % Identifiers
-Artifact       : '.' {Z 9} {@ 9 '-' '_'}*
+Wildcard       : '_'
+Artifact       : '.' z {z 9 '-'}*
 Field          : { z 9 } -Dashed?
 Constant       : -Noun
 Variable       : -Field '''*
@@ -30,95 +31,84 @@ Notation       : -Noun
 Type           : -Noun
 
 % Operators
-Operator       : (-OperatorSymbol)x1-3
-OperatorSymbol : { '.' '+' '-' '/' '*' '=' '>' '<' '&' '|' '^' '#' '@' '~' }
+Operator       : (-OperatorLetter)x1-3
+OperatorLetter : { '+' '-' '/' '*' '=' '>' '<' '&' '|' '#' '~' }
 
 % Symbols
-Measure        : { @ UnitSymbol }+
-UnitSymbol     : { ''' '$' '€' '/' '°' '"' }
+Symbol         : { @ UnitLetter }+
+UnitLetter     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
-literal        : LogicLiteral | TextLiteral | BinaryLiteral
-LogicLiteral   : ''' ( (-Number['e'Number:exponent] Measure?) | ($ .. UnitSymbol):value )
-TextLiteral    : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
-BinaryLiteral  : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
+literal        : logic-literal | text-literal | bit-literal
+logic-literal  : ''' ( (-Number['e'Number:exponent] Symbol?) | ($ .. UnitLetter):value )
+text-literal   : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
+bit-literal    : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
 
-range          : literal-set | literal-range | constant-range
+values         : literal-set | literal-range | constant-range
+literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
 literal-range  : literal [ >> '..' >> literal ] | '..' >> literal
 constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
-literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
 
 % Types
-TypeVariant    : { '!' '?' '~' '*' }
+% TODO capture struct layout in memory in type (reference vs. embedded) - use ':' in front of whole tuple to say everything should be embedded, references are than modeled as "pointer" types (use '@') 
+modifier       : { '!' '?' '*' }
+class          : {'$' '^'}
 TypeDimension  : '[' 9* ['-'9+] ']' | '..'
-type           : '$'? -base-type TypeDimension? TypeVariant? | op-type
+type           : class? -base-type TypeDimension* modifier? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
-array-type     : -base-type TypeDimension
+array-type     : -base-type TypeDimension+
 list-type      : '[' base-type? ']'
 set-type       : '{' base-type? '}'
-tuple-type     : '(' [ type ( ',' >> type )* ] ')'
+tuple-type     : ':'? '(' [ type ( ',' >> type )* ] ')'
 fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
 % Type Variables / Kinds
 KindDimension  : '[' (9*):min [ '-' (9*):max ] ']' | '..'
-instances      : 'instances', TypeVariable, '::', kind, ['&' >> Operation+]
-kind           : -base-kind KindDimension? TypeVariant? | op-kind
-base-kind      : '_' | Type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
-array-kind     : -base-kind KindDimension
+instances      : 'instances', TypeVariable, '::', kind [, '&' >> Operation+]
+kind           : class? -base-kind KindDimension* modifier? | op-kind
+base-kind      : Wildcard | Type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
+array-kind     : -base-kind KindDimension+
 list-kind      : '[' base-kind? ']'
 set-kind       : '{' base-kind? '}'
 tuple-kind1    : '..' | kind
-tuple-kind     : '(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')'
+tuple-kind     : ':'? ('(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')')
 fn-kind        : '(->)' | '(' kind >> '->' ( >> kind >> '->' )*  >> kind ')'
-op-kind        : ( '_' | Operation ) fn-kind
+op-kind        : ( Wildcard | Operation ) fn-kind
 
 % Modularisation
-file           : (library | namespace | module) ,
-library        : 'library', Library+, '::', '{', Module, (',', Module,)* '}'
-
-namespace      : 'namespace', Namespace+, '::', import*, auto*, invariant*
-import         : ('-use' | '-share') ~ ['strict' ~] resource ,
-resource       : Library+ >> confinement?, aliases?
-confinement    : '[' >> Module (>>','?>> Module)*, ']'
-aliases        : '{', alias, (','?, alias,)* '}'
-alias          : Type >> '=>' >> Type | Operation >> '=>' >> Operation
-
-auto           : '-auto' ^ < specialisation
-specialisation : bind | promotion
-promotion      : type >> '~>' >> Type .
-bind           : Function >> '~>' >> Operation (>> type)* .
-
-invariant      : '-invariant' ^ < Type >> '<~' (>> Function)+ .
+file           : module | namespace
+namespace      : form
 
 % Implementation
-module         : 'module', Module+, '::', include*, auto*, invariant*, member+
-include        : '-use' ^ < resource
-member         : (val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension ),
+module         : (, member)+ .
+member         : val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension
 
-% Values
-val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
-
-data           : 'data' ^ Data >> '::', < (record | type), format*, enumeration?
-record         : '(', field, (',', field,)* ')'
-field          : type ^ Field
-format         : '<~>', ( tuple-type | array-type | Data ),
-enumeration    : '=', expr1
-
-dimension      : 'dimension' >> -primitive, enumeration?
-unit           : 'unit' >> -primitive
-primitive      : Type < >> ['[' Measure ']'] >> '::', ['relative'|'absolute']:aspect >> [Type >> range?], format*
+fault          : 'fault' >> Fault >> '::', < Type, values?
 
 system         : 'unit' ^ 'system' ^ System >> '::', < '=', (ratio,)*
 ratio          : 'ratio' ^ Ratio >> '::', < '[', equation, (',', equation,)* ']' .
 equation       : literal >> '=' >> literal
 
-fault          : 'fault' >> Fault >> '::', < Type, range?
+% Values
+val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
 
+data           : 'data' ^ Data >> '::', < (record | type), format*, enumeration?
+record         : ':'? '(', field, (',', field,)* ')'
+field          : type ^ Field
+format         : '<~>', ( tuple-type | array-type | Data ),
+enumeration    : '=', form
+
+dimension      : 'dimension' >> -primitive, enumeration?
+unit           : 'unit' >> -primitive
+primitive      : Type < >> ['[' Symbol ']'] >> '::', ((Atom ^)*):aspect  [Type >> values?], format*
+
+% Somewhat abstract data types
 notation       : 'notation' >> Notation >> '::', < type?, [ '=', '{', type, (',', type,) '}' ]
 
 protocol       : 'protocol' >> Protocol >> '::', < '{', Operation, (',', Operation,)* '}'
 
+% Functions
 op             : 'op' >> Operation >> < ['[' Operator ']'] >> '::', Operation?, signature
 
 fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature, ( '=', '&native' | implementation, [ where ]) 
@@ -129,12 +119,16 @@ implementation : ['\' >> expr >> ':' .] ('\' >> -expressions >> '\', '=' >> expr
 where          : 'where', declaration >> (declaration >> )*
 declaration    : variable | specialisation
 variable       : type ^ Variable >> '=' >> expr .
+specialisation : bind | promotion
+promotion      : type >> '~>' >> Type .
+bind           : Function >> '~>' >> Operation (>> type)* .
 
 % Expressions
-expr           : expr1 ( >> expr1 )*
-expr1          : tuple | list | set | element
+expr           : form ( >> form )*
+form           : tuple | list | set | comment | element
 list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
-expressions    : expr (, ',', expr )*
-element        : '_' | Atom | range | literal | Artifact | Constant | Operator | Variable | Type | Fault
+comment        : '%' .. '%'
+expressions    : expr (, ','?, expr )*
+element        : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Variable | Type | Fault

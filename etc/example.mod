@@ -1,15 +1,4 @@
-module .Math ::
-	
-	-use .Util
-	-use .Bar {Original => Alias, Que => Foo}
-	
-	-auto eq      ~> equals Int
-	-auto [Digit] ~> Digits
-	-auto []      ~> NoElements
-	
-	-invariant Digits <~ non-empty
-	-invariant Int    <~ positive odd
-	
+
 	instances F1 :: (T -> T -> Bool)
 
 	instances X :: (Int[3], [T])
@@ -26,7 +15,7 @@ module .Math ::
 		
 	unit Digit :: Char '0 .. '9
 	
-	dimension Bool :: = [False, True]
+	dimension Bool :: = [ False, True ]
 
 	dimension Bit :: = [ `0, `1 ]
 	
@@ -97,7 +86,7 @@ module .Math ::
 	fn clojure? :: [] e -> () = &native
 	
 	fn range :: Int low -> Int high -> [Int]
-		= [low .. high] 
+		= &native 
 	
 	dimension Suit :: = { Spades, Hearts, Diamonds, Clubs }
 	
@@ -114,8 +103,8 @@ module .Math ::
 	unit Sign :: Char {'+', '-'}
 	
 	dimension Time :: Int
-	unit Days :: relative Time 
-	unit DayOfMonth :: absolute Time
+	unit Days :: `relative Time 
+	unit DayOfMonth :: `absolute Time
 	
 	instances E :: _
 	instances L :: [E]
@@ -138,7 +127,7 @@ module .Math ::
 
 	data Elements :: (
 	    Length length,
-	    E[]~ elements,
+	    E[]* elements,
 	    [E] tail
 	)
 	
@@ -156,7 +145,7 @@ module .Math ::
 	instances A :: _
 	instances B :: _
 
-	fn lazy :: (A -> P -> B) f -> A v -> P p -> (() -> B)
+	fn lazy :: (A -> P -> B) f -> A v -> P p -> ^B
 	    = () -> (a f p)
         
         
@@ -170,7 +159,7 @@ module .Math ::
 	    
 	instances T :: _ & eq
 	fn first :: [T] list -> T sample -> Index start -> T
-	    \ sample == list @ start \= e
+	    \ sample == list at start \= e
 	    \                        \= list first sample (start + '1) 
 	    
 	dimension Coordinate :: Int
@@ -214,7 +203,7 @@ or even source code like
 	
 	val Something :: = `some-thing
 	
-	fn test :: Int i -> Int = .Math
+	fn test :: Int i -> Int = .math
 	
 	
 	
@@ -247,3 +236,7 @@ or even source code like
 		             
 	fn real :: Int v -> Real
 		= '100,000.00e-34
+		
+	data Array2D :: Int[2][2]..
+	
+	instances S :: :(,)

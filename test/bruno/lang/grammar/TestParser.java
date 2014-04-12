@@ -19,9 +19,17 @@ public class TestParser {
 		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
 		Grammar bruno = grammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
-		printer.process(Parsed.parse("etc/example.mod", "file", bruno));
-		printer.process(Parsed.parse("etc/example.ns", "file", bruno));
-		printer.process(Parsed.parse("etc/example.lib", "file", bruno));		
+		printer.process(Parsed.parse("etc/example.mod", "module", bruno));
+		printer.process(Parsed.parse("etc/example.ns", "namespace", bruno));
+	}
+	
+	@Test
+	public void thatBrunoASTCanBeParsed() throws IOException {
+		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
+		Grammar bruno = grammar(t);
+		Processor printer = Printer.rulePrinter(System.out);
+		printer.process(Parsed.parse("etc/example.ast", "namespace", bruno));
+		printer.process(Parsed.parse("etc/bruno.mod", "module", bruno));
 	}
 	
 	@Test
