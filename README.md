@@ -1,8 +1,7 @@
-
 Lingukit
 ========
 
-Lingukit is a toolbox to develop formal languages. It has been developed to support the creation of the bruno language.
+Lingukit is a formal languages creation concept based on data and tools. It has been developed to support the creation of the bruno language.
 
 ## Syntax
 ### Rules
