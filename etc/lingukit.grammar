@@ -1,4 +1,3 @@
-%v2
 grammar       : member (, member)*
 member        : comment | rule
 comment       : '%' (!\n+):text

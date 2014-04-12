@@ -1,11 +1,8 @@
 
-Noa FL
-======
+Lingukit
+========
 
-Not Only Another Formal Language
---------------------------------
-                                                      
-A general grammar used for the bruno language.
+Lingukit is a toolbox to develop formal languages. It has been developed to support the creation of the bruno language.
 
 ## Syntax
 ### Rules

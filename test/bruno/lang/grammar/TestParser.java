@@ -16,7 +16,7 @@ public class TestParser {
 
 	@Test
 	public void thatBrunoLangCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
+		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar bruno = grammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
 		printer.process(Parsed.parse("etc/example.mod", "module", bruno));
@@ -25,7 +25,7 @@ public class TestParser {
 	
 	@Test
 	public void thatBrunoASTCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", NOA.GRAMMAR);
+		Parsed t = Parsed.parse("etc/bruno.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar bruno = grammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
 		printer.process(Parsed.parse("etc/example.ast", "namespace", bruno));
@@ -33,25 +33,25 @@ public class TestParser {
 	}
 	
 	@Test
-	public void thatGrammarGrammarCanBeParsed() throws IOException {
-		Grammar g0 = NOA.GRAMMAR;
-		Parsed t1 = Parsed.parse("etc/noa.grammar", "grammar", g0);
+	public void thatLingukitGrammarCanBeParsed() throws IOException {
+		Grammar g0 = Lingukit.GRAMMAR;
+		Parsed t1 = Parsed.parse("etc/lingukit.grammar", "grammar", g0);
 		Grammar g1 = grammar(t1);
-		Parsed t2 = Parsed.parse("etc/noa.grammar", "grammar", g1);
+		Parsed t2 = Parsed.parse("etc/lingukit.grammar", "grammar", g1);
 		System.out.println(g1);
 		Printer.rulePrinter(System.out).process(t2);
 	}
 	
 	@Test
 	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
-		ParseTree tokens = Parsed.parse("etc/test.grammar", "grammar", NOA.GRAMMAR).tree;
+		ParseTree tokens = Parsed.parse("etc/test.grammar", "grammar", Lingukit.GRAMMAR).tree;
 		assertEquals(8, tokens.end());
 		assertEquals("terminal", tokens.rule(7).name);
 	}
 	
 	@Test
 	public void thatJSONGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/json.grammar", "grammar", NOA.GRAMMAR);
+		Parsed t = Parsed.parse("etc/json.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar json = grammar(t);
 		System.out.println(json);
 		Parsed jsont = Parsed.parse("etc/example.json", "json", json);
@@ -60,7 +60,7 @@ public class TestParser {
 	
 	@Test
 	public void thatXMLGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/xml.grammar", "grammar", NOA.GRAMMAR);
+		Parsed t = Parsed.parse("etc/xml.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar xml = grammar(t);
 		System.out.println(xml);
 		Parsed xmlt = Parsed.parse("etc/example.xml", "document", xml);

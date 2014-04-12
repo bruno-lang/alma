@@ -21,11 +21,11 @@ import static bruno.lang.grammar.Terminal.notCharacter;
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
- * Bootstrap {@link Grammar} of Noa FL.
+ * Bootstrap {@link Grammar} of Lingukit.
  * 
  * @author jan
  */
-public final class NOA {
+public final class Lingukit {
 
 	static final Rule
 		g = pattern(GAP),

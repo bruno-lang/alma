@@ -29,10 +29,10 @@ public final class Builder {
 		int token = 0;
 		while (token < c) {
 			Rule r = tokens.rule(token);
-			if (r == NOA.grammar) {
+			if (r == Lingukit.grammar) {
 				token++;
-			} else if (r == NOA.member) {
-				if (tokens.rule(token+1) == NOA.rule) {
+			} else if (r == Lingukit.member) {
+				if (tokens.rule(token+1) == Lingukit.rule) {
 					Rule rule = rule(token+1, grammar);
 					rules.add(rule);
 				}
@@ -43,17 +43,17 @@ public final class Builder {
 	}
 
 	private static Rule rule(int token, Parsed grammar) {
-		check(token, grammar, NOA.rule);
+		check(token, grammar, Lingukit.rule);
 		return selection(token+2, grammar).as(grammar.text(token+1));
 	}
 
 	private static Rule selection(int token, Parsed grammar) {
-		check(token, grammar, NOA.selection);
+		check(token, grammar, Lingukit.selection);
 		final List<Rule> alternatives = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (tokens.rule(i) == NOA.sequence && tokens.end(i) <= end) {
+		while (tokens.rule(i) == Lingukit.sequence && tokens.end(i) <= end) {
 			alternatives.add(sequence(i, grammar));
 			i = tokens.next(i);
 		}
@@ -64,13 +64,13 @@ public final class Builder {
 	}
 
 	private static Rule sequence(int token, Parsed grammar) {
-		check(token, grammar, NOA.sequence);
+		check(token, grammar, Lingukit.sequence);
 		final List<Rule> elems = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token)+1;
 		int distinctFrom = Rule.UNDISTINGUISHABLE;
 		int i = token+1;
-		while (tokens.rule(i) == NOA.element && tokens.end(i) <= end) {
+		while (tokens.rule(i) == Lingukit.element && tokens.end(i) <= end) {
 			Rule e = element(i, grammar);
 			if (e != DISTINCT_FROM) {
 				elems.add(e);
@@ -86,23 +86,23 @@ public final class Builder {
 	}
 
 	private static Rule element(int token, Parsed grammar) {
-		check(token, grammar, NOA.element);
+		check(token, grammar, Lingukit.element);
 		final ParseTree tokens = grammar.tree;
 		Occur occur = occur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
-		if (r == NOA.distinction) {
+		if (r == Lingukit.distinction) {
 			return DISTINCT_FROM;
 		}
-		if (r == NOA.completion) {
+		if (r == Lingukit.completion) {
 			return Rule.completion();
 		}
-		if (r == NOA.group) {
+		if (r == Lingukit.group) {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(occur);
 		}
-		if (r == NOA.option) {
+		if (r == Lingukit.option) {
 			return capture(tokens.next(token+2), grammar, selection(token+2, grammar)).occurs(Occur.qmark);
 		}
-		if (r == NOA.terminal) {
+		if (r == Lingukit.terminal) {
 			Rule t = terminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
 			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
@@ -110,11 +110,11 @@ public final class Builder {
 			}
 			return t;
 		}
-		if (r == NOA.string) {
+		if (r == Lingukit.string) {
 			String text = grammar.text(token+1);
 			return Rule.string(text.substring(1, text.length()-1)).occurs(occur);
 		}
-		if (r == NOA.ref) {
+		if (r == Lingukit.ref) {
 			return ref(token+1, grammar).occurs(occur);
 		}
 		throw unexpectedRule(r);
@@ -125,67 +125,67 @@ public final class Builder {
 	}
 
 	private static Rule capture(int token, Parsed grammar, Rule rule) {
-		if (grammar.tree.rule(token) == NOA.capture) {
+		if (grammar.tree.rule(token) == Lingukit.capture) {
 			return rule.as(grammar.text(token+1));
 		}
 		return rule;
 	}
 
 	private static Rule terminal(int token, Parsed grammar) {
-		check(token, grammar, NOA.terminal);
+		check(token, grammar, Lingukit.terminal);
 		Rule r = grammar.tree.rule(token+1);
-		if (r == NOA.ranges) {
+		if (r == Lingukit.ranges) {
 			return ranges(token+1, grammar);
 		}
-		if (r == NOA.figures) {
+		if (r == Lingukit.figures) {
 			return figures(token+1, grammar);
 		}
-		if (r == NOA.pattern) {
+		if (r == Lingukit.pattern) {
 			return pattern(token+1, grammar);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule pattern(int token, Parsed grammar) {
-		check(token, grammar, NOA.pattern);
-		boolean not = grammar.tree.rule(token+1) == NOA.not;
+		check(token, grammar, Lingukit.pattern);
+		boolean not = grammar.tree.rule(token+1) == Lingukit.not;
 		Rule p = patternSelection(token+(not?2:1), grammar);
 		return not ? Rule.pattern(Patterns.not(p.pattern)) : p;
 	}
 
 	private static Rule patternSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
-		if (r == NOA.gap) {
+		if (r == Lingukit.gap) {
 			return Rule.pattern(Patterns.GAP);
 		}
-		if (r == NOA.pad) {
+		if (r == Lingukit.pad) {
 			return Rule.pattern(Patterns.PAD);
 		}
-		if (r == NOA.indent) {
+		if (r == Lingukit.indent) {
 			return Rule.pattern(Patterns.INDENT);
 		}
-		if (r == NOA.separator) {
+		if (r == Lingukit.separator) {
 			return Rule.pattern(Patterns.SEPARATOR);
 		}
-		if (r == NOA.wrap) {
+		if (r == Lingukit.wrap) {
 			return Rule.pattern(Patterns.WRAP);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule figures(int token, Parsed grammar) {
-		check(token, grammar, NOA.figures);
+		check(token, grammar, Lingukit.figures);
 		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token);
 		Terminal terminal = null;
 		int i = token+1;
 		List<Rule> refs = new ArrayList<>();
-		while (tokens.end(i) <= end && tokens.rule(i) != NOA.capture) {
+		while (tokens.end(i) <= end && tokens.rule(i) != Lingukit.capture) {
 			Rule figure = tokens.rule(i);
-			if (figure == NOA.ranges) {
+			if (figure == Lingukit.ranges) {
 				Rule ranges = ranges(i, grammar);
 				terminal = terminal == null ? ranges.terminal : terminal.and(ranges.terminal);
-			} else if (figure == NOA.name) {
+			} else if (figure == Lingukit.name) {
 				String name = grammar.text(i);
 				if (name.charAt(0) != '-') {
 					name = "-"+name; // always do not capture these
@@ -204,52 +204,52 @@ public final class Builder {
 	}
 
 	private static Rule ranges(int token, Parsed grammar) {
-		check(token, grammar, NOA.ranges);
-		boolean not = grammar.tree.rule(token+1) == NOA.not;
+		check(token, grammar, Lingukit.ranges);
+		boolean not = grammar.tree.rule(token+1) == Lingukit.not;
 		Rule ranges = rangesSelection(token +(not ? 2 : 1), grammar);
 		return not ? Rule.terminal(ranges.terminal.not()) : ranges;
 	}
 
 	private static Rule rangesSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
-		if (r == NOA.wildcard) {
+		if (r == Lingukit.wildcard) {
 			return Rule.terminal(Terminal.WILDCARD);
 		}
-		if (r == NOA.letter) {
+		if (r == Lingukit.letter) {
 			return Rule.terminal(Terminal.LETTERS);
 		}
-		if (r == NOA.upper) {
+		if (r == Lingukit.upper) {
 			return Rule.terminal(Terminal.UPPER_LETTERS);
 		}
-		if (r == NOA.lower) {
+		if (r == Lingukit.lower) {
 			return Rule.terminal(Terminal.LOWER_LETTERS);
 		}
-		if (r == NOA.hex) {
+		if (r == Lingukit.hex) {
 			return Rule.terminal(Terminal.HEX_NUMBER);
 		}
-		if (r == NOA.octal) {
+		if (r == Lingukit.octal) {
 			return Rule.terminal(Terminal.OCTAL_NUMBER);
 		}
-		if (r == NOA.binary) {
+		if (r == Lingukit.binary) {
 			return Rule.terminal(Terminal.BINARY_NUMBER);
 		}
-		if (r == NOA.digit) {
+		if (r == Lingukit.digit) {
 			return Rule.terminal(Terminal.DIGITS);
 		}
-		if (r == NOA.category) {
+		if (r == Lingukit.category) {
 			//TODO
 			throw new UnsupportedOperationException("Not available yet");
 		}
-		if (r == NOA.range) {
+		if (r == Lingukit.range) {
 			return Rule.terminal(Terminal.range(literal(token+1, grammar), literal(token+3, grammar)));
 		}
-		if (r == NOA.literal) {
+		if (r == Lingukit.literal) {
 			return Rule.terminal(Terminal.character(literal(token, grammar)));
 		}
-		if (r == NOA.whitespace) {
+		if (r == Lingukit.whitespace) {
 			return Rule.terminal(Terminal.WHITESPACE);
 		}
-		if (r == NOA.shortname) {
+		if (r == Lingukit.shortname) {
 			String name = grammar.text(token+1);
 			int c = name.charAt(1);
 			if (c == 't') {
@@ -267,12 +267,12 @@ public final class Builder {
 	}
 
 	private static int literal(int token, Parsed grammar) {
-		check(token, grammar, NOA.literal);
+		check(token, grammar, Lingukit.literal);
 		Rule r = grammar.tree.rule(token+1);
-		if (r == NOA.symbol) {
+		if (r == Lingukit.symbol) {
 			return grammar.text(token+1).codePointAt(1);
 		}
-		if (r == NOA.code_point) {
+		if (r == Lingukit.code_point) {
 			return Integer.parseInt(grammar.text(token+1).substring(2), 16);
 		}
 		throw unexpectedRule(r);
@@ -280,17 +280,17 @@ public final class Builder {
 
 	private static Occur occur(int token, Parsed grammar, int parent) {
 		// there might not be an occurrence token or it belongs to a outer parent 
-		if (grammar.tree.rule(token) != NOA.occurrence || grammar.tree.end(parent) < grammar.tree.end(token)) {
+		if (grammar.tree.rule(token) != Lingukit.occurrence || grammar.tree.end(parent) < grammar.tree.end(token)) {
 			return Occur.once;
 		}
 		Rule occur = grammar.tree.rule(token+1);
-		if (occur == NOA.plus) {
+		if (occur == Lingukit.plus) {
 			return Occur.plus;
 		}
-		if (occur == NOA.star) {
+		if (occur == Lingukit.star) {
 			return Occur.star;
 		}
-		if (occur == NOA.qmark) {
+		if (occur == Lingukit.qmark) {
 			return Occur.qmark;
 		}
 		int min = Integer.parseInt(grammar.text(token+1));
