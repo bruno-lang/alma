@@ -1,23 +1,30 @@
 lingukit
 ========
 
-## What is lingukit?
+### What is lingukit?
 Lingukit is a programming language independent concept to define and process formal languages using data and solvers.
-It somewhat takes the role of AntLR or XText in the Java space.
+It somewhat takes the role of AntLR or Xtext in the Java space.
 
-It has been designed and developed in the context of the bruno programming system for what reason the first implementation is in Java but it a key property of the concept that it is programming language independent and can be easily implemented in almost every other programming language.
+It has been designed and developed in the context of the bruno programming system for what reason the first available implementation is in Java but it a key property of the concept that it is programming language independent and can be implemented easily in almost every other programming language.
 
-## Why lingukit?
-- **reasonable correlation between grammar and parsing behaviour**
+### Aren't there plenty other tools out there?
+Yes, I tried AntLR and Xtext and it really isn't fun to use them. I was out for:
+
+- reasonable correlation between grammar and parsing behaviour
 - programming language independent
 - based on data and solvers
 - fine-grained control over parsing and parse tree through the grammar (including whitespace!)
 - rapid development through general data structures (no code generation)
+- reason about **my language** not the tool it is build with
+- bring back the **fun** in developing languages
 
-## Status
-The concept is quite mature and has shown to be complete enough to support the development of bruno without requiring further changes. The Java implementation allows to bootstrap a language using a grammar declaration file. There is definitly room for improvments but there are also no serious known defects or problemenatic behavours.
+...and lingukit does that for me.
 
-## Syntax
+### Status
+The concept is quite mature and has shown to be complete enough to support the development of bruno without requiring further changes. The Java implementation allows to bootstrap a new language using a grammar declaration file. While the solvers always can get better they pretty much do their job good enough to develop a sophisticated language. 
+
+Syntax
+---------
 ### Rules
 The basic unit of a grammar are rules. A grammar is a set of rules (given in no particular order).
 A rule has the simplified form:
