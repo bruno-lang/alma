@@ -8,6 +8,7 @@ It somewhat takes the role of AntLR or XText in the Java space.
 It has been designed and developed in the context of the bruno programming system for what reason the first implementation is in Java but it a key property of the concept that it is programming language independent and can be easily implemented in almost every other programming language.
 
 ## Why lingukit?
+- **reasonable correlation between grammar and parsing behaviour**
 - programming language independent
 - based on data and solvers
 - fine-grained control over parsing and parse tree through the grammar (including whitespace!)
