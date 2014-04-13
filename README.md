@@ -1,7 +1,7 @@
-Lingukit
+lingukit
 ========
 
-Lingukit is a formal languages creation concept based on data and tools. It has been designed and developed in the context of the bruno programming system.
+Lingukit is a formal languages concept based on data and tools. It has been designed and developed in the context of the bruno programming system.
 
 ## Syntax
 ### Rules
