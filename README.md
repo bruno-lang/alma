@@ -12,9 +12,10 @@ Yes, I tried AntLR and Xtext and it really isn't fun to use them. I was out for:
 
 - reasonable correlation between grammar and parsing behaviour
 - programming language independent
+- grammar is not complected code (e.g. for AST, analyser or emitter)
 - based on data and solvers
 - fine-grained control over parsing and parse tree through the grammar (including whitespace!)
-- rapid development through general data structures (no code generation)
+- rapid REPL-like development (no code generation)
 - reason about **my language** not the tool it is build with
 - bring back the **fun** in developing languages
 
