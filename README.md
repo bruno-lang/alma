@@ -3,6 +3,7 @@ lingukit
 
 ### What is lingukit?
 Lingukit is a programming language independent concept to define and process formal languages using data and solvers.
+You get the lexer/parser and parse-tree for a new language by defining a grammar. The analyer and emitter is up to you to implement based on the parse-tree.
 
 It has been designed and developed in the context of the bruno programming system for what reason the first available implementation is in Java but it a key property of the concept that it is programming language independent and can be implemented similarly in almost every other programming language.
 
