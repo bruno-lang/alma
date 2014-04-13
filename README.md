@@ -3,9 +3,8 @@ lingukit
 
 ### What is lingukit?
 Lingukit is a programming language independent concept to define and process formal languages using data and solvers.
-It somewhat takes the role of AntLR or Xtext in the Java space.
 
-It has been designed and developed in the context of the bruno programming system for what reason the first available implementation is in Java but it a key property of the concept that it is programming language independent and can be implemented easily in almost every other programming language.
+It has been designed and developed in the context of the bruno programming system for what reason the first available implementation is in Java but it a key property of the concept that it is programming language independent and can be implemented similarly in almost every other programming language.
 
 ### Aren't there plenty other tools out there?
 Yes, I tried AntLR and Xtext and it really isn't fun to use them. I was out for:
