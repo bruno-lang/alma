@@ -240,3 +240,5 @@ or even source code like
 	data Array2D :: Int[2][2]..
 	
 	instances S :: :(,)
+	
+	fn plus [+] :: Int a -> Int b -> Int! = &ast (`iadd (`var "a") (`var "b"))

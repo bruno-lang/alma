@@ -81,8 +81,8 @@ file           : module | namespace
 namespace      : form
 
 % Implementation
-module         : (, member)+ .
-member         : val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension
+module         : (, declaration)+ .
+declaration    : val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension
 
 fault          : 'fault' >> Fault >> '::', < Type, values?
 
@@ -111,13 +111,13 @@ protocol       : 'protocol' >> Protocol >> '::', < '{', Operation, (',', Operati
 % Functions
 op             : 'op' >> Operation >> < ['[' Operator ']'] >> '::', Operation?, signature
 
-fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature, ( '=', '&native' | implementation, [ where ]) 
+fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature, ( '=', '&native' | '=', '&ast', form | implementation, [ where ]) 
 signature      : -descriptor | '(' >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ -Variable:name
 implementation : ['\' >> expr >> ':' .] ('\' >> -expressions >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
-where          : 'where', declaration >> (declaration >> )*
-declaration    : variable | specialisation
+where          : 'where', clause >> (clause >> )*
+clause         : variable | specialisation
 variable       : type ^ Variable >> '=' >> expr .
 specialisation : bind | promotion
 promotion      : type >> '~>' >> Type .
