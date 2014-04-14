@@ -111,7 +111,7 @@ protocol       : 'protocol' >> Protocol >> '::', < '{', Operation, (',', Operati
 % Functions
 op             : 'op' >> Operation >> < ['[' Operator ']'] >> '::', Operation?, signature
 
-fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature, ( '=', '&native' | '=', '&ast', form | implementation, [ where ]) 
+fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature, ( '=', ':native' | implementation, [ where ]) 
 signature      : -descriptor | '(' >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ -Variable:name
@@ -125,10 +125,11 @@ bind           : Function >> '~>' >> Operation (>> type)* .
 
 % Expressions
 expr           : form ( >> form )*
-form           : tuple | list | set | comment | element
+form           : ast | tuple | list | set | comment | element
 list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
+ast            : '(:ast', -expressions, ')'
 comment        : '%' .. '%'
 expressions    : expr (, ','?, expr )*
 element        : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Variable | Type | Fault

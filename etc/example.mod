@@ -70,7 +70,7 @@
 		\ Monday \= "Monday"
 		\ Tuesday \= "Tuesday" 
 		
-	fn a-native-fn :: (String s -> String) = &native
+	fn a-native-fn :: (String s -> String) = :native
 	
 	fn another :: [Int] n -> Int idx -> Int
 		\ n == :
@@ -83,10 +83,10 @@
 		   (b c),
 		   (c d))
 	
-	fn clojure? :: [] e -> () = &native
+	fn clojure? :: [] e -> () = :native
 	
 	fn range :: Int low -> Int high -> [Int]
-		= &native 
+		= :native 
 	
 	dimension Suit :: = { Spades, Hearts, Diamonds, Clubs }
 	
@@ -241,4 +241,4 @@ or even source code like
 	
 	instances S :: :(,)
 	
-	fn plus [+] :: Int a -> Int b -> Int! = &ast (`iadd (`var "a") (`var "b"))
+	fn plus [+] :: Int a -> Int b -> Int! = (:ast `iadd (`var "a") (`var "b"))
