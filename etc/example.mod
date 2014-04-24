@@ -242,3 +242,7 @@ or even source code like
 	instances S :: :(,)
 	
 	fn plus [+] :: Int a -> Int b -> Int! = (:ast `iadd (`var "a") (`var "b"))
+	
+	fn partially-ast-impl :: Some a -> Thing 
+		\ foo bar \= (:ast baz)
+		= (:ast que)
