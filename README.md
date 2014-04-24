@@ -11,15 +11,13 @@ It has been designed and developed in the context of the bruno programming syste
 Yes, I tried AntLR and Xtext and it really isn't fun to use them. I was out for:
 
 - reasonable correlation between grammar and parsing behaviour
-- programming language independent
 - grammar is not complected code (e.g. for AST, analyser or emitter)
-- based on data and solvers
+- programming language independent
+- data driven parsing (data + solvers)
 - fine-grained control over parsing and parse tree through the grammar (including whitespace!)
 - rapid REPL-like development (no code generation)
-- reason about **my language** not the tool it is build with
+- reason about **the created language** not the tool it is build with
 - bring back the **fun** in developing languages
-
-...and lingukit does that for me.
 
 ### Status
 The concept is quite mature and has shown to be complete enough to support the development of bruno without requiring further changes. The Java implementation allows to bootstrap a new language using a grammar declaration file. While the solvers always can get better they pretty much do their job good enough to develop a sophisticated language. 
