@@ -9,27 +9,23 @@ class ParseTree {
   
   final List<int> indexStack;
   
-  int level = -1;
+  int lev = -1;
   int top = -1;
   
-  ParseTree() {
-    rules = [];
-    starts = [];
-    ends = [];
-    levels = [];
-    indexStack = [];
-  }
+  ParseTree(this.rules, this.starts, this.ends, this.levels, this.indexStack);
+  
+  ParseTree.empty() : this([], [], [], [], []);
 
   void push(Rule rule, int start) {
     starts[++top] = start;
     ends[top] = start;
     rules[top] = rule;
-    level++;
-    levels[top] = level;
-    indexStack[level] = top;
+    lev++;
+    levels[top] = lev;
+    indexStack[lev] = top;
   }
   
-  int end(int index) {
+  int end([int index = 0]) {
     return ends[index];
   }
   
@@ -45,22 +41,18 @@ class ParseTree {
     return rules[index];
   }
   
-  int end() {
-    return ends[0];
-  }
-  
   int count() {
     return top+1;
   }
 
   void pop() {
-    top = indexStack[level]-1;
-    level--;
+    top = indexStack[lev]-1;
+    lev--;
   }
 
   void done(int end) {
-    ends[indexStack[level]] = end;
-    level--;
+    ends[indexStack[lev]] = end;
+    lev--;
   }
   
   void erase(int position) {
