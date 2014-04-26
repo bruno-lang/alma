@@ -1,13 +1,14 @@
 library lingukit;
 
 import 'dart:math' as Math;
-import 'dart:convert' as IO;
+import 'dart:convert' as Encoding;
 
-part 'Grammar.dart';
-part 'Terminal.dart';
-part 'Occur.dart';
+part 'grammar.dart';
+part 'terminal.dart';
+part 'occur.dart';
 part 'ParseTree.dart';
-part 'UTF8.dart';
+part 'utf8.dart';
+part 'pattern.dart';
 
 main() {
   print("x".length);
