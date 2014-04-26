@@ -2,6 +2,8 @@ part of lingukit;
 
 class UTF8 {
   
+  static const int MAX_CODE_POINT = 0x7FFFFFFF;
+  
   static const int byte_mask = 0xFF;
   static const int utf8_lenght = 0x80;
   

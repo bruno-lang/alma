@@ -141,7 +141,7 @@ class Not implements Pattern {
 
   int length(List<int> input, int position) {
     int l = excluded.length(input, position);
-    return l < 0 ? UTF8.byteCount(input, position) : Pattern.NOT_MACHTING;
+    return l < 0 ? UTF8.byteCount(input[position]) : Pattern.NOT_MACHTING;
   }
 
   String toString() {
