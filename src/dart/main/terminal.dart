@@ -14,21 +14,17 @@ class Terminal {
   static final Terminal WHITESPACE = range(9, 13).and(character(32));
   
   static final Terminal
-    DIGITS = characterRange('0', '9'),
-    HEX_NUMBER = DIGITS.and(characterRange('A', 'F')),
-    OCTAL_NUMBER = characterRange('0', '7'),
-    BINARY_NUMBER = characterRange('0', '1'),
-    UPPER_LETTERS = characterRange('A','Z'),
-    LOWER_LETTERS = characterRange('a', 'z'), 
+    DIGITS = charRange('0', '9'),
+    HEX_NUMBER = DIGITS.and(charRange('A', 'F')),
+    OCTAL_NUMBER = charRange('0', '7'),
+    BINARY_NUMBER = charRange('0', '1'),
+    UPPER_LETTERS = charRange('A','Z'),
+    LOWER_LETTERS = charRange('a', 'z'), 
     LETTERS = UPPER_LETTERS.and(LOWER_LETTERS)
     ;
   
   static Terminal notRange(int minCodePoint, int maxCodePoint) {
     return new Terminal.of([-minCodePoint, -maxCodePoint ]); 
-  }
-  
-  static Terminal characterRange(String minCodePoint, String maxCodePoint) {
-    return range(UTF8.bytes(minCodePoint).first, UTF8.bytes(maxCodePoint).first);
   }
   
   static Terminal range(int minCodePoint, int maxCodePoint) {
@@ -42,6 +38,18 @@ class Terminal {
   static Terminal notCharacter(int codePoint) {
     return notRange(codePoint, codePoint);
   }
+
+  static Terminal charRange(String minChar, String maxChar) {
+    return range(UTF8.codePoint0(UTF8.bytes(minChar)), UTF8.codePoint0(UTF8.bytes(maxChar)));
+  }
+  
+  static Terminal char(String char) {
+    return character(UTF8.codePoint0(UTF8.bytes(char)));
+  }
+  
+  static Terminal notChar(String char) {
+    return notCharacter(UTF8.codePoint0(UTF8.bytes(char)));
+  }
   
   final List<int> asciis;
   final List<int> ranges; // 2 int's give min CP and max CP (negative when excluding)
@@ -51,7 +59,7 @@ class Terminal {
   Terminal(this.ranges, this.asciis);
   
   static List<int> asciisOf(List<int> ranges) {
-    List<int> ascii = new List<int>(4);
+    List<int> ascii = new List.filled(4, 0);
     if (ranges[0] < 0) {
       ascii[0] = -1;
       ascii[1] = -1;

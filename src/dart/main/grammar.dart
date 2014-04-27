@@ -29,17 +29,18 @@ class Grammar  {
     StringBuffer b = new StringBuffer();
     for (Rule r in rules) {
       if (r != null && !r.name.isEmpty) {
-      b.write(r.name);
-      for (Rule elem in r.elements) {
-        String s = elem.toString();
-        RuleType type = elem.type;
-        if (type == RuleType.SEQUENCE || elem.type == RuleType.SELECTION) {
-          s = s.substring(1, s.length-1);
+        b.write(r.name);
+        b.write(" = ");
+        for (Rule elem in r.elements) {
+          String s = elem.toString();
+          RuleType type = elem.type;
+          if (type == RuleType.SEQUENCE || elem.type == RuleType.SELECTION) {
+            s = s.substring(1, s.length-1);
+          }
+          b.write(s);
+          b.write(' ');
         }
-        b.write(s);
-        b.write(' ');
-      }
-      b.write('\n');
+        b.write('\n');
       }
     }
     return b.toString();
