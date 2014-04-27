@@ -4,9 +4,11 @@ import 'dart:math' as Math;
 import 'dart:convert' as Encoding;
 
 part 'grammar.dart';
+part 'mechanic.dart';
 part 'terminal.dart';
 part 'occur.dart';
 part 'parsetree.dart';
+part 'parser.dart';
 part 'utf8.dart';
 part 'pattern.dart';
 
@@ -114,4 +116,4 @@ part 'pattern.dart';
     grammar = seq([member, seq([g, member]).star()]).as("grammar") 
     ;
   
-  final Grammar GRAMMAR = new Grammar([grammar]);
+  final Grammar GRAMMAR = new Grammar(Mechanic.finish(Mechanic.namedRules([grammar])));
