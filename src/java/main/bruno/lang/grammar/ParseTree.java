@@ -137,6 +137,12 @@ public final class ParseTree {
 		toString(b, "", index);
 		out.println(b);
 	}
+	
+	public ParseTree debug() {
+		int t = 0;
+		while (rules[t] != null) { t++; }
+		return new ParseTree(rules, starts, ends, levels, 0, t-1);
+	}
 
 	public boolean isSequential() {
 		return starts[1] == ends[0];
@@ -149,12 +155,6 @@ public final class ParseTree {
 		ParseTree l = new ParseTree(rules.length);
 		sequential(l, 0);
 		return l;
-	}
-	
-	public ParseTree debug() {
-		int t = 0;
-		while (rules[t] != null) { t++; }
-		return new ParseTree(rules, starts, ends, levels, 0, t-1);
 	}
 	
 	private int sequential(ParseTree dest, final int index) {
