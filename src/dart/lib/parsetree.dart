@@ -8,7 +8,11 @@ class Parsed {
   Parsed(this.file, this.tree);
   
   String text(int index) {
-    return UTF8.string(file.sublist(tree.start(index), tree.end(index)));
+    return UTF8.string(bytes(index));
+  }
+  
+  List<int> bytes(int index) {
+    return file.sublist(tree.start(index), tree.end(index));
   }
 
   static Parsed from(String srcFile, String start, Grammar grammar) {

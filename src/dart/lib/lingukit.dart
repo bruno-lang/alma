@@ -15,6 +15,7 @@ part 'parsetree.dart';
 part 'parser.dart';
 part 'utf8.dart';
 part 'pattern.dart';
+part 'builder.dart';
 
   Rule seq(List<Rule> elements) {
     return new Rule.seq(elements);

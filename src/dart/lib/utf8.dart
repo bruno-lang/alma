@@ -13,7 +13,7 @@ class UTF8 {
   static const int utf8_3bit = 0xE0;
   static const int utf8_2bit = 0xC0;
   
-  static Uint8List bytesOf(int codePoint) {
+  static List<int> bytesOf(int codePoint) {
     var l = byteCount(codePoint);
     if (l == 1)
       return [codePoint];

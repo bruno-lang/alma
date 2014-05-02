@@ -30,6 +30,9 @@ class Grammar  {
     for (Rule r in rules) {
       if (r != null && !r.name.isEmpty) {
         b.write(r.name);
+        for (int i = r.name.length; i < 15; i++) {
+          b.write(' ');
+        }
         b.write(" = ");
         for (Rule elem in r.elements) {
           String s = elem.toString();
