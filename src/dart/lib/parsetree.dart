@@ -15,8 +15,8 @@ class Parsed {
     return file.sublist(tree.start(index), tree.end(index));
   }
 
-  static Parsed from(String srcFile, String start, Grammar grammar) {
-    List<int> buffer = new File(srcFile).readAsBytesSync();
+  static Parsed from(File src, String start, Grammar grammar) {
+    List<int> buffer = src.readAsBytesSync();
     ParseTree tree = Parser.parse(buffer, grammar.rule(start));
     return new Parsed(buffer, tree);
   }
