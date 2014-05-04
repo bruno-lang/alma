@@ -78,7 +78,7 @@ public class TestParser {
 	}
 	
 	private static Grammar grammar(Parsed t) {
-		return new Grammar(Mechanic.finish(Builder.grammar(t)));		
+		return new Grammar(Mechanic.finish(Builder.buildGrammar(t)));		
 	}
 
 	/**

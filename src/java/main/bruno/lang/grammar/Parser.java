@@ -123,7 +123,7 @@ public final class Parser {
 			Rule r = rule.elements[i];
 			int endPosition = parse(r, input, end, tree);
 			if (endPosition < 0) {
-				if (rule.distinctFrom <= i) {
+				if (rule.distinctFromIndex <= i) {
 					tree.erase(end);
 					throw new ParseException(end, endPosition);
 				}

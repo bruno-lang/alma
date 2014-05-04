@@ -116,9 +116,9 @@ public final class Grammar {
 		public final byte[] literal;
 		public final Terminal terminal;
 		public final Pattern pattern;
-		public final int distinctFrom;
+		public final int distinctFromIndex;
 
-		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern, int distinctFrom) {
+		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern, int distinctFromIndex) {
 			super();
 			this.type = type;
 			this.name = name.intern();
@@ -127,12 +127,12 @@ public final class Grammar {
 			this.literal = literal;
 			this.terminal = terminal;
 			this.pattern = pattern;
-			this.distinctFrom = distinctFrom;
+			this.distinctFromIndex = distinctFromIndex;
 		}
 
 		public Rule as(String name) {
 			if (name.length() > 0 && name.charAt(0) == '-') {
-				return new Rule(type, name, elements, occur, literal, terminal, pattern, distinctFrom);
+				return new Rule(type, name, elements, occur, literal, terminal, pattern, distinctFromIndex);
 			}
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
 			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, NO_LITERAL, null, null, 0);
@@ -223,7 +223,7 @@ public final class Grammar {
 		}
 
 		public boolean isDistinctive() {
-			return distinctFrom != Rule.UNDISTINGUISHABLE;
+			return distinctFromIndex != Rule.UNDISTINGUISHABLE;
 		}
 	}
 }
