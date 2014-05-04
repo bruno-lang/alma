@@ -1,7 +1,7 @@
 library lingukit;
 
 import 'dart:math' as Math;
-import 'dart:convert' as Encoding show UTF8;
+import 'dart:convert' as Encoding show UTF8, HTML_ESCAPE;
 import 'dart:typed_data' show Uint8List;
 import 'dart:io';
 
@@ -16,6 +16,7 @@ part 'parser.dart';
 part 'utf8.dart';
 part 'pattern.dart';
 part 'builder.dart';
+part 'printer.dart';
 
   Rule seq(List<Rule> elements) {
     return new Rule.seq(elements);
