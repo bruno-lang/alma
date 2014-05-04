@@ -3,41 +3,49 @@ import 'package:lingukit/lingukit.dart';
 import 'dart:io';
 
 main() {
-  test('bruno grammar parses', () => 
-    expect(() => Parsed.from(etc('bruno.grammar'), 'grammar', GRAMMAR), returnsNormally));
-  
-  test('bruno module parses', () {
-    Parsed bruno = Parsed.from(etc('bruno.grammar'), 'grammar', GRAMMAR);
-    expect(() => Parsed.from(etc('example.mod'), 'module', grammarFrom(bruno)), returnsNormally);
+  group('bruno', () {
+    test('grammar parses', () => 
+      expect(() => Parsed.from(etc('bruno.grammar'), 'grammar', GRAMMAR), returnsNormally));
+    
+    test('module parses', () {
+      Parsed bruno = Parsed.from(etc('bruno.grammar'), 'grammar', GRAMMAR);
+      expect(() => Parsed.from(etc('example.mod'), 'module', grammarFrom(bruno)), returnsNormally);
+    });
+    
+    test('namespace parses', () {
+      Parsed bruno = Parsed.from(etc('bruno.grammar'), 'grammar', GRAMMAR);
+      expect(() => Parsed.from(etc('example.ns'), 'namespace', grammarFrom(bruno)), returnsNormally);
+    });
   });
   
-  test('bruno namespace parses', () {
-    Parsed bruno = Parsed.from(etc('bruno.grammar'), 'grammar', GRAMMAR);
-    expect(() => Parsed.from(etc('example.ns'), 'namespace', grammarFrom(bruno)), returnsNormally);
+  group('lingukit', () {
+    test('grammar parses', () => 
+        expect(() => Parsed.from(etc('lingukit.grammar'), 'grammar', GRAMMAR), returnsNormally));
+    
+    test('via parsed lingukit grammar parses itself', () {  
+      Parsed lingukit = Parsed.from(etc('lingukit.grammar'), 'grammar', GRAMMAR);
+      expect(() => Parsed.from(etc('lingukit.grammar'), 'grammar', grammarFrom(lingukit)), returnsNormally); 
+    });
+  });
+
+  group('XML', () {
+    test('grammar parses', () => 
+        expect(() => Parsed.from(etc('xml.grammar'), 'grammar', GRAMMAR), returnsNormally));
+    
+    test('example parses', () {
+      Parsed xml = Parsed.from(etc('xml.grammar'), 'grammar', GRAMMAR);
+      expect(() => Parsed.from(etc('example.xml'), 'document', grammarFrom(xml)), returnsNormally);
+    });
   });
   
-  test('lingukit grammar parses', () => 
-    expect(() => Parsed.from(etc('lingukit.grammar'), 'grammar', GRAMMAR), returnsNormally));
-  
-  test('lingukit via parsed lingukit grammar parses itself', () {  
-    Parsed lingukit = Parsed.from(etc('lingukit.grammar'), 'grammar', GRAMMAR);
-    expect(() => Parsed.from(etc('lingukit.grammar'), 'grammar', grammarFrom(lingukit)), returnsNormally); 
-   });
-  
-  test('xml grammar parses', () => 
-    expect(() => Parsed.from(etc('xml.grammar'), 'grammar', GRAMMAR), returnsNormally));
-  
-  test('xml example parses', () {
-    Parsed xml = Parsed.from(etc('xml.grammar'), 'grammar', GRAMMAR);
-    expect(() => Parsed.from(etc('example.xml'), 'document', grammarFrom(xml)), returnsNormally);
-  });
-  
-  test('json grammar parses', () => 
-      expect(() => Parsed.from(etc('json.grammar'), 'grammar', GRAMMAR), returnsNormally)); 
-  
-  test('json example parses', () {
-    Parsed json = Parsed.from(etc('json.grammar'), 'grammar', GRAMMAR);
-    expect(() => Parsed.from(etc('example.json'), 'json', grammarFrom(json)), returnsNormally);
+  group('JSON', () {
+    test('grammar parses', () => 
+        expect(() => Parsed.from(etc('json.grammar'), 'grammar', GRAMMAR), returnsNormally)); 
+    
+    test('example parses', () {
+      Parsed json = Parsed.from(etc('json.grammar'), 'grammar', GRAMMAR);
+      expect(() => Parsed.from(etc('example.json'), 'json', grammarFrom(json)), returnsNormally);
+    });
   });
 }
 
