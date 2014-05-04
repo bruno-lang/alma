@@ -102,7 +102,7 @@ public final class Mechanic {
 		if (rule.type == RuleType.CAPTURE && rule.name.startsWith("-")) {
 			return rule.elements[0];
 		}
-		//TODO recursion? unpacked rules also have to be collected to they are replaced everywhere referenced
+		//TODO recursion? unpacked rules also have to be collected so they are replaced everywhere referenced
 		return rule;
 	}
 	

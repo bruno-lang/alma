@@ -34,10 +34,15 @@ class Mechanic {
     for (Rule r in namedRules) {
       rules[r.name] = r;
     }
+    Map<String, Rule> literals = new Map();
     Set<Rule> followedDereference = new Set();
+    Set<Rule> followedContract = new Set();
+    Set<Rule> followedDeduplicate = new Set();    
     for (int i = 0; i < namedRules.length; i++) {
       Rule r = namedRules[i];
+      r = deduplicate(r, literals, followedDeduplicate);
       r = dereference(r, rules, followedDereference);
+      r = compact(r, followedContract);
       namedRules[i] = r;
     }   
     return namedRules;
@@ -70,4 +75,70 @@ class Mechanic {
     return rule;
   }
   
+  /**
+   * Contracts selections with just {@link Terminal}s and 1 character literals
+   * to a single {@link Terminal}. A selection of just literal characters will
+   * also be contracted to a single terminal.
+   */
+  static Rule compact(Rule rule, Set<Rule> followed) {
+    if (followed.contains(rule)) {
+      return rule;
+    }
+    followed.add(rule);
+    if (rule.type == RuleType.SELECTION) {
+      int ts = 0;
+      int ls = 0;
+      for (Rule e in rule.elements) {
+        if (e.type == RuleType.TERMINAL) {
+          ts++;
+        }
+        if (e.type == RuleType.LITERAL && UTF8.characters(e.literal) == 1) {
+          ls++;
+        }
+      }
+      if (ts+ls == rule.elements.length) {
+        Terminal t = rule.elements[0].terminal;
+        for (int i = 1; i < rule.elements.length; i++) {
+          Rule r = rule.elements[i];
+          if (r.type == RuleType.TERMINAL) {
+            t = t.and(r.terminal);
+          } else {
+            t = t.and(Terminal.character(UTF8.codePoint0(r.literal)));
+          }
+        }
+        return new Rule._terminal(t);
+      }
+    } 
+    if (rule.elements.length > 0) {
+      for (int i = 0; i < rule.elements.length; i++) {
+        rule.elements[i] = compact(rule.elements[i], followed);
+      }
+    }
+    return rule;
+  }
+  
+  /**
+   * Reuses same instance of a {@link RuleType#LITERAL} {@link Rule} for equal
+   * {@link String} literals.
+   */
+  static Rule deduplicate(Rule rule, Map<String, Rule> literals, Set<Rule> followed) {
+    if (followed.contains(rule)) {
+      return rule;
+    }
+    followed.add(rule);
+    if (rule.type == RuleType.LITERAL) {
+      String l = UTF8.string(rule.literal);
+      Rule r = literals[l];
+      if (r != null) {
+        return r;
+      }
+      literals[l] = rule;
+    } else if (rule.elements.length > 0) {
+      for (int i = 0; i < rule.elements.length; i++) {
+        rule.elements[i] = deduplicate(rule.elements[i], literals, followed);
+      }
+    }
+    return rule;
+    
+  }  
 }
