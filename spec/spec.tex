@@ -9,13 +9,13 @@
 \setlist[rulelist]{leftmargin=7em,style=nextline,font=\bf\tt}
 
 \begin{document}
-\title{Lingukit System Specification}
+\title{Formal Languages as Structured Grammars}
 \author{Jan Bernitt}
 \date{\today}
 \maketitle
 
 \begin{abstract}
-\noindent The Lingukit system describes the semantics of a programming language independent concept to model a formal language as data (more precisely as a set of production rules each composed of a fixed set of types of rule components) as well as the formal process of how to use such a grammar to build an index overlay parse-tree for input documents.
+\noindent Structured Grammars describe the semantics of a programming language independent system to model a formal language as data together with the formal process of a generic solver that is controlled by a grammar in order to parse a document formulated in the grammars syntax into a index overlay parse-tree.
 \end{abstract}
 \section{Grammar as Data}
 \subsection{Types of Rules}
@@ -36,11 +36,14 @@
 
 \paragraph{Model the Parse Tree}
 \begin{rulelist}
-\item[CAPTURE] Wraps one component and associates it with a name. This names the rule component (for reference) and the resulting parse tree node at the same time. As long as the wrapped component matches an element is pushed onto the parse tree stack describing start and end position, nesting level and rule of the matching component.
+\item[CAPTURE] Wraps one component and associates it with a name. This names the rule component (for reference) and the resulting parse tree node at the same time. As long as the wrapped component matches an element a frame is pushed onto the parse tree stack describing start and end position, nesting level and rule of the matching component.
 \end{rulelist}
 
 \paragraph{Bootstrapping}
 \begin{rulelist}
 \item[REFERENCE] bar
 \end{rulelist}
+
+\section{Lingukit Grammar}
+
 \end{document}
