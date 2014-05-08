@@ -4,9 +4,16 @@
 *.jar
 *.war
 *.ear
+*.aux
+*.log
+*.synctex.gz
 
 bin/
 target/
 .project
 .classpath
 .settings
+
+spec/*.pdf
+
+

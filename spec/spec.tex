@@ -1,0 +1,46 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{enumitem}
+
+\newlist{rulelist}{description}{2}
+\setlist[rulelist]{leftmargin=7em,style=nextline,font=\bf\tt}
+
+\begin{document}
+\title{Lingukit System Specification}
+\author{Jan Bernitt}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+\noindent The Lingukit system describes the semantics of a programming language independent concept to model a formal language as data (more precisely as a set of production rules each composed of a fixed set of types of rule components) as well as the formal process of how to use such a grammar to build an index overlay parse-tree for input documents.
+\end{abstract}
+\section{Grammar as Data}
+\subsection{Types of Rules}
+\paragraph{Matching Bytes}
+\begin{rulelist}
+\item[LITERAL] Matches an exact sequence of UTF-8 bytes.
+\item[TERMINAL] Matches ranges of UTF-8 code-points.
+\item[PATTERN] Matches an abstract pattern of UTF-8 bytes. The length of matching bytes is given through a particular algorithm for a particular pattern. This is the only non-concrete building block.
+\end{rulelist}
+
+\paragraph{Matching Structure}
+\begin{rulelist}
+\item[SEQUENCE] Wraps two or more components that have to sequently follow each other. Matches if all its components match.
+\item[SELECTION] Wraps two or more alternative components. The alternatives are ordered from highest to lowest priority. Matches as soon as highest yet tried component matches.
+\item[ITERATION] Wraps one component that has to occur at least as often as a defined minimum and as most as often as a defined maximum occurrence. Matches as long as the number of times its component matches the proceeding input is within the specified range of occurrences.
+\item[COMPLETION] Can be used within sequences to match all input until the component following it in the sequence matches from there on. 
+\end{rulelist}
+
+\paragraph{Model the Parse Tree}
+\begin{rulelist}
+\item[CAPTURE] Wraps one component and associates it with a name. This names the rule component (for reference) and the resulting parse tree node at the same time. As long as the wrapped component matches an element is pushed onto the parse tree stack describing start and end position, nesting level and rule of the matching component.
+\end{rulelist}
+
+\paragraph{Bootstrapping}
+\begin{rulelist}
+\item[REFERENCE] bar
+\end{rulelist}
+\end{document}

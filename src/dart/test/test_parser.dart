@@ -47,6 +47,13 @@ main() {
       expect(() => Parsed.from(etc('example.json'), 'json', grammarFrom(json)), returnsNormally);
     });
   });
+  
+  group('cross check:', () {
+    test('JSON does not parse XML', () {
+      Parsed json = Parsed.from(etc('json.grammar'), 'grammar', GRAMMAR);
+      expect(() => Parsed.from(etc('example.xml'), 'json', grammarFrom(json)), throwsException);
+    });
+  });
 }
 
 File etc(String filename) {
