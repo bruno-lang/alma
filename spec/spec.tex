@@ -23,33 +23,36 @@
 \begin{abstract}
 \noindent This paper describes the semantics of a programming language independent system to model a formal language as data in combination with the formal process of a generic solver controlled by a grammar to parse documents formulated in the grammars syntax into a index overlay parse-tree.
 \end{abstract}
-\section{Formal Language as Data}
-\subsection{Composition of Rules}
-A grammar is a set of production rules. Each production rule is composed out of rule components. There is a fixed set of different kinds or types of rules. The three terminal rules Literal, Terminal and Pattern match bytes of UTF-8. The non-terminal rules Sequence, Selection, Iteration, and Completion describe the nesting or structure.
+\section{Formal Grammar as Data}
+A formal grammar is modelled using the same universal data structure for all target languages. This data is \emph{interpreted} by universal solvers (e.g. a parser). No behaviour is attached to the grammar nor does it require to generate code for the production rules or the parse-tree.
 
+\subsection{Composition of Rules}
+A grammar is a set of production rules. Each production rule is composed out of rule components. There is a fixed set of different kinds or types of rules.
 \begin{lstlisting}
 type Grammar = [Rule]
 data Rule
-	= Literal [Byte]
+	= Literal UTF8String
 	| Terminal [CodePointRange]
-	| Pattern [Byte] -> Position -> Length
+	| Pattern UTF8String -> Position -> Length
 	| Sequence [Rule]
 	| Selection [Rule]
-	| Iteration { r :: Rule, min :: Int, max :: Int }
+	| Iteration { r :: Rule, min :: Count, max :: Count }
 	| Completion { subsequent :: Rule }
 	| Capture Name Rule
-	| Reference Name Rule
+	| Reference Name
 data CodePointRange
 	= Character CodePoint
 	| NotCharacter CodePoint
 	| Range { min :: CodePoint , max :: CodePoint }
 	| NotRange { min :: CodePoint , max :: CodePoint }
 type CodePoint = Word32
-type Byte = Word8
+type UTF8String = [Word8]
 type Position = Int32
 type Length = Int32
 type Name = String
+type Count = Int
 \end{lstlisting}
+ The three terminal rules \texttt{Literal}, \texttt{Terminal} and \texttt{Pattern} match bytes or code-points of \texttt{UTF-8}. The non-terminal rules \texttt{Sequence}, \texttt{Selection}, \texttt{Iteration}, and \texttt{Completion} describe the nesting or structure. A \texttt{Capture} decoration rule is used to name a rule for reference and as a element having that name in the resulting parse-tree. The \texttt{Reference} finally allows the reuse of named rule components.
 
 \subsection{Types of Rules}
 \paragraph{Matching Bytes}
@@ -73,6 +76,7 @@ type Name = String
 \end{rulelist}
 
 \paragraph{Model the Parse Tree}
+The parse-tree is 
 \begin{rulelist}
 \item[Capture] Wraps one component and associates it with a name. This names the rule component (for reference) and the resulting parse tree node at the same time. As long as the wrapped component matches an element a frame is pushed onto the parse tree stack describing start and end position, nesting level and rule of the matching component.
 \end{rulelist}
@@ -82,8 +86,31 @@ type Name = String
 \item[Reference] Names the rule that this place-holder rule is substituted with when building the grammar. This allows to compose grammars programmatically and build rules having circular references to other rules. All references are replaced before a grammar is used. At runtime rules of type do no longer occur.
 \end{rulelist}
 
+\subsection{Terminal and Non-Terminal Rules}
+
+\subsection{White-space}
+
 \section{Parser as Data Controlled Solver}
+\subsection{Index Overlay Parse-Trees}
+A parse-tree is modelled as a list of blocks. Each block results from a \texttt{Capture}. When processing input a \texttt{Block} "frame" is pushed onto the parse "stack" when it starts. As a result the list of blocks contains the root as its first element. 
+\begin{lstlisting}
+type ParseTree = [Block]
+data Block = Block { 
+	start :: Position,
+	end :: Position,
+	level :: Level,
+	rule :: Rule
+}
+type Level = Word8
+\end{lstlisting}
+Each Block memorises the absolute \texttt{start} and \texttt{end} \texttt{Position} of the block in the input (byte offset), the nesting \texttt{level} (starting from 0 for the root and increasing towards the leafs) and the \texttt{rule} that is captured. 
+
+The level is used to traverse the tree. For example in order to go to the next node all blocks with a higher level are skipped. The first block with the same or higher level as the starting one is the successor.
+
+\paragraph{Note} In most languages the \texttt{Block} structure is better implemented as multiple arrays. That is one for all starts, ends, levels and rules where values at the same indexes are one logical block.
 
 \section{Lingukit Grammar}
+
+\lstinputlisting[language=sh]{../etc/lingukit.grammar}
 
 \end{document}
