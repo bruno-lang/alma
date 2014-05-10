@@ -13,7 +13,3 @@ target/
 .project
 .classpath
 .settings
-
-spec/*.pdf
-
-

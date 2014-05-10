@@ -4,34 +4,69 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{enumitem}
+\usepackage{listings}
+
 
 \newlist{rulelist}{description}{2}
 \setlist[rulelist]{leftmargin=7em,style=nextline,font=\bf\tt}
 
 \begin{document}
-\title{Formal Languages as Structured Grammars}
+\lstset{language=Haskell}
+\title{Formal Languages as Data and Solvers}
 \author{Jan Bernitt}
 \date{\today}
 \maketitle
 
 \begin{abstract}
-\noindent Structured Grammars describe the semantics of a programming language independent system to model a formal language as data together with the formal process of a generic solver that is controlled by a grammar in order to parse a document formulated in the grammars syntax into a index overlay parse-tree.
+\noindent This paper describes the semantics of a programming language independent system to model a formal language as data in combination with the formal process of a generic solver controlled by a grammar to parse documents formulated in the grammars syntax into a index overlay parse-tree.
 \end{abstract}
-\section{Grammar as Data}
+\section{Formal Language as Data}
+\subsection{Composition of Rules}
+A grammar is a set of production rules. Each production rule is composed out of rule components. There is a fixed set of different kinds or types of rules. The three terminal rules Literal, Terminal and Pattern match bytes of UTF-8. The non-terminal rules Sequence, Selection, Iteration, and Completion describe the nesting or structure.
+
+\begin{lstlisting}
+type Grammar = [Rule]
+data Rule
+	= Literal [Byte]
+	| Terminal [CodePointRange]
+	| Pattern [Byte] -> Position -> Length
+	| Sequence [Rule]
+	| Selection [Rule]
+	| Iteration { r :: Rule, min :: Int, max :: Int }
+	| Completion { subsequent :: Rule }
+	| Capture Name Rule
+	| Reference Name Rule
+data CodePointRange
+	= Character CodePoint
+	| NotCharacter CodePoint
+	| Range { min :: CodePoint , max :: CodePoint }
+	| NotRange { min :: CodePoint , max :: CodePoint }
+type CodePoint = Word32
+type Byte = Word8
+type Position = Int32
+type Length = Int32
+type Name = String
+\end{lstlisting}
+
 \subsection{Types of Rules}
 \paragraph{Matching Bytes}
 \begin{rulelist}
 \item[LITERAL] Matches an exact sequence of UTF-8 bytes.
+
 \item[TERMINAL] Matches ranges of UTF-8 code-points.
+
 \item[PATTERN] Matches an abstract pattern of UTF-8 bytes. The length of matching bytes is given through a particular algorithm for a particular pattern. This is the only non-concrete building block.
 \end{rulelist}
 
 \paragraph{Matching Structure}
 \begin{rulelist}
-\item[SEQUENCE] Wraps two or more components that have to sequently follow each other. Matches if all its components match.
+\item[SEQUENCE] Wraps two or more components that have to sequentially follow each other. Matches if all its components match.
+
 \item[SELECTION] Wraps two or more alternative components. The alternatives are ordered from highest to lowest priority. Matches as soon as highest yet tried component matches.
+
 \item[ITERATION] Wraps one component that has to occur at least as often as a defined minimum and as most as often as a defined maximum occurrence. Matches as long as the number of times its component matches the proceeding input is within the specified range of occurrences.
-\item[COMPLETION] Can be used within sequences to match all input until the component following it in the sequence matches from there on. 
+
+\item[COMPLETION] Is used within sequences to match all bytes up to the position from which the subsequent component in the sequence matches.
 \end{rulelist}
 
 \paragraph{Model the Parse Tree}
@@ -41,8 +76,10 @@
 
 \paragraph{Bootstrapping}
 \begin{rulelist}
-\item[REFERENCE] bar
+\item[REFERENCE] Names the rule that this place-holder rule is substituted with when building the grammar. This allows to compose grammars programmatically and build rules having circular references to other rules. All references are replaced before a grammar is used. At runtime rules of type do no longer occur.
 \end{rulelist}
+
+\section{Parser as Data Controlled Solver}
 
 \section{Lingukit Grammar}
 
