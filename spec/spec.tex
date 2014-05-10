@@ -5,10 +5,13 @@
 \usepackage{amssymb}
 \usepackage{enumitem}
 \usepackage{listings}
+\usepackage{inconsolata}
 
 
 \newlist{rulelist}{description}{2}
-\setlist[rulelist]{leftmargin=7em,style=nextline,font=\bf\tt}
+\setlist[rulelist]{leftmargin=6.5em,style=nextline,font=\bf\tt}
+
+\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
 
 \begin{document}
 \lstset{language=Haskell}
@@ -51,32 +54,32 @@ type Name = String
 \subsection{Types of Rules}
 \paragraph{Matching Bytes}
 \begin{rulelist}
-\item[LITERAL] Matches an exact sequence of UTF-8 bytes.
+\item[Literal] Matches an exact sequence of UTF-8 bytes.
 
-\item[TERMINAL] Matches ranges of UTF-8 code-points.
+\item[Terminal] Matches ranges of UTF-8 code-points.
 
-\item[PATTERN] Matches an abstract pattern of UTF-8 bytes. The length of matching bytes is given through a particular algorithm for a particular pattern. This is the only non-concrete building block.
+\item[Pattern] Matches an abstract pattern of UTF-8 bytes. The length of matching bytes is given through a particular algorithm for a particular pattern. This is the only non-concrete building block.
 \end{rulelist}
 
 \paragraph{Matching Structure}
 \begin{rulelist}
-\item[SEQUENCE] Wraps two or more components that have to sequentially follow each other. Matches if all its components match.
+\item[Sequence] Wraps two or more components that have to sequentially follow each other. Matches if all its components match.
 
-\item[SELECTION] Wraps two or more alternative components. The alternatives are ordered from highest to lowest priority. Matches as soon as highest yet tried component matches.
+\item[Selection] Wraps two or more alternative components. The alternatives are ordered from highest to lowest priority. Matches as soon as highest yet tried component matches.
 
-\item[ITERATION] Wraps one component that has to occur at least as often as a defined minimum and as most as often as a defined maximum occurrence. Matches as long as the number of times its component matches the proceeding input is within the specified range of occurrences.
+\item[Iteration] Wraps one component that has to occur at least as often as a defined minimum and as most as often as a defined maximum occurrence. Matches as long as the number of times its component matches the proceeding input is within the specified range of occurrences.
 
-\item[COMPLETION] Is used within sequences to match all bytes up to the position from which the subsequent component in the sequence matches.
+\item[Completion] Is used within sequences to match all bytes up to the position from which the subsequent component in the sequence matches.
 \end{rulelist}
 
 \paragraph{Model the Parse Tree}
 \begin{rulelist}
-\item[CAPTURE] Wraps one component and associates it with a name. This names the rule component (for reference) and the resulting parse tree node at the same time. As long as the wrapped component matches an element a frame is pushed onto the parse tree stack describing start and end position, nesting level and rule of the matching component.
+\item[Capture] Wraps one component and associates it with a name. This names the rule component (for reference) and the resulting parse tree node at the same time. As long as the wrapped component matches an element a frame is pushed onto the parse tree stack describing start and end position, nesting level and rule of the matching component.
 \end{rulelist}
 
 \paragraph{Bootstrapping}
 \begin{rulelist}
-\item[REFERENCE] Names the rule that this place-holder rule is substituted with when building the grammar. This allows to compose grammars programmatically and build rules having circular references to other rules. All references are replaced before a grammar is used. At runtime rules of type do no longer occur.
+\item[Reference] Names the rule that this place-holder rule is substituted with when building the grammar. This allows to compose grammars programmatically and build rules having circular references to other rules. All references are replaced before a grammar is used. At runtime rules of type do no longer occur.
 \end{rulelist}
 
 \section{Parser as Data Controlled Solver}
