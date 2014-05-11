@@ -5,13 +5,24 @@
 \usepackage{amssymb}
 \usepackage{enumitem}
 \usepackage{listings}
+\usepackage{color}
 \usepackage{inconsolata}
-
 
 \newlist{rulelist}{description}{2}
 \setlist[rulelist]{leftmargin=6.5em,style=nextline,font=\bf\tt}
 
-\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
+\lstset{
+  basicstyle=\footnotesize\ttfamily,
+  breaklines=true,
+  keywordstyle=\color{blue}
+}
+
+\lstdefinelanguage{Lingukit}{
+  keywords={:,|},
+  sensitive=true,
+  alsoletter={:|},
+  keywordstyle=\color{blue}
+}
 
 \begin{document}
 \lstset{language=Haskell}
@@ -59,7 +70,7 @@ type Count = Int
 \subsection{Kinds of Rules}
 \paragraph{Matching Bytes}
 \begin{rulelist}
-\item[Literal] Matches an exact sequence of UTF-8 bytes.
+\item[Literal] Matches an exact sequence of UTF-8 bytes. Typical examples are keywords of the target language.
 
 \item[Terminal] Matches ranges of UTF-8 code-points (any single character of the input within the range).
 
@@ -120,10 +131,20 @@ The system of grammars as data and solvers could easily applied to any character
 
 The \texttt{Unicode} standard might not be perfect but it is sufficient for universal usage. Out of the available \texttt{Unicode} encodings \texttt{UTF-8} balances the different objectives better than others and is already widely adopted. To emphasis the importance to use the same encoding everywhere the system is described particularly for \texttt{UTF-8}. A flexibility in the use of encodings is not a feature but a burden for both programmers and users.
 
+\subsection{Code Generation}
+Many of the popular parser-generators complect the grammar declaration with parse-tree or AST concerns. Code fragments are attached to the grammar definitions from which parser and AST code is generated. This clearly intermingles the concerns of parsing with those of analysis and code emitting and makes it impossible to share the same grammar declaration independent of the language the compiler is written in. 
+
+The seconds major drawback is that a code generation step hinders  REPL-like feedback when working with the grammar. Even thou many tool have spent huge efforts in making grammar development smoothly none of the code generation tools could conveys a instant and interactive experience. 
+
+Furthermore code generation renders direct runtime integrations impossible. Languages like Smalltalk would e.g. allow to have changes to the grammar directly effect the whole environment.
+
+\subsection{Keywords}
+There is no special notion or additional declaration for keywords in the system of grammars as data. This allows a grammar alone to be sufficient as a complete working definition of a language's syntax and parse-tree structure. As a consequence pure data can be exchanges e.g. in files to control solvers according to a language. For example code highlighters could be build once and feed with more languages from a grammar file alone.
+
 \section{Lingukit}
 Lingukit is a concrete formal grammar to describe grammars. It is close to the \texttt{Rule} based model and has concise declarative syntax similar to BNF.
 
 \newpage
-\lstinputlisting[language=sh,caption={\texttt{Lingukit} given in its own syntax}]{../etc/lingukit.grammar}
+\lstinputlisting[language=Lingukit,caption={\texttt{Lingukit} given in its own syntax}]{../etc/lingukit.grammar}
 
 \end{document}
