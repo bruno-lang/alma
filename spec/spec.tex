@@ -144,7 +144,42 @@ There is no special notion or additional declaration for keywords in the system 
 \section{Lingukit}
 Lingukit is a concrete formal grammar to describe grammars. It is close to the \texttt{Rule} based model and has concise declarative syntax similar to BNF.
 
+
+\subsection{Grammar Specification}
+
+\subsubsection{Short-hands}
+There is some \textit{syntactic sugar} that does not add more expressiveness but better readability by giving frequently used patterns a short-hand syntax.
+
+\paragraph*{Occurrence}
+\begin{itemize}
+\item \verb!+ = x1+!
+\item \verb!* = x0+!
+\item \verb!? = x0-1!
+\item \verb![XYZ] = (XYZ)? = (XYZ)x0-1!
+\end{itemize}
+
+\paragraph*{Sets of Characters}
+\begin{itemize}
+\item \verb!9 = '0'-'9'!
+\item \verb!7 = '0'-'7'!
+\item \verb!1 = '0'-'1'!
+\item \verb!# = { 9 'A'-'F'} = { '0'-'9' 'A'-'F'}!
+\item \verb!@ = { 'a'-'z' 'A'-'Z' }!
+\item \verb!$ = { \u0000-\u7FFFFFFF }! (that is any UTF-8)
+\end{itemize}
+
+\paragraph*{White-space}
+\begin{itemize}
+\item \verb$_ = \s = { \t \n \r ' '}$
+\item \verb$, = _* = { \t \n \r ' '}*$
+\item \verb$~ = _+ = { \t \n \r ' '}+$
+\item \verb$. = >>* { \n \r }+ >>*$\footnote{this is not fully equivalent as the pattern allows that CR/LF do not occur if the end of the file is reached}
+\item \verb$>> = { \t ' ' }$
+\end{itemize}
+
 \newpage
 \lstinputlisting[language=Lingukit,caption={\texttt{Lingukit} given in its own syntax}]{../etc/lingukit.grammar}
+
+\subsection{File Format Specification}
 
 \end{document}
