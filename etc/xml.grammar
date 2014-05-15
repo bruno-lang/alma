@@ -1,12 +1,24 @@
-document = doctype?, root
-root = node
-doctype = '<?xml' attributes? , '?>'
-node = cdata | comment | element | text
-element = '<' name attributes? , '>', nodes?, '</' name '>'
-nodes = node (, node)*
-attributes = ~ attribute (~ attribute)*
-attribute = name '=' '"' ..:value '"'
-text = !'<'*
-cdata = '<![CDATA[' ..:data ']]>'
-comment = '<!--' ..:info '-->'
-name = @+
+document :
+	doctype?, root
+root :
+	node
+doctype :
+	'<?xml' attributes? , '?>'
+node :
+	cdata | comment | element | text
+element :
+	'<' name attributes? , '>', nodes?, '</' name '>'
+nodes :
+	node (, node)*
+attributes :
+	~ attribute (~ attribute)*
+attribute :
+	name '=' '"' ..:value '"'
+text :
+	!'<'*
+cdata :
+	'<![CDATA[' ..:data ']]>'
+comment :
+	'<!--' ..:info '-->'
+name :
+	@+

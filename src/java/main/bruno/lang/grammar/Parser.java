@@ -16,7 +16,7 @@ public final class Parser {
 		ParseTree tree = new ParseTree(Math.max(512, input.capacity() * 2 / 3));
 		int t = 0;
 		try {
-			t = parse(start, input, 0, tree);
+			t = parseRule(start, input, 0, tree);
 		} catch (ParseException e) { 
 			t = e.errorPosition;
 		} catch (Exception e) {
@@ -38,24 +38,24 @@ public final class Parser {
 		return tree;
 	}
 	
-	private static int parse(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseRule(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		switch (rule.type) {
 		case LITERAL:
-			return literal(rule, input, position);
+			return parseLiteral(rule, input, position);
 		case TERMINAL:
-			return terminal(rule, input, position);
+			return parseTerminal(rule, input, position);
 		case PATTERN:
-			return pattern(rule, input, position);
+			return parsePattern(rule, input, position);
 		case ITERATION:
-			return iteration(rule, input, position, tree);
+			return parseIteration(rule, input, position, tree);
 		case SEQUENCE:
-			return sequence(rule, input, position, tree);
+			return parseSequence(rule, input, position, tree);
 		case SELECTION:
-			return selection(rule, input, position, tree);
+			return parseSelection(rule, input, position, tree);
 		case COMPLETION:
-			return completion(rule, input, position, tree);
+			return parseCompletion(rule, input, position, tree);
 		case CAPTURE:
-			return capture(rule, input, position, tree);
+			return parseCapture(rule, input, position, tree);
 		default:
 			throw new IllegalArgumentException("`"+rule+"` has no proper type: "+rule.type);
 		}
@@ -65,10 +65,10 @@ public final class Parser {
 		return -position-1;
 	}
 
-	private static int completion(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseCompletion(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		final int l = input.limit();
 		while (position < l) {
-			int end = parse(rule.elements[0], input, position, tree);
+			int end = parseRule(rule.elements[0], input, position, tree);
 			if (end < 0) {
 				position++;
 			} else {
@@ -80,7 +80,7 @@ public final class Parser {
 		return mismatch(l);
 	}
 
-	private static int literal(Rule rule, ByteBuffer input, int position) {
+	private static int parseLiteral(Rule rule, ByteBuffer input, int position) {
 		final byte[] literal = rule.literal;
 		final int limit = input.limit();
 		for (int i = 0; i < literal.length; i++) {
@@ -93,9 +93,9 @@ public final class Parser {
 		return position;
 	}
 
-	private static int capture(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseCapture(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		tree.push(rule, position);
-		int end = parse(rule.elements[0], input, position, tree);
+		int end = parseRule(rule.elements[0], input, position, tree);
 		if (end > position) {
 			tree.done(end);
 		} else {
@@ -104,10 +104,10 @@ public final class Parser {
 		return end;
 	}
 
-	private static int selection(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseSelection(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		int end = mismatch(position);
 		for (Rule r : rule.elements) {
-			int endPosition = parse(r, input, position, tree);
+			int endPosition = parseRule(r, input, position, tree);
 			if (endPosition >= 0) {
 				return endPosition;
 			}
@@ -117,11 +117,11 @@ public final class Parser {
 		return end;
 	}
 
-	private static int sequence(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseSequence(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		int end = position;
 		for (int i = 0; i < rule.elements.length; i++) {
 			Rule r = rule.elements[i];
-			int endPosition = parse(r, input, end, tree);
+			int endPosition = parseRule(r, input, end, tree);
 			if (endPosition < 0) {
 				if (rule.distinctFromIndex <= i) {
 					tree.erase(end);
@@ -135,11 +135,11 @@ public final class Parser {
 		return end;
 	}
 
-	private static int iteration(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseIteration(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		int end = position;
 		int c = 0;
 		while (c < rule.occur.max) {
-			int endPosition = parse(rule.elements[0], input, end, tree);
+			int endPosition = parseRule(rule.elements[0], input, end, tree);
 			if (endPosition < 0) {
 				tree.erase(end);
 				if (c < rule.occur.min) {
@@ -154,7 +154,7 @@ public final class Parser {
 		return end;
 	}
 
-	private static int terminal(Rule rule, ByteBuffer input, int position) {
+	private static int parseTerminal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return mismatch(position);
 		if (rule.terminal.contains(input, position)) {
@@ -163,7 +163,7 @@ public final class Parser {
 		return mismatch(position);
 	}
 	
-	private static int pattern(Rule rule, ByteBuffer input, int position) {
+	private static int parsePattern(Rule rule, ByteBuffer input, int position) {
 		final int l = rule.pattern.length(input, position);
 		return l < 0 ? mismatch(position) : position + l;
 	}
