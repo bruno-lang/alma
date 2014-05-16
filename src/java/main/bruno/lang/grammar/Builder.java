@@ -29,10 +29,10 @@ public final class Builder {
 		int token = 0;
 		while (token < c) {
 			Rule r = tokens.rule(token);
-			if (r == Lingukit.grammar) {
+			if (r == Lingukit.grammar_) {
 				token++;
-			} else if (r == Lingukit.member) {
-				if (tokens.rule(token+1) == Lingukit.rule) {
+			} else if (r == Lingukit.member_) {
+				if (tokens.rule(token+1) == Lingukit.rule_) {
 					Rule rule = buildRule(token+1, grammar);
 					rules.add(rule);
 				}
@@ -43,17 +43,17 @@ public final class Builder {
 	}
 
 	private static Rule buildRule(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.rule);
+		check(token, grammar, Lingukit.rule_);
 		return buildSelection(token+2, grammar).as(grammar.text(token+1));
 	}
 
 	private static Rule buildSelection(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.selection);
+		check(token, grammar, Lingukit.selection_);
 		final List<Rule> alternatives = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (tokens.rule(i) == Lingukit.sequence && tokens.end(i) <= end) {
+		while (tokens.rule(i) == Lingukit.sequence_ && tokens.end(i) <= end) {
 			alternatives.add(buildSequence(i, grammar));
 			i = tokens.next(i);
 		}
@@ -64,13 +64,13 @@ public final class Builder {
 	}
 
 	private static Rule buildSequence(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.sequence);
+		check(token, grammar, Lingukit.sequence_);
 		final List<Rule> elems = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token)+1;
 		int distinctFrom = Rule.UNDISTINGUISHABLE;
 		int i = token+1;
-		while (tokens.rule(i) == Lingukit.element && tokens.end(i) <= end) {
+		while (tokens.rule(i) == Lingukit.element_ && tokens.end(i) <= end) {
 			Rule e = buildElement(i, grammar);
 			if (e != DISTINCT_FROM) {
 				elems.add(e);
@@ -86,23 +86,23 @@ public final class Builder {
 	}
 
 	private static Rule buildElement(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.element);
+		check(token, grammar, Lingukit.element_);
 		final ParseTree tokens = grammar.tree;
 		Occur occur = buildOccur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
-		if (r == Lingukit.distinction) {
+		if (r == Lingukit.distinction_) {
 			return DISTINCT_FROM;
 		}
-		if (r == Lingukit.completion) {
+		if (r == Lingukit.completion_) {
 			return Rule.completion();
 		}
-		if (r == Lingukit.group) {
+		if (r == Lingukit.group_) {
 			return buildCapture(tokens.next(token+2), grammar, buildSelection(token+2, grammar)).occurs(occur);
 		}
-		if (r == Lingukit.option) {
+		if (r == Lingukit.option_) {
 			return buildCapture(tokens.next(token+2), grammar, buildSelection(token+2, grammar)).occurs(Occur.qmark);
 		}
-		if (r == Lingukit.terminal) {
+		if (r == Lingukit.terminal_) {
 			Rule t = buildTerminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
 			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
@@ -110,11 +110,11 @@ public final class Builder {
 			}
 			return t;
 		}
-		if (r == Lingukit.string) {
+		if (r == Lingukit.string_) {
 			String text = grammar.text(token+1);
 			return Rule.string(text.substring(1, text.length()-1)).occurs(occur);
 		}
-		if (r == Lingukit.ref) {
+		if (r == Lingukit.ref_) {
 			return buildRef(token+1, grammar).occurs(occur);
 		}
 		throw unexpectedRule(r);
@@ -125,67 +125,67 @@ public final class Builder {
 	}
 
 	private static Rule buildCapture(int token, Parsed grammar, Rule rule) {
-		if (grammar.tree.rule(token) == Lingukit.capture) {
+		if (grammar.tree.rule(token) == Lingukit.capture_) {
 			return rule.as(grammar.text(token+1));
 		}
 		return rule;
 	}
 
 	private static Rule buildTerminal(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.terminal);
+		check(token, grammar, Lingukit.terminal_);
 		Rule r = grammar.tree.rule(token+1);
-		if (r == Lingukit.ranges) {
+		if (r == Lingukit.ranges_) {
 			return buildRanges(token+1, grammar);
 		}
-		if (r == Lingukit.figures) {
+		if (r == Lingukit.figures_) {
 			return buildFigures(token+1, grammar);
 		}
-		if (r == Lingukit.pattern) {
+		if (r == Lingukit.pattern_) {
 			return buildPattern(token+1, grammar);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule buildPattern(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.pattern);
-		boolean not = grammar.tree.rule(token+1) == Lingukit.not;
+		check(token, grammar, Lingukit.pattern_);
+		boolean not = grammar.tree.rule(token+1) == Lingukit.not_;
 		Rule p = patternSelection(token+(not?2:1), grammar);
 		return not ? Rule.pattern(Patterns.not(p.pattern)) : p;
 	}
 
 	private static Rule patternSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
-		if (r == Lingukit.gap) {
+		if (r == Lingukit.gap_) {
 			return Rule.pattern(Patterns.GAP);
 		}
-		if (r == Lingukit.pad) {
+		if (r == Lingukit.pad_) {
 			return Rule.pattern(Patterns.PAD);
 		}
-		if (r == Lingukit.indent) {
+		if (r == Lingukit.indent_) {
 			return Rule.pattern(Patterns.INDENT);
 		}
-		if (r == Lingukit.separator) {
+		if (r == Lingukit.separator_) {
 			return Rule.pattern(Patterns.SEPARATOR);
 		}
-		if (r == Lingukit.wrap) {
+		if (r == Lingukit.wrap_) {
 			return Rule.pattern(Patterns.WRAP);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule buildFigures(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.figures);
+		check(token, grammar, Lingukit.figures_);
 		final ParseTree tokens = grammar.tree;
 		final int end = tokens.end(token);
 		Terminal terminal = null;
 		int i = token+1;
 		List<Rule> refs = new ArrayList<>();
-		while (tokens.end(i) <= end && tokens.rule(i) != Lingukit.capture) {
+		while (tokens.end(i) <= end && tokens.rule(i) != Lingukit.capture_) {
 			Rule figure = tokens.rule(i);
-			if (figure == Lingukit.ranges) {
+			if (figure == Lingukit.ranges_) {
 				Rule ranges = buildRanges(i, grammar);
 				terminal = terminal == null ? ranges.terminal : terminal.and(ranges.terminal);
-			} else if (figure == Lingukit.name) {
+			} else if (figure == Lingukit.name_) {
 				String name = grammar.text(i);
 				if (name.charAt(0) != '-') {
 					name = "-"+name; // always do not capture these
@@ -204,52 +204,52 @@ public final class Builder {
 	}
 
 	private static Rule buildRanges(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.ranges);
-		boolean not = grammar.tree.rule(token+1) == Lingukit.not;
+		check(token, grammar, Lingukit.ranges_);
+		boolean not = grammar.tree.rule(token+1) == Lingukit.not_;
 		Rule ranges = rangesSelection(token +(not ? 2 : 1), grammar);
 		return not ? Rule.terminal(ranges.terminal.not()) : ranges;
 	}
 
 	private static Rule rangesSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
-		if (r == Lingukit.wildcard) {
+		if (r == Lingukit.wildcard_) {
 			return Rule.terminal(Terminal.WILDCARD);
 		}
-		if (r == Lingukit.letter) {
+		if (r == Lingukit.letter_) {
 			return Rule.terminal(Terminal.LETTERS);
 		}
-		if (r == Lingukit.upper) {
+		if (r == Lingukit.upper_) {
 			return Rule.terminal(Terminal.UPPER_LETTERS);
 		}
-		if (r == Lingukit.lower) {
+		if (r == Lingukit.lower_) {
 			return Rule.terminal(Terminal.LOWER_LETTERS);
 		}
-		if (r == Lingukit.hex) {
+		if (r == Lingukit.hex_) {
 			return Rule.terminal(Terminal.HEX_NUMBER);
 		}
-		if (r == Lingukit.octal) {
+		if (r == Lingukit.octal_) {
 			return Rule.terminal(Terminal.OCTAL_NUMBER);
 		}
-		if (r == Lingukit.binary) {
+		if (r == Lingukit.binary_) {
 			return Rule.terminal(Terminal.BINARY_NUMBER);
 		}
-		if (r == Lingukit.digit) {
+		if (r == Lingukit.digit_) {
 			return Rule.terminal(Terminal.DIGITS);
 		}
-		if (r == Lingukit.category) {
+		if (r == Lingukit.category_) {
 			//TODO
 			throw new UnsupportedOperationException("Not available yet");
 		}
-		if (r == Lingukit.range) {
+		if (r == Lingukit.range_) {
 			return Rule.terminal(Terminal.range(buildLiteral(token+1, grammar), buildLiteral(token+3, grammar)));
 		}
-		if (r == Lingukit.literal) {
+		if (r == Lingukit.literal_) {
 			return Rule.terminal(Terminal.character(buildLiteral(token, grammar)));
 		}
-		if (r == Lingukit.whitespace) {
+		if (r == Lingukit.whitespace_) {
 			return Rule.terminal(Terminal.WHITESPACE);
 		}
-		if (r == Lingukit.shortname) {
+		if (r == Lingukit.shortname_) {
 			String name = grammar.text(token+1);
 			int c = name.charAt(1);
 			if (c == 't') {
@@ -267,12 +267,12 @@ public final class Builder {
 	}
 
 	private static int buildLiteral(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.literal);
+		check(token, grammar, Lingukit.literal_);
 		Rule r = grammar.tree.rule(token+1);
-		if (r == Lingukit.symbol) {
+		if (r == Lingukit.symbol_) {
 			return grammar.text(token+1).codePointAt(1);
 		}
-		if (r == Lingukit.code_point) {
+		if (r == Lingukit.code_point_) {
 			return Integer.parseInt(grammar.text(token+1).substring(2), 16);
 		}
 		throw unexpectedRule(r);
@@ -280,17 +280,17 @@ public final class Builder {
 
 	private static Occur buildOccur(int token, Parsed grammar, int parent) {
 		// there might not be an occurrence token or it belongs to a outer parent 
-		if (grammar.tree.rule(token) != Lingukit.occurrence || grammar.tree.end(parent) < grammar.tree.end(token)) {
+		if (grammar.tree.rule(token) != Lingukit.occurrence_ || grammar.tree.end(parent) < grammar.tree.end(token)) {
 			return Occur.once;
 		}
 		Rule occur = grammar.tree.rule(token+1);
-		if (occur == Lingukit.plus) {
+		if (occur == Lingukit.plus_) {
 			return Occur.plus;
 		}
-		if (occur == Lingukit.star) {
+		if (occur == Lingukit.star_) {
 			return Occur.star;
 		}
-		if (occur == Lingukit.qmark) {
+		if (occur == Lingukit.qmark_) {
 			return Occur.qmark;
 		}
 		int min = Integer.parseInt(grammar.text(token+1));

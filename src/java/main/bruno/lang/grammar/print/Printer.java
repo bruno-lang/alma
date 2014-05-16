@@ -7,7 +7,6 @@ import java.util.Arrays;
 import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.ParseTree;
 import bruno.lang.grammar.Parsed;
-import bruno.lang.grammar.Processor;
 
 public final class Printer {
 
