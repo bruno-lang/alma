@@ -5,8 +5,6 @@ import 'dart:convert' as Encoding show UTF8, HTML_ESCAPE;
 import 'dart:typed_data' show Uint8List;
 import 'dart:io';
 
-import 'package:unittest/unittest.dart';
-
 part 'grammar.dart';
 part 'mechanic.dart';
 part 'terminal.dart';
