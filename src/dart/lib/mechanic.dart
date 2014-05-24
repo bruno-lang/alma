@@ -66,6 +66,7 @@ class Mechanic {
       if (r == null) {
         throw new ArgumentError("No such rule: `"+rule.name+"`\nKnown rules are: "+namedRules.keys.toString());
       }
+      r = dereference(r, namedRules, followed);
       return noCapture ? r.elements[0] : r;
     } else if (rule.elements.length > 0) {
       for (int i = 0; i < rule.elements.length; i++) {
