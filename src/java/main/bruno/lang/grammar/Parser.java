@@ -13,7 +13,7 @@ import bruno.lang.grammar.Grammar.Rule;
 public final class Parser {
 
 	public static ParseTree parse(ByteBuffer input, Rule start) {
-		ParseTree tree = new ParseTree(Math.max(512, input.capacity() * 2 / 3));
+		ParseTree tree = new ParseTree(Math.max(512, input.capacity()));
 		int t = 0;
 		try {
 			t = parseRule(start, input, 0, tree);

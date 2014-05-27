@@ -78,6 +78,15 @@ public class TestParser {
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
 	}
 	
+	@Test
+	public void thatJavaGrammarCanBeParsed() throws IOException {
+		Parsed t = Parsed.parse("etc/java.grammar", "grammar", Lingukit.GRAMMAR);
+		Grammar java = grammar(t);
+		System.out.println(java);
+		Parsed example = Parsed.parse("src/java/main/bruno/lang/grammar/ParseTree.java", "file", java);
+		Printer.rulePrinter(System.out).process(example);
+	}	
+	
 	private static Grammar grammar(Parsed t) {
 		return new Grammar(Mechanic.finish(Builder.buildGrammar(t)));		
 	}

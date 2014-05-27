@@ -1,0 +1,68 @@
+file = , package, imports members .
+comment = '/*' .. '*/' | '//' .. .
+package = comment*, 'package', < -eos:name
+imports = (import,)*
+import = comment*, 'import', < 'static'? -eos:name
+members = -member (, -member)*
+member = comment | class | interface | enum | constructor | method | field
+
+modifiers = (, -modifier)*
+modifier = ('public'):public | ('private'):private | ('static'):static | ('final'):final
+
+class = modifiers?, 'class', < identifier, extends?, implements?, -type-block
+interface = modifiers?, 'interface', < type, extends?, -type-block
+enum = modifiers?, 'enum', < implements? -type-block
+extends = 'extends', < type
+implements = 'implements', < type
+
+eos = !';'+ ';'
+
+type = ( primitive | PACKAGE? identifier ) '[]'*
+primitive = 'int' | 'float' | 'boolean' | 'double' | 'long' | 'void'
+
+type-block = '{', members?, '}'
+
+annotations = annotation (, annotation)*
+annotation = '@'type ['(' .. ')']
+
+constructor = modifier?, type, '(', -params, ')', block
+params = [ param (,',', param)* ]
+param = [modifier ~] type ~ identifier
+
+method = annotations?, modifiers?, type, identifier, '(' < , -params, ')', '{', statements?, '}'
+field = modifiers?, type, identifier, ['=', expression, ] ';' 
+
+statements = -statement (, -statement)* 
+statement = comment | if | for | while | return | switch | do | assign, ';' | expression, ';'
+if = 'if', < '(', expression, ')', block [, 'else', < block ]
+while = 'while', < '(', expression, ')', block
+do = 'do', < block, 'while', '(', expression, ')'
+for = 'for', < '(', assign, ';', expression, ';', expression, ')', block 
+switch = 'switch', < '(', expression, ')', block
+block = '{', statements?, '}' | statement
+return = 'return', expression, ';'
+assign = [modifier ~] [type ~ ] var, '=' < , expression
+invoke = (identifier '.')* identifier, '(' < , args, ')',
+new = 'new' ~ < type, ( '(', args, ')' | ('[', [expression,] ']')+ )
+var = 'this', '.' <, field1 | 'super', '.' <, field1 |  (field1 '.', )* field1  
+field1 = identifier ( '[', expression, ']' )* 
+
+args = [ expression (,',', expression)* ]
+expression = -expr1 (, (operator | '.'), -expr1 )*
+expr1 = prefix?, (new | literal | invoke | var) postfix?
+literal = string | char | number
+string = '"' ({ !'"' !'\' }+ | '\' . )* '"'
+char = ''' '\'? $ '''
+number = int | long | float | double
+int = sign 9+
+long = sign 9+ {'l' 'L'}
+float = sign 9* '.' 9* {'f' 'F'}
+double = sign 9* '.' 9* {'d' 'D'}
+sign = { '-' '+' }?
+operator = {'=' '>' '<' '!' '*' '-' '+' '/' '&' '|' }x1-3
+prefix = '-'x1-2 | '+'x1-2
+postfix = '-'x2 | '+'x2
+
+identifier = { @ '_' '$' } { @ 9 '_' '$' }*
+
+PACKAGE = (identifier '.')+
