@@ -12,8 +12,8 @@ member = -annotations? (comment | class | interface | enum | ainterface | constr
 modifiers = (, -modifier)*
 modifier = ('public'):public | 'protected' | ('private'):private | ('static'):static | ('final'):final | 'abstract' | 'transient' | 'synchronized' | 'volatile'
 
-class = modifiers?, 'class' ~ < identifier:name, [generic,] extends?, implements?, -type-block
-interface = modifiers?, 'interface'~ < identifier, extends?, -type-block
+class = modifiers?, 'class' ~ < identifier:name, [generic,] extends?, implements?, '{', members?, '}'
+interface = modifiers?, 'interface'~ < identifier, extends?, '{', members?, '}'
 enum = modifiers?, 'enum' ~ < identifier, implements?, '{', enumeration, members?, '}'
 ainterface = modifiers?, '@interface' ~ < identifier:name, '{', (amethod,)* '}'
 extends = 'extends', < generic-type
@@ -24,21 +24,20 @@ enumeration = [( identifier, ['(', args, ')',] ','?,)* ';']
 
 primitive = 'int' | 'char' | 'float' | 'boolean' | 'double' | 'long' | 'void' | 'byte' | 'short'
 
-type = ( primitive | -identifiers ) '[]'* ['...']
+type = ( primitive | -identifiers ) dimension
+dimension = '[]'* ['...']
 generic = '<', [generic-type, (',', generic-type,)*] '>'
-generic-type = wildcard | type [ generic ]
+generic-type = wildcard | type [ generic ] dimension
 wildcard = '?' [, ('extends'|'super'), generic-type]
 
-type-block = '{', members?, '}'
-
 annotations = annotation (, annotation)*
-annotation = '@'type < [,'(' .. ')']
+annotation = '@'type < [,'(', avalues?, ')']
 
 constructor = modifier?, identifier, '(', -params, ')', block
 params = [ param (,',', param)* ]
 param = [modifier ~] generic-type, identifier:name
 
-method = annotations?, modifiers?, generic-type, identifier:name, '(' < , -params, ')', [throws,] (';' | '{', statements?, '}')
+method = annotations?, modifiers?, generic?, generic-type, identifier:name, '(' < , -params, ')', [throws,] (';' | '{', statements?, '}')
 field = modifiers?, generic-type, identifier, ['=', (array | args), ] ';' 
 amethod = annotations?, modifiers?, type, identifier:name, '(', -params, ')', ['default', literal,] ';'
 
@@ -61,7 +60,7 @@ label = identifier,':'
 throw = 'throw' ~ < expression, ';'
 block = '{', statements?, '}' | statement
 return = 'return' ~ < expression, ';'
-assign = [modifier ~] [generic-type ~ ] var, '=' < , (array | expression)
+assign = annotations?, [modifier ~] [generic-type ~ ] var, '=' < , (array | expression)
 invoke = (ref '.')* identifier:name, '(' < , args, ')',
 new = 'new' ~ < generic-type, ( '(', args, ')' | (('[', [expression,] ']')+ ):array | '{', args ,'}' )
 var = (('this' | 'super' | ref) '.', )* ref  
@@ -92,3 +91,6 @@ postfix = '-'x2 | '+'x2
 
 identifier = { @ '_' '$' } { @ 9 '_' '$' }*
 identifiers = identifier ('.' identifier)*
+
+avalues = avalue, (',', avalue)*
+avalue = '{'<, avalues, '}' | literal | var | identifier:key, '=', avalue 
