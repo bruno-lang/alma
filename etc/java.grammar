@@ -1,13 +1,14 @@
-file = , package, imports members .
-comment = ('/*' .. '*/'):block | ('//' .. .):inline
-package = comment*, 'package', -identifiers, ';'
-imports = (import,)*
+file =  -header, members .
+header = package, imports
+comment = ('/*' .. '*/'):doc | ('//' .. .):inline
+package = , comment*, 'package', -identifiers, ';'
+imports = (, import)*
 import = comment*, 'import', < 'static'?, type, ';' 
 members = -member (, -member)*
 member = comment | class | interface | enum | constructor | method | field
 
 modifiers = (, -modifier)*
-modifier = ('public'):public | ('private'):private | ('static'):static | ('final'):final
+modifier = ('public'):public | 'protected' | ('private'):private | ('static'):static | ('final'):final | 'abstract' | 'transient' | 'synchronized' | 'volatile'
 
 class = modifiers?, 'class' ~ < identifier:name, [generic,] extends?, implements?, -type-block
 interface = modifiers?, 'interface'~ < identifier, extends?, -type-block
@@ -34,12 +35,12 @@ params = [ param (,',', param)* ]
 param = [modifier ~] generic-type, identifier:name
 
 method = annotations?, modifiers?, generic-type, identifier:name, '(' < , -params, ')', [throws,] (';' | '{', statements?, '}')
-field = modifiers?, generic-type, identifier, ['=', args, ] ';' 
+field = modifiers?, generic-type, identifier, ['=', (array | args), ] ';' 
 
 throws = 'throws', < type (,',', type)*
 
 statements = -statement (, -statement)* 
-statement = comment | if | for | while | try-catch | return | switch | do | throw | assign, ';' | expression, ';'
+statement = comment | if | for | while | try-catch | return | switch | do | throw | break | continue | label | assign, ';' | expression, ';'
 if = 'if', < '(', expression, ')', block [, 'else', < block ]
 while = 'while', < '(', expression, ')', block
 do = 'do', < -block, 'while', '(', expression, ')'
@@ -47,11 +48,15 @@ for = 'for', < '(', (counter | each) , ')', block
 counter = assign, ';', expression, ';', expression
 each = generic-type ~ identifier, ':', expression
 try-catch = 'try', < -block (, 'catch', '(', type ~ identifier:name,')', -block)* [, 'finally', -block]
-switch = 'switch', < '(', expression, ')', block
+switch = 'switch', < '(', expression, ')', '{', (case ,)* '}'
+case = 'case' ~ < identifier,':', -block | 'default', ':', < -block
+break = 'break'[~ identifier],<';'
+continue = 'continue'[~ identifier],<';'
+label = identifier,':'
 throw = 'throw' ~ < expression, ';'
 block = '{', statements?, '}' | statement
 return = 'return' ~ < expression, ';'
-assign = [modifier ~] [generic-type ~ ] var, '=' < , expression
+assign = [modifier ~] [generic-type ~ ] var, '=' < , (array | expression)
 invoke = (ref '.')* identifier:name, '(' < , args, ')',
 new = 'new' ~ < generic-type, ( '(', args, ')' | (('[', [expression,] ']')+ ):array | '{', args ,'}' )
 var = (('this' | 'super' | ref) '.', )* ref  
@@ -63,6 +68,7 @@ conditional = '?' < , expression:then, ':', expression:else
 expr1 = cast? prefix?, (new | literal | invoke | var | group) postfix?
 group = '(', expression, ')'
 cast = '(',generic-type,')'
+array = '{', args, '}'
 
 literal = string | char | -number
 string = '"' ({ !'"' !'\' }+ | '\' $ )* '"'
