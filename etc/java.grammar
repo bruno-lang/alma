@@ -1,11 +1,13 @@
-file =  -header, members .
+file =  -header, -members .
 header = package, imports
-comment = ('/*' .. '*/'):doc | ('//' .. .):inline
+comment = doc | inline
+doc = '/*' .. '*/'
+inline = '//' .. .
 package = , comment*, 'package', -identifiers, ';'
 imports = (, import)*
 import = comment*, 'import', < 'static'?, type, ';' 
-members = -member (, -member)*
-member = comment | class | interface | enum | constructor | method | field
+members = member (, member)*
+member = -annotations? (comment | class | interface | enum | ainterface | constructor | method | field)
 
 modifiers = (, -modifier)*
 modifier = ('public'):public | 'protected' | ('private'):private | ('static'):static | ('final'):final | 'abstract' | 'transient' | 'synchronized' | 'volatile'
@@ -13,8 +15,9 @@ modifier = ('public'):public | 'protected' | ('private'):private | ('static'):st
 class = modifiers?, 'class' ~ < identifier:name, [generic,] extends?, implements?, -type-block
 interface = modifiers?, 'interface'~ < identifier, extends?, -type-block
 enum = modifiers?, 'enum' ~ < identifier, implements?, '{', enumeration, members?, '}'
-extends = 'extends', < type
-implements = 'implements', < type
+ainterface = modifiers?, '@interface' ~ < identifier:name, '{', (amethod,)* '}'
+extends = 'extends', < generic-type
+implements = 'implements', < generic-type
 
 eos = !';'+ ';'
 enumeration = [( identifier, ['(', args, ')',] ','?,)* ';']
@@ -23,12 +26,13 @@ primitive = 'int' | 'char' | 'float' | 'boolean' | 'double' | 'long' | 'void' | 
 
 type = ( primitive | -identifiers ) '[]'* ['...']
 generic = '<', [generic-type, (',', generic-type,)*] '>'
-generic-type = type [ generic ]
+generic-type = wildcard | type [ generic ]
+wildcard = '?' [, ('extends'|'super'), generic-type]
 
 type-block = '{', members?, '}'
 
 annotations = annotation (, annotation)*
-annotation = '@'type ['(' .. ')']
+annotation = '@'type < [,'(' .. ')']
 
 constructor = modifier?, identifier, '(', -params, ')', block
 params = [ param (,',', param)* ]
@@ -36,6 +40,7 @@ param = [modifier ~] generic-type, identifier:name
 
 method = annotations?, modifiers?, generic-type, identifier:name, '(' < , -params, ')', [throws,] (';' | '{', statements?, '}')
 field = modifiers?, generic-type, identifier, ['=', (array | args), ] ';' 
+amethod = annotations?, modifiers?, type, identifier:name, '(', -params, ')', ['default', literal,] ';'
 
 throws = 'throws', < type (,',', type)*
 
@@ -60,12 +65,12 @@ assign = [modifier ~] [generic-type ~ ] var, '=' < , (array | expression)
 invoke = (ref '.')* identifier:name, '(' < , args, ')',
 new = 'new' ~ < generic-type, ( '(', args, ')' | (('[', [expression,] ']')+ ):array | '{', args ,'}' )
 var = (('this' | 'super' | ref) '.', )* ref  
-ref = identifier ( '[', expression, ']' )* 
+ref = identifier ( '[', expression?, ']' )* 
 
 args = [ expression (,',', expression)* ]
-expression = -expr1 (, (operator | '.'), -expr1 )* [, conditional]
+expression = -expr (, (operator | '.'), -expr )* [, conditional]
 conditional = '?' < , expression:then, ':', expression:else
-expr1 = cast? prefix?, (new | literal | invoke | var | group) postfix?
+expr = cast? prefix?, (new | literal | invoke | var | group) postfix? [, doc]
 group = '(', expression, ')'
 cast = '(',generic-type,')'
 array = '{', args, '}'
