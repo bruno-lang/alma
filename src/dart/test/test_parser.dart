@@ -62,5 +62,5 @@ File etc(String filename) {
 }
 
 Grammar grammarFrom(Parsed p) {
-  return new Grammar(Mechanic.finish(Builder.buildGrammar(p)));
+  return new Grammar(Linguist.finish(Builder.buildGrammar(p)));
 }

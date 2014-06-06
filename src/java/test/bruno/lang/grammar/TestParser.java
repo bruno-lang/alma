@@ -5,6 +5,7 @@ import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -68,7 +69,7 @@ public class TestParser {
 		Printer.rulePrinter(System.out).process(xmlt);
 	}
 
-	@Test
+	@Test(timeout=200)
 	public void thatCompletionWorks() {
 		String input = "% this is the comments text\n% this is another one\n";
 		Grammar grammar = COMMENTS;
@@ -82,13 +83,19 @@ public class TestParser {
 	public void thatJavaGrammarCanBeParsed() throws IOException {
 		Parsed t = Parsed.parse("etc/java.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar java = grammar(t);
-		System.out.println(java);
-		Parsed example = Parsed.parse("src/java/main/bruno/lang/grammar/ParseTree.java", "file", java);
-		Printer.rulePrinter(System.out).process(example);
+		File src = new File("src/java/main/bruno/lang/grammar/");
+		for (File source : src.listFiles()) {
+			if (source.getName().endsWith(".java")) {
+				Parsed example = Parsed.parse(source.getAbsolutePath(), "file", java);
+				assertEquals(source.length(), example.tree.end());
+			}
+		}
+//		Parsed example = Parsed.parse("/home/jan/proj/silk/src/core/se/jbee/inject/bind/Binder.java", "file", java);
+//		Printer.rulePrinter(System.out).process(example);
 	}	
 	
 	private static Grammar grammar(Parsed t) {
-		return new Grammar(Mechanic.finish(Builder.buildGrammar(t)));		
+		return new Grammar(Linguist.finish(Builder.buildGrammar(t)));		
 	}
 
 	/**

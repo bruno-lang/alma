@@ -3,6 +3,7 @@ package bruno.lang.grammar;
 import java.nio.ByteBuffer;
 
 import bruno.lang.grammar.Grammar.Rule;
+import bruno.lang.grammar.print.Printer;
 
 /**
  * A multi-language parser that can parse any language given a starting
@@ -26,10 +27,11 @@ public final class Parser {
 			int pos = Math.abs(t);
 			String msg = "Failed to parse at "+pos+":";
 			System.err.println(msg);
-			System.err.println(tree.debug());
+			ParseTree debug = tree.debug();
+			new Printer.ParseTreePrinter(System.err).process(new Parsed(input, debug));
 			input.position(pos);
 			//FIXME what if end of file...
-			byte[] x = new byte[Math.min(20, input.limit()-pos)];
+			byte[] x = new byte[Math.min(60, input.limit()-pos)];
 			input.get(x);
 			System.err.println(new String(x));
 			throw new RuntimeException(msg);

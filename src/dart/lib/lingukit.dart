@@ -6,7 +6,7 @@ import 'dart:typed_data' show Uint8List;
 import 'dart:io';
 
 part 'grammar.dart';
-part 'mechanic.dart';
+part 'linguist.dart';
 part 'terminal.dart';
 part 'occur.dart';
 part 'parsetree.dart';
@@ -115,4 +115,4 @@ part 'printer.dart';
     grammar_ = seq([member_, seq([g, member_]).star()]).as("grammar") 
     ;
   
-  final Grammar GRAMMAR = new Grammar(Mechanic.finish(Mechanic.namedRules([grammar_])));
+  final Grammar GRAMMAR = new Grammar(Linguist.finish(Linguist.namedRules([grammar_])));

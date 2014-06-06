@@ -14,7 +14,7 @@ import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
 /**
- * The {@link Mechanic} is a utility that optimizes and finishes a set of
+ * The {@link Linguist} is a utility that optimizes and finishes a set of
  * {@link Rule}s used to build a {@link Grammar}.
  * 
  * Such a set is usually created by the {@link Builder} that does not deliver a
@@ -22,7 +22,7 @@ import bruno.lang.grammar.Grammar.RuleType;
  * 
  * @author jan
  */
-public final class Mechanic {
+public final class Linguist {
 
 	/**
 	 * Creates a set of named {@link Rule}s reachable from any of the given roots.  
@@ -206,6 +206,9 @@ public final class Mechanic {
 		} else if (rule.elements.length > 0) {
 			for (int i = 0; i < rule.elements.length; i++) {
 				rule.elements[i] = dereference(rule.elements[i], namedRules, followed);
+				if (rule.type == RuleType.CAPTURE && rule.elements[i].type == RuleType.CAPTURE) {
+					rule.elements[i] = rule.elements[i].elements[0]; // unpack double capture
+				}
 			}
 		}
 		return rule;
