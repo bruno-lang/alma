@@ -12,7 +12,7 @@ member = -annotations? (comment | class | interface | enum | ainterface | constr
 modifiers = (, -modifier)*
 modifier = ('public'):public | 'protected' | ('private'):private | ('static'):static | ('final'):final | 'abstract' | 'transient' | 'synchronized' | 'volatile'
 
-class = modifiers?, 'class' ~ < identifier:name, [generic,] extends?, implements?, '{', members?, '}'
+class = modifiers?, 'class' ~ < identifier:name, [generics,] extends?, implements?, '{', members?, '}'
 interface = modifiers?, 'interface'~ < identifier, extends?, '{', members?, '}'
 enum = modifiers?, 'enum' ~ < identifier, implements?, '{', enumeration, members?, '}'
 ainterface = modifiers?, '@interface' ~ < identifier:name, '{', (amethod,)* '}'
@@ -26,9 +26,11 @@ primitive = 'int' | 'char' | 'float' | 'boolean' | 'double' | 'long' | 'void' | 
 
 type = ( primitive | -identifiers ) dimension
 dimension = '[]'* ['...']
-generic = '<', [generic-type, (',', generic-type,)*] '>'
-generic-type = wildcard | type [ generic ] dimension
-wildcard = '?' [, ('extends'|'super'), generic-type]
+generics = '<', [generic, (',', generic,)*] '>'
+generic = variance | wildcard | generic-type
+generic-type = type [ generics ] dimension
+variance = ('?' | identifier), ('extends'|'super'), generic-type
+wildcard = '?'
 
 annotations = annotation (, annotation)*
 annotation = '@'type < [,'(', avalues?, ')']
@@ -37,7 +39,7 @@ constructor = modifier?, identifier, '(', -params, ')', block
 params = [ param (,',', param)* ]
 param = [modifier ~] generic-type, identifier:name
 
-method = annotations?, modifiers?, generic?, generic-type, identifier:name, '(' < , -params, ')', [throws,] (';' | '{', statements?, '}')
+method = annotations?, modifiers?, generics?, generic-type, identifier:name, '(' < , -params, ')', [throws,] (';' | '{', statements?, '}')
 field = modifiers?, generic-type, identifier, ['=', (array | args), ] ';' 
 amethod = annotations?, modifiers?, type, identifier:name, '(', -params, ')', ['default', literal,] ';'
 
@@ -61,15 +63,16 @@ throw = 'throw' ~ < expression, ';'
 block = '{', statements?, '}' | statement
 return = 'return' ~ < expression, ';'
 assign = annotations?, [modifier ~] [generic-type ~ ] var, '=' < , (array | expression)
-invoke = (ref '.')* identifier:name, '(' < , args, ')',
+invoke = (ref, '.', [generics,])* identifier:name, '(' < , args, ')',
 new = 'new' ~ < generic-type, ( '(', args, ')' | (('[', [expression,] ']')+ ):array | '{', args ,'}' )
 var = (('this' | 'super' | ref) '.', )* ref  
-ref = identifier ( '[', expression?, ']' )* 
+ref = identifier ( '[', expression?, ']' )*
+instanceof = var, 'instanceof', generic-type
 
 args = [ expression (,',', expression)* ]
 expression = -expr (, (operator | '.'), -expr )* [, conditional]
 conditional = '?' < , expression:then, ':', expression:else
-expr = cast? prefix?, (new | literal | invoke | var | group) postfix? [, doc]
+expr = cast? prefix?, (new | literal | instanceof | invoke | var | group) postfix? [, comment]
 group = '(', expression, ')'
 cast = '(',generic-type,')'
 array = '{', args, '}'
