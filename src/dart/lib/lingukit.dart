@@ -104,7 +104,8 @@ part 'printer.dart';
     group_ = seq([sym('('), g, ref("selection"), g, sym(')'), capture_]).as("group"),
     completion_ = seq([string(".."), capture_]).as("completion"),
     distinction_ = sym('<').as("distinction"),
-    element_ = seq([selection([distinction_, completion_, group_, option_, string_, terminal_, ref_]), occurrence_.qmark()]).as("element"),
+    lookahead_ = seq([string(">("), g, ref("selection"), g, sym(')')]).as("lookahead"),
+    element_ = seq([selection([distinction_, completion_, group_, option_, lookahead_, string_, terminal_, ref_]), occurrence_.qmark()]).as("element"),
 
     sequence_ = seq([element_, seq([i, element_]).star()]).as("sequence"),
     selection_ = seq([sequence_, seq([g, sym('|'), i, sequence_]).star()]).as("selection"),

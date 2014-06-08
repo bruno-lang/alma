@@ -54,6 +54,16 @@ main() {
       expect(() => Parsed.from(etc('example.xml'), 'json', grammarFrom(json)), throwsException);
     });
   });
+  
+  group('test', () {
+    test('grammar parses', () => 
+        expect(() => Parsed.from(etc('test.grammar'), 'grammar', GRAMMAR), returnsNormally)); 
+    
+    test('example parses', () {
+      Parsed test = Parsed.from(etc('test.grammar'), 'grammar', GRAMMAR);
+      expect(() => Parsed.from(etc('example.test'), 'start', grammarFrom(test)), returnsNormally);
+    });
+  });  
 }
 
 File etc(String filename) {

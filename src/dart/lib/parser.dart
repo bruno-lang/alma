@@ -12,7 +12,7 @@ class ParseException implements Exception {
 class Parser {
 
   static ParseTree parse(List<int> input, Rule start) {
-    ParseTree tree = new ParseTree.fixed(input.length);
+    ParseTree tree = new ParseTree.fixed(Math.max(512, input.length));
     int t = 0;
     try {
       t = parseRule(start, input, 0, tree);
@@ -51,6 +51,8 @@ class Parser {
       return parseSelection(rule, input, position, tree);
     case RuleType.COMPLETION:
       return parseCompletion(rule, input, position, tree);
+    case RuleType.LOOKAHEAD:
+      return parseRule(rule.elements[0], input, position, tree);    
     case RuleType.CAPTURE:
       return parseCapture(rule, input, position, tree);
     default:
@@ -127,6 +129,9 @@ class Parser {
         tree.erase(position);
         return endPosition;
       }
+      if (r.type == RuleType.LOOKAHEAD) { // we know it is the last rule
+        return end; // the end of the previous rule is the result
+      }      
       end = endPosition;
     }
     return end;

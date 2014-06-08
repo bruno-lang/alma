@@ -62,6 +62,7 @@ class RuleType {
   static const SEQUENCE = const RuleType._("seq");
   static const SELECTION = const RuleType._("sel");
   static const COMPLETION = const RuleType._("cpl");
+  static const LOOKAHEAD = const RuleType._("lah");
   static const REFERENCE = const RuleType._("ref");
   static const CAPTURE = const RuleType._("cap");
 
@@ -79,6 +80,8 @@ class Rule {
   
   static final List<Rule> NO_ELEMENTS = new List<Rule>(0);
   static final List<int> NO_LITERAL = new List<int>(0);
+  
+  Rule.lookahead(Rule ahead) : this(RuleType.LOOKAHEAD, "", new List.filled(1, ahead), Occur.once, NO_LITERAL, null, null, 0);
   
   Rule.completion() : this(RuleType.COMPLETION, "", new List<Rule>(1), Occur.once, NO_LITERAL, null, null, 0);
 
@@ -177,6 +180,9 @@ class Rule {
     }
     if (type == RuleType.COMPLETION) {
       return "..`"+elements[0].toString()+"`";
+    }
+    if (type == RuleType.LOOKAHEAD) {
+      return ">("+elements[0].toString()+")";
     }
     if (type == RuleType.SELECTION) {
       StringBuffer b = new StringBuffer();

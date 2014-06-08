@@ -20,6 +20,10 @@ class Parsed {
     ParseTree tree = Parser.parse(buffer, grammar.rule(start));
     return new Parsed(buffer, tree);
   }
+  
+  String toString() {
+    return tree.toString();
+  }
 }
 
 class ParseTree {
@@ -37,6 +41,8 @@ class ParseTree {
   ParseTree(this.rules, this.starts, this.ends, this.levels, this.lev, this.top);
   
   ParseTree.fixed(int length) : this(new List(length), new List(length), new List(length), new List(length), -1, -1);
+  
+  ParseTree.flexible() : this([], [], [], [], -1, -1);
 
   void push(Rule rule, int start) {
     starts[++top] = start;
