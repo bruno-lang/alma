@@ -40,22 +40,25 @@ public class TestParser {
 		Parsed t1 = Parsed.parse("etc/lingukit.grammar", "grammar", g0);
 		Grammar g1 = grammar(t1);
 		Parsed t2 = Parsed.parse("etc/lingukit.grammar", "grammar", g1);
-		System.out.println(g1);
 		Printer.rulePrinter(System.out).process(t2);
 	}
 	
 	@Test
-	public void thatTerminalHasNoRangeOfZeroLength() throws IOException {
-		ParseTree tokens = Parsed.parse("etc/test.grammar", "grammar", Lingukit.GRAMMAR).tree;
-		assertEquals(8, tokens.end());
-		assertEquals("terminal", tokens.rule(7).name);
+	public void thatLookaheadWorks() throws IOException {
+		Parsed p = Parsed.parse("etc/test.grammar", "grammar", Lingukit.GRAMMAR);
+		Grammar test = grammar(p);
+		Parsed example = Parsed.parse("etc/example.test", "start", test);
+		assertEquals("y", example.tree.rule(1).name);
+		assertEquals("x", example.tree.rule(3).name);
+		assertEquals("y", example.tree.rule(5).name);
+		assertEquals("w", example.tree.rule(6).name);
+		assertEquals("y", example.tree.rule(8).name);
 	}
 	
 	@Test
 	public void thatJSONGrammarCanBeParsed() throws IOException {
 		Parsed t = Parsed.parse("etc/json.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar json = grammar(t);
-		System.out.println(json);
 		Parsed jsont = Parsed.parse("etc/example.json", "json", json);
 		Printer.rulePrinter(System.out).process(jsont);
 	}
@@ -64,7 +67,6 @@ public class TestParser {
 	public void thatXMLGrammarCanBeParsed() throws IOException {
 		Parsed t = Parsed.parse("etc/xml.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar xml = grammar(t);
-		System.out.println(xml);
 		Parsed xmlt = Parsed.parse("etc/example.xml", "document", xml);
 		Printer.rulePrinter(System.out).process(xmlt);
 	}
@@ -83,15 +85,20 @@ public class TestParser {
 	public void thatJavaGrammarCanBeParsed() throws IOException {
 		Parsed t = Parsed.parse("etc/java.grammar", "grammar", Lingukit.GRAMMAR);
 		Grammar java = grammar(t);
-		File src = new File("src/java/main/bruno/lang/grammar/");
+		assertParses(java, new File("src/java/main/bruno/lang/grammar/"), ".java");
+		assertParses(java, new File("src/java/main/bruno/lang/grammar/print/"), ".java");
+		assertParses(java, new File("src/java/test/bruno/lang/grammar/"), ".java");
+//		Parsed example = Parsed.parse("/home/jan/proj/silk/src/core/se/jbee/inject/bind/Binder.java", "file", java);
+//		Printer.rulePrinter(System.out).process(example);
+	}
+
+	private void assertParses(Grammar java, File src, String ending) throws IOException {
 		for (File source : src.listFiles()) {
-			if (source.getName().endsWith(".java")) {
+			if (source.getName().endsWith(ending)) {
 				Parsed example = Parsed.parse(source.getAbsolutePath(), "file", java);
 				assertEquals(source.length(), example.tree.end());
 			}
 		}
-//		Parsed example = Parsed.parse("/home/jan/proj/silk/src/core/se/jbee/inject/bind/Binder.java", "file", java);
-//		Printer.rulePrinter(System.out).process(example);
 	}	
 	
 	private static Grammar grammar(Parsed t) {

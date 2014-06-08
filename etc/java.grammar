@@ -1,7 +1,7 @@
 file =  -header, -members .
 header = package, imports
-comment = doc | inline
-doc = '/*' .. '*/'
+comment = multiline | inline
+multiline = '/*' .. '*/'
 inline = '//' .. .
 package = , comment*, 'package', -identifiers, ';'
 imports = (, import)*
@@ -33,7 +33,7 @@ variance = ('?' | identifier), ('extends'|'super'), generic-type
 wildcard = '?'
 
 annotations = annotation (, annotation)*
-annotation = '@'type < [,'(', avalues?, ')']
+annotation = '@'type < [,'(' < , avalues?, ')']
 
 constructor = modifier?, identifier, '(', -params, ')', block
 params = [ param (,',', param)* ]
@@ -96,4 +96,4 @@ identifier = { @ '_' '$' } { @ 9 '_' '$' }*
 identifiers = identifier ('.' identifier)*
 
 avalues = avalue, (',', avalue)*
-avalue = '{'<, avalues, '}' | literal | var | identifier:key, '=', avalue 
+avalue = '{'<, avalues, '}' | literal | identifier:key, '=', avalue | var 

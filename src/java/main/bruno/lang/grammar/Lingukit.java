@@ -83,7 +83,8 @@ public final class Lingukit {
 		group_ = seq(symbol('('), g, ref("selection"), g, symbol(')'), capture_).as("group"),
 		completion_ = seq(string(".."), capture_).as("completion"),
 		distinction_ = symbol('<').as("distinction"),
-		element_ = seq(selection(distinction_, completion_, group_, option_, string_, terminal_, ref_), occurrence_.qmark()).as("element"),
+		lookahead_ = seq(string(">("),g, ref("selection"), g, symbol(')')).as("lookahead"),
+		element_ = seq(selection(distinction_, completion_, group_, option_, lookahead_, string_, terminal_, ref_), occurrence_.qmark()).as("element"),
 
 		sequence_ = seq(element_, seq(i, element_).star()).as("sequence"),
 		selection_ = seq(sequence_, seq(g, symbol('|'), i, sequence_).star()).as("selection"),

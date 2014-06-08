@@ -44,7 +44,11 @@ public final class Builder {
 
 	private static Rule buildRule(int token, Parsed grammar) {
 		check(token, grammar, Lingukit.rule_);
-		return buildSelection(token+2, grammar).as(grammar.text(token+1));
+		String name = grammar.text(token+1);
+		if (name.matches("[zZ179@#_,~.^$+*?]")) {
+			throw new IllegalArgumentException("A rule cannot be named "+name+" as this is a control sequence in lingukit.");
+		}
+		return buildSelection(token+2, grammar).as(name);
 	}
 
 	private static Rule buildSelection(int token, Parsed grammar) {
@@ -102,6 +106,9 @@ public final class Builder {
 		if (r == Lingukit.option_) {
 			return buildCapture(tokens.next(token+2), grammar, buildSelection(token+2, grammar)).occurs(Occur.qmark);
 		}
+		if (r == Lingukit.lookahead_) {
+			return buildLookahead(token+1, grammar);
+		}
 		if (r == Lingukit.terminal_) {
 			Rule t = buildTerminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
@@ -118,6 +125,11 @@ public final class Builder {
 			return buildRef(token+1, grammar).occurs(occur);
 		}
 		throw unexpectedRule(r);
+	}
+
+	private static Rule buildLookahead(int token, Parsed grammar) {
+		check(token, grammar, Lingukit.lookahead_);
+		return Rule.lookahead(buildSelection(token+1, grammar));
 	}
 
 	private static Rule buildRef(int token, Parsed grammar) {

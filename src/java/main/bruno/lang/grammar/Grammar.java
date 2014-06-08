@@ -59,7 +59,7 @@ public final class Grammar {
 	}
 
 	public static enum RuleType {
-		LITERAL("lit"), TERMINAL("trm"), PATTERN("pat"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cpl"), REFERENCE("ref"), CAPTURE("cap");
+		LITERAL("lit"), TERMINAL("trm"), PATTERN("pat"), ITERATION("itr"), SEQUENCE("seq"), SELECTION("sel"), COMPLETION("cpl"), LOOKAHEAD("lah"), REFERENCE("ref"), CAPTURE("cap");
 
 		public final String code;
 
@@ -76,6 +76,10 @@ public final class Grammar {
 		private static final Rule[] NO_ELEMENTS = new Rule[0];
 		private static final byte[] NO_LITERAL = new byte[0];
 
+		public static Rule lookahead(Rule ahead) {
+			return new Rule(RuleType.LOOKAHEAD, "", new Rule[] { ahead }, Occur.once, NO_LITERAL, null, null, 0);
+		}
+		
 		public static Rule completion() {
 			return new Rule(RuleType.COMPLETION, "", new Rule[1], Occur.once, NO_LITERAL, null, null, 0);
 		}
@@ -196,6 +200,9 @@ public final class Grammar {
 			}
 			if (type == RuleType.COMPLETION) {
 				return "..`"+elements[0]+"`";
+			}
+			if (type == RuleType.LOOKAHEAD) {
+				return ">("+elements[0]+")";
 			}
 			if (type == RuleType.SELECTION) {
 				StringBuilder b = new StringBuilder();

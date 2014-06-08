@@ -27,6 +27,11 @@ public final class Parsed {
 		file.get(dst);
 		return new String(dst);
 	}
+	
+	@Override
+	public String toString() {
+		return tree.toString();
+	}
 
 	public static Parsed parse(String src, String start, Grammar grammar)
 			throws FileNotFoundException, IOException {

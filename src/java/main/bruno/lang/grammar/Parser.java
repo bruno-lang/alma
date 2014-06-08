@@ -3,6 +3,7 @@ package bruno.lang.grammar;
 import java.nio.ByteBuffer;
 
 import bruno.lang.grammar.Grammar.Rule;
+import bruno.lang.grammar.Grammar.RuleType;
 import bruno.lang.grammar.print.Printer;
 
 /**
@@ -56,6 +57,8 @@ public final class Parser {
 			return parseSelection(rule, input, position, tree);
 		case COMPLETION:
 			return parseCompletion(rule, input, position, tree);
+		case LOOKAHEAD:
+			return parseRule(rule.elements[0], input, position, tree);
 		case CAPTURE:
 			return parseCapture(rule, input, position, tree);
 		default:
@@ -120,8 +123,9 @@ public final class Parser {
 	}
 
 	private static int parseSequence(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+		final int elems = rule.elements.length;
 		int end = position;
-		for (int i = 0; i < rule.elements.length; i++) {
+		for (int i = 0; i < elems; i++) {
 			Rule r = rule.elements[i];
 			int endPosition = parseRule(r, input, end, tree);
 			if (endPosition < 0) {
@@ -131,6 +135,9 @@ public final class Parser {
 				}
 				tree.erase(position);
 				return endPosition;
+			}
+			if (r.type == RuleType.LOOKAHEAD) { // we know it is the last rule
+				return end; // the end of the previous rule is the result
 			}
 			end = endPosition;
 		}
