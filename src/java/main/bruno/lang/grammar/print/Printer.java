@@ -157,6 +157,9 @@ public final class Printer {
 	}
 
 	private static void printColor(PrintStream out, String color, String text) {
+		if (color.endsWith(ANSIColor.UNDERLINED) && text.trim().isEmpty()) {
+			color = ANSIColor.RESET;
+		}
 		final int l = text.length();
 		int lf = text.indexOf('\n');
 		int s = 0;
