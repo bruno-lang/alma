@@ -138,14 +138,10 @@ public final class Linguist {
 				}
 			}
 			if (ts+ls == rule.elements.length) {
-				Terminal t = rule.elements[0].terminal;
+				Terminal t = terminalOf(rule.elements[0]);
 				for (int i = 1; i < rule.elements.length; i++) {
 					Rule r = rule.elements[i];
-					if (r.type == RuleType.TERMINAL) {
-						t = t.and(r.terminal);
-					} else {
-						t = t.and(Terminal.character(UTF8.codePoint(r.literal)));
-					}
+					t = t.and(terminalOf(r));
 				}
 				return Rule.terminal(t);
 			}
@@ -156,6 +152,10 @@ public final class Linguist {
 			}
 		}
 		return rule;
+	}
+	
+	private static Terminal terminalOf(Rule r) {
+		return r.type == RuleType.TERMINAL ? r.terminal : Terminal.character(UTF8.codePoint(r.literal));
 	}
 	
 	/**
