@@ -2,19 +2,27 @@
 Dashed         : { '-' z 9 }* { z 9 }?
 Verb           : z -Dashed?
 Noun           : Z { @ '-' } { @  9 }*
-number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number
+
+% Type Variant Symbols
+Embed          : ':'
+TypeOf         : '$'
+PointerOf      : '@'
+LazyOf         : '^'
+Optional       : '?'
+Faulty         : '!'
+Transient      : '*'
 
 % Identifiers
 Wildcard       : '_'
 Artifact       : '.' z {z 9 '-'}*
 Field          : { z 9 } -Dashed?
 Constant       : -Noun
-Variable       : -Field '''*
+Variable       : -Field '´'*
 Atom           : '`'{ !_ }+
 Alias          : '?'{ @ 9 '-' '_' }+
 
 Operation      : -Verb '?'?
-Function       : -Verb {'?' '*'}?
+Function       : -Verb {'?' '´'}?
 Fault          : -Verb '!'
 
 Module         : -Artifact
@@ -33,17 +41,18 @@ Type           : -Noun
 
 % Operators
 Operator       : (-OperatorLetter)x1-3
-OperatorLetter : { '+' '-' '/' '*' '=' '>' '<' '&' '|' '#' '~' }
+OperatorLetter : { '+' '-' '/' '*' '=' '>' '<' '&' '|' '~' }
 
 % Symbols
 Symbol         : { @ UnitLetter }+
 UnitLetter     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
-literal        : logic-literal | text-literal | bit-literal
-logic-literal  : ''' ( (-number['e'number:exponent] Symbol?) | ($ .. UnitLetter):value )
-text-literal   : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
-bit-literal    : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
+literal        : conceptual | textual | binary
+conceptual     : ''' ( (-number['e'number:exponent] Symbol?) | ($ .. UnitLetter):value )
+textual        : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
+binary         : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
+number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number
 
 values         : literal-set | literal-range | constant-range
 literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
@@ -51,16 +60,15 @@ literal-range  : literal [ >> '..' >> literal ] | '..' >> literal
 constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 
 % Types
-% TODO capture struct layout in memory in type (reference vs. embedded) - use ':' in front of whole tuple to say everything should be embedded, references are than modeled as "pointer" types (use '@') 
-modifier       : { '!' '?' '*' }
-class          : {'$' '^'}
+modifier       : { Faulty Optional Transient }
+class          : { TypeOf LazyOf PointerOf }
 dimension-type : '[' ( TypeVariable | (9*):min ['-'(9*):max] ) ']' | '..'
 type           : class? -base-type dimension-type* modifier? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 array-type     : -base-type dimension-type+
 list-type      : '[' base-type? ']'
 set-type       : '{' base-type? '}'
-tuple-type     : ':'? '(' [ type ( ',' >> type )* ] ')'
+tuple-type     : Embed? '(' [ type ( ',' >> type )* ] ')'
 fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
@@ -73,7 +81,7 @@ array-kind     : -base-kind dimension-type+
 list-kind      : '[' base-kind? ']'
 set-kind       : '{' base-kind? '}'
 tuple-kind1    : '..' | kind
-tuple-kind     : ':'? ('(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')')
+tuple-kind     : Embed? ('(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')')
 fn-kind        : '(->)' | '(' kind >> '->' ( >> kind >> '->' )*  >> kind ')'
 op-kind        : ( Wildcard | Operation ) fn-kind
 
@@ -95,14 +103,14 @@ equation       : literal >> '=' >> literal
 val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
 
 data           : 'data' ^ Data >> '::', < (record | type), format*, enumeration?
-record         : ':'? '('<, field, (',', field,)* ')'
+record         : Embed? '('<, field, (',', field,)* ')'
 field          : type ^ Field
 format         : '<~>', ( tuple-type | array-type | Data ),
 enumeration    : '=', form
 
 dimension      : 'dimension' >> -primitive, enumeration?
 unit           : 'unit' >> -primitive
-primitive      : Type < >> ['[' Symbol ']'] >> '::', ((Atom ^)*):aspect  [Type >> values?], format*
+primitive      : Type < >> ['[' Symbol ']'] >> '::', ((Atom ^)*):aspects  [Type >> values?], format*
 
 % Somewhat abstract data types
 notation       : 'notation' >> Notation >> '::', < type?, [ '=', '{', type, (',', type,) '}' ]
@@ -125,11 +133,11 @@ promotion      : type >> '~>' >> Type .
 bind           : Function >> '~>' >> Operation (>> type)* .
 
 % Expressions
+expressions    : expr (, ','?, expr )*
 expr           : form ( >> form )*
-form           : tuple | list | set | comment | element
+form           : tuple | list | set | comment | term
+tuple          : '()' | '(', -expressions, ')'
 list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
-tuple          : '()' | '(', -expressions, ')'
 comment        : '%' .. '%'
-expressions    : expr (, ','?, expr )*
-element        : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Variable | Type | Fault | Alias
+term           : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Variable | Type | Fault | Alias

@@ -6,7 +6,7 @@
 	instances T :: _
 	instances E :: _
 
-	fn foo* :: ({([T], E[])} e -> E) = x
+	fn foo´ :: ({([T], E[])} e -> E) = x
 
 	op cons [+] :: ([T] l -> E e -> [T])
 	
@@ -52,7 +52,7 @@
 		
 		
 	fn quicksort :: [T] list -> [T] 
-		\ list # <= '1 \
+		\ list at <= '1 \
 			= list 
 		= (less ++ same ++ more)
 	where
@@ -64,6 +64,10 @@
 	fn something :: [T] list -> {(T, T)}
 		= { a => b, 
 		    c => d }
+
+	instances K :: _
+	instances V :: _
+	fn assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 
 	fn switch :: (Weekday d -> String)
 		\ d == :
@@ -251,3 +255,8 @@ or even source code like
 	instances A :: 6-8
 	
 	data Tuple :: (Int[A] one, String[A] other)
+	
+	data Embedding :: :(EmbeddedFoo foo, EmbeddedBar bar)
+	data Embedding :: :(Embedded a, @Referenced b)
+	
+	instances P :: @_
