@@ -199,9 +199,9 @@ or even source code like
 	fn map :: [A] l -> (A -> B) fn -> [B]
 	fn singleton :: A v -> {A}
 	
-	val SETIFY :: ([A] -> [{A}]) = (_ map singleton)
+	val Setify :: ([A] -> [{A}]) = (_ map singleton)
 	
-	val Something :: = `some-thing
+	val SomeTHING :: = `some-thing
 	
 	fn test :: Int i -> Int = .math
 	
@@ -241,8 +241,13 @@ or even source code like
 	
 	instances S :: :(,)
 	
-	fn plus [+] :: Int a -> Int b -> Int! = (:ast `iadd (`var "a") (`var "b"))
+	fn plus [+] :: Int a -> Int b -> Int! = (`ast `iadd ?a ?b)
 	
 	fn partially-ast-impl :: Some a -> Thing 
-		\ foo bar \= (:ast baz)
-		= (:ast que)
+		\ foo bar \= (`ast baz)
+		= (`ast que)
+	
+		
+	instances A :: 6-8
+	
+	data Tuple :: (Int[A] one, String[A] other)

@@ -22,7 +22,7 @@
 		(`use .util)
 		(`use .bar {Original => Alias, Que => Foo})
 		
-		(`auto eq		equals Int)
+		(`auto eq		equals [Int])
 		(`auto [Digit] 	Digits)
 		(`auto []      	NoElements)
 		

@@ -2,7 +2,7 @@
 Dashed         : { '-' z 9 }* { z 9 }?
 Verb           : z -Dashed?
 Noun           : Z { @ '-' } { @  9 }*
-Number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number
+number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number
 
 % Identifiers
 Wildcard       : '_'
@@ -10,7 +10,8 @@ Artifact       : '.' z {z 9 '-'}*
 Field          : { z 9 } -Dashed?
 Constant       : -Noun
 Variable       : -Field '''*
-Atom           : '`' { !_ }+
+Atom           : '`'{ !_ }+
+Alias          : '?'{ @ 9 '-' '_' }+
 
 Operation      : -Verb '?'?
 Function       : -Verb {'?' '*'}?
@@ -40,7 +41,7 @@ UnitLetter     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
 literal        : logic-literal | text-literal | bit-literal
-logic-literal  : ''' ( (-Number['e'Number:exponent] Symbol?) | ($ .. UnitLetter):value )
+logic-literal  : ''' ( (-number['e'number:exponent] Symbol?) | ($ .. UnitLetter):value )
 text-literal   : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
 bit-literal    : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
 
@@ -53,10 +54,10 @@ constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 % TODO capture struct layout in memory in type (reference vs. embedded) - use ':' in front of whole tuple to say everything should be embedded, references are than modeled as "pointer" types (use '@') 
 modifier       : { '!' '?' '*' }
 class          : {'$' '^'}
-TypeDimension  : '[' 9* ['-'9+] ']' | '..'
-type           : class? -base-type TypeDimension* modifier? | op-type
+dimension-type : '[' ( TypeVariable | (9*):min ['-'(9*):max] ) ']' | '..'
+type           : class? -base-type dimension-type* modifier? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
-array-type     : -base-type TypeDimension+
+array-type     : -base-type dimension-type+
 list-type      : '[' base-type? ']'
 set-type       : '{' base-type? '}'
 tuple-type     : ':'? '(' [ type ( ',' >> type )* ] ')'
@@ -64,11 +65,11 @@ fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
 % Type Variables / Kinds
-KindDimension  : '[' (9*):min [ '-' (9*):max ] ']' | '..'
 instances      : 'instances', TypeVariable, '::', kind [, '&' >> Operation+]
-kind           : class? -base-kind KindDimension* modifier? | op-kind
-base-kind      : Wildcard | Type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
-array-kind     : -base-kind KindDimension+
+kind           : class? -base-kind dimension-type* modifier? | op-kind
+base-kind      : Wildcard | Type | dimension-kind | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
+dimension-kind : (9+):min [ '-' (9*):max ]
+array-kind     : -base-kind dimension-type+
 list-kind      : '[' base-kind? ']'
 set-kind       : '{' base-kind? '}'
 tuple-kind1    : '..' | kind
@@ -94,7 +95,7 @@ equation       : literal >> '=' >> literal
 val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
 
 data           : 'data' ^ Data >> '::', < (record | type), format*, enumeration?
-record         : ':'? '(', field, (',', field,)* ')'
+record         : ':'? '('<, field, (',', field,)* ')'
 field          : type ^ Field
 format         : '<~>', ( tuple-type | array-type | Data ),
 enumeration    : '=', form
@@ -125,11 +126,10 @@ bind           : Function >> '~>' >> Operation (>> type)* .
 
 % Expressions
 expr           : form ( >> form )*
-form           : ast | tuple | list | set | comment | element
+form           : tuple | list | set | comment | element
 list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 tuple          : '()' | '(', -expressions, ')'
-ast            : '(:ast', -expressions, ')'
 comment        : '%' .. '%'
 expressions    : expr (, ','?, expr )*
-element        : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Variable | Type | Fault
+element        : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Variable | Type | Fault | Alias
