@@ -1,7 +1,8 @@
 % Fragments
-Dashed         : { '-' z 9 }* { z 9 }?
+Dashed         : { z 9 '-' }* { z 9 }?
 Verb           : z -Dashed?
 Noun           : Z { @ '-' } { @  9 }*
+Identifier     : -Verb '?'? {'´'}*
 
 % Type Variant Symbols
 Embed          : ':'
@@ -15,14 +16,14 @@ Transient      : '*'
 % Identifiers
 Wildcard       : '_'
 Artifact       : '.' z {z 9 '-'}*
-Field          : { z 9 } -Dashed?
+Field          : -Verb
 Constant       : -Noun
-Variable       : -Field '´'*
+Variable       : Identifier
 Atom           : '`'{ !_ }+
 Alias          : '?'{ @ 9 '-' '_' }+
 
-Operation      : -Verb '?'?
-Function       : -Verb {'?' '´'}?
+Operation      : -Verb
+Function       : Identifier
 Fault          : -Verb '!'
 
 Module         : -Artifact
@@ -40,8 +41,7 @@ Notation       : -Noun
 Type           : -Noun
 
 % Operators
-Operator       : (-OperatorLetter)x1-3
-OperatorLetter : { '+' '-' '/' '*' '=' '>' '<' '&' '|' '~' }
+Operator       : { '+' '-' '/' '*' '=' '>' '<' '&' '|' '~' }x1-3
 
 % Symbols
 Symbol         : { @ UnitLetter }+
@@ -62,7 +62,9 @@ constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 % Types
 modifier       : { Faulty Optional Transient }
 class          : { TypeOf LazyOf PointerOf }
-dimension-type : '[' ( TypeVariable | (9*):min ['-'(9*):max] ) ']' | '..'
+length-type    : 9+ | '*' | TypeVariable
+range-type     : length-type:min '-' length-type:max
+dimension-type : '[' (range-type|length-type)? ']' | '..'
 type           : class? -base-type dimension-type* modifier? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 array-type     : -base-type dimension-type+
@@ -73,10 +75,9 @@ fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
 % Type Variables / Kinds
-instances      : 'instances', TypeVariable, '::', kind [, '&' >> Operation+]
+instances      : 'instances', < TypeVariable, '::', kind [, '&' >> Operation+]
 kind           : class? -base-kind dimension-type* modifier? | op-kind
-base-kind      : Wildcard | Type | dimension-kind | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
-dimension-kind : (9+):min [ '-' (9*):max ]
+base-kind      : Wildcard | Type | range-type | length-type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
 array-kind     : -base-kind dimension-type+
 list-kind      : '[' base-kind? ']'
 set-kind       : '{' base-kind? '}'
@@ -95,14 +96,14 @@ declaration    : val | instances | fn | op | protocol | fault | notation | data 
 
 fault          : 'fault' >> Fault >> '::', < Type, values?
 
-system         : 'unit' ^ 'system' ^ System >> '::', < '=', (ratio,)*
-ratio          : 'ratio' ^ Ratio >> '::', < '[', equation, (',', equation,)* ']' .
+system         : 'unit' ^ 'system' ^< System >> '::', '=', (ratio,)*
+ratio          : 'ratio' ^< Ratio >> '::', '[', equation, (',', equation,)* ']' .
 equation       : literal >> '=' >> literal
 
 % Values
 val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
 
-data           : 'data' ^ Data >> '::', < (record | type), format*, enumeration?
+data           : 'data' ^< Data >> '::', (record | type), format*, enumeration?
 record         : Embed? '('<, field, (',', field,)* ')'
 field          : type ^ Field
 format         : '<~>', ( tuple-type | array-type | Data ),
@@ -113,9 +114,9 @@ unit           : 'unit' >> -primitive
 primitive      : Type < >> ['[' Symbol ']'] >> '::', ((Atom ^)*):aspects  [Type >> values?], format*
 
 % Somewhat abstract data types
-notation       : 'notation' >> Notation >> '::', < type?, [ '=', '{', type, (',', type,) '}' ]
+notation       : 'notation' >>< Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
 
-protocol       : 'protocol' >> Protocol >> '::', < '{', Operation, (',', Operation,)* '}'
+protocol       : 'protocol' >>< Protocol >> '::', [Protocol, (',', Protocol,)] ['=', '{', Operation, (',', Operation,)* '}']
 
 % Functions
 op             : 'op' >> Operation >> < ['[' Operator ']'] >> '::', Operation?, signature
@@ -140,4 +141,4 @@ tuple          : '()' | '(', -expressions, ')'
 list           : '[]' | '[', -expressions, ']'
 set            : '{}' | '{', -expressions, '}'
 comment        : '%' .. '%'
-term           : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Variable | Type | Fault | Alias
+term           : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Identifier | Type | Fault | Alias | TypeVariable

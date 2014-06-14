@@ -26,7 +26,7 @@
 	val January :: Int = '1
 	val Day :: Hours='24h
 	
-	protocol List :: { cons, size }	
+	protocol List :: = { cons, size }	
 	
 	fault div-by-zero! :: Int '0 .. '0
 	
@@ -52,7 +52,7 @@
 		
 		
 	fn quicksort :: [T] list -> [T] 
-		\ list at <= '1 \
+		\ list length <= '1 \
 			= list 
 		= (less ++ same ++ more)
 	where
@@ -82,12 +82,12 @@
 		\ ['1] \= '1
 		\      \= n at idx	
 		
-	fn clojure? :: [T] e -> (T, T) 
+	fn clojure :: [T] e -> (T, T) 
 		= ((a b),
 		   (b c),
 		   (c d))
 	
-	fn clojure? :: [] e -> () = :native
+	fn clojure :: [] e -> () = :native
 	
 	fn range :: Int low -> Int high -> [Int]
 		= :native 
@@ -123,7 +123,7 @@
 	op at :: L l -> Index i -> E?
 	op slice :: L l -> Index from -> Index to -> L
 	
-	protocol List :: {force, cons, append, concat, take, 
+	protocol List :: = {force, cons, append, concat, take, 
 	                                    drop, remove, insert, at, slice}
 	                                    
 	                                    
@@ -183,7 +183,8 @@
 	
 	instances T :: _
 	instances S :: T
-	fn specialise [~>] :: T value -> $S type -> S
+	fn specialise [~>] :: T value -> $S type -> S 
+		= (`ast `specialise ?value ?type) 
 	
 	val Bla :: String = """
 	
@@ -201,7 +202,7 @@ or even source code like
 	fn invoke :: F f -> A a -> P p -> B = a f p
 	
 	fn map :: [A] l -> (A -> B) fn -> [B]
-	fn singleton :: A v -> {A}
+	fn singleton :: A v -> {A} = {v}
 	
 	val Setify :: ([A] -> [{A}]) = (_ map singleton)
 	
@@ -260,3 +261,24 @@ or even source code like
 	data Embedding :: :(Embedded a, @Referenced b)
 	
 	instances P :: @_
+	
+	instances M :: *
+	instances L :: 0-M
+
+	fn fill :: T[L] a -> T e -> T[L]
+		= a fill-with-from-to '0 M
+	
+	instances E :: _
+	instances A :: E[*]
+	
+	fn same-length-array :: A a -> A b -> A		
+	
+	fn rotate180 :: Matrix* m -> Matrix 
+		= m rotate90 rotate90
+		
+	instances F1 :: (->)
+	instances F2 :: (_ -> _)
+	instances F3 :: (_ -> _ -> _)
+	
+	fn empty? :: E[] array -> Bool = array length == '0
+	
