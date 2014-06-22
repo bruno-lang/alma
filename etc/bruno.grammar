@@ -18,9 +18,8 @@ Wildcard       : '_'
 Artifact       : '.' z {z 9 '-'}*
 Field          : -Verb
 Constant       : -Noun
-Variable       : Identifier
 Atom           : '`'{ !_ }+
-Alias          : '?'{ @ 9 '-' '_' }+
+Variable       : '?'{ @ 9 '-' '_' }+
 
 Operation      : -Verb
 Function       : Identifier
@@ -62,21 +61,21 @@ constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 % Types
 modifier       : { Faulty Optional Transient }
 class          : { TypeOf LazyOf PointerOf }
-length-type    : 9+ | '*' | TypeVariable
+length-type    : 9+ | '*' | Type | TypeVariable
 range-type     : length-type:min '-' length-type:max
-dimension-type : '[' (range-type|length-type)? ']' | '..'
+dimension-type : '['< (range-type|length-type)? ']' | '..'
 type           : class? -base-type dimension-type* modifier? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 array-type     : -base-type dimension-type+
-list-type      : '[' base-type? ']'
-set-type       : '{' base-type? '}'
+list-type      : '['< base-type? ']'
+set-type       : '{'< base-type? '}'
 tuple-type     : Embed? '(' [ type ( ',' >> type )* ] ')'
 fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
 % Type Variables / Kinds
 instances      : 'instances', < TypeVariable, '::', kind [, '&' >> Operation+]
-kind           : class? -base-kind dimension-type* modifier? | op-kind
+kind           : op-kind | class? -base-kind dimension-type* modifier?
 base-kind      : Wildcard | Type | range-type | length-type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
 array-kind     : -base-kind dimension-type+
 list-kind      : '[' base-kind? ']'
@@ -121,24 +120,26 @@ protocol       : 'protocol' >>< Protocol >> '::', [Protocol, (',', Protocol,)] [
 % Functions
 op             : 'op' >> Operation >> < ['[' Operator ']'] >> '::', Operation?, signature
 
-fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature, ( '=', ':native' | implementation, [ where ]) 
-signature      : -descriptor | '(' >> -descriptor >> ')'
+fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature?, ( '=', ':native' | implementation, [ where ]) 
+signature      : -descriptor | '('< >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
-parameter      : type ^ -Variable:name
-implementation : ['\' >> expr >> ':' .] ('\' >> -expressions >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
+parameter      : type ^ -Identifier:name
+implementation : ['\' >> expr >> ':' .] ('\' >> -vector >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
 where          : 'where', clause >> (clause >> )*
 clause         : variable | specialisation
-variable       : type ^ Variable >> '=' >> expr .
+variable       : type ^ Identifier >> '=' >> expr .
 specialisation : bind | promotion
 promotion      : type >> '~>' >> Type .
 bind           : Function >> '~>' >> Operation (>> type)* .
 
 % Expressions
-expressions    : expr (, ','?, expr )*
+vector         : expr (, {',' ';'}?, expr )*
 expr           : form ( >> form )*
-form           : tuple | list | set | comment | term
-tuple          : '()' | '(', -expressions, ')'
-list           : '[]' | '[', -expressions, ']'
-set            : '{}' | '{', -expressions, '}'
+form           : eval | tuple | list | set | comment | term
+eval           : '(:=', -vector, ')'
+inline         : '^' Function
+tuple          : '()' | '(', -vector, ')'
+list           : '[]' | '[', -vector, ']'
+set            : '{}' | '{', -vector, '}'
 comment        : '%' .. '%'
-term           : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Identifier | Type | Fault | Alias | TypeVariable
+term           : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable

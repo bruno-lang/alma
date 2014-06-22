@@ -279,6 +279,15 @@ or even source code like
 	instances F1 :: (->)
 	instances F2 :: (_ -> _)
 	instances F3 :: (_ -> _ -> _)
+	instances O1 :: _(->)
 	
 	fn empty? :: E[] array -> Bool = array length == '0
 	
+	val Pi :: Int = (:= pi-gauss-legendre '0.000001 )
+	
+	fn first :: = at '0
+	
+	fn example :: E.. one -> E.. other -> Bool
+		= one ^first == other ^first
+		
+	val Menu :: Food[Weekday] = ["Pasta", "Pizza"]
