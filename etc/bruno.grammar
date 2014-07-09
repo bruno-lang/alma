@@ -2,12 +2,10 @@
 Dashed         : { z 9 '-' }* { z 9 }?
 Verb           : z -Dashed?
 Noun           : Z { @ '-' } { @  9 }*
-Identifier     : -Verb '?'? {'´'}*
+Identifier     : -Verb {'?' '~' }?
 
 % Type Variant Symbols
-Embed          : ':'
 TypeOf         : '$'
-PointerOf      : '@'
 LazyOf         : '^'
 Optional       : '?'
 Faulty         : '!'
@@ -30,7 +28,7 @@ Library        : -Artifact
 Namespace      : -Artifact
 
 TypeVariable   : Z 9?
-Protocol       : -Noun
+Behaviour      : -Noun
 Data           : -Noun
 System         : -Noun
 Ratio          : -Noun
@@ -40,7 +38,7 @@ Notation       : -Noun
 Type           : -Noun
 
 % Operators
-Operator       : { '+' '-' '/' '*' '=' '>' '<' '&' '|' '~' }x1-3
+Operator       : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }x1-3
 
 % Symbols
 Symbol         : { @ UnitLetter }+
@@ -50,8 +48,10 @@ UnitLetter     : { ''' '$' '€' '/' '°' '"' }
 literal        : conceptual | textual | binary
 conceptual     : ''' ( (-number['e'number:exponent] Symbol?) | ($ .. UnitLetter):value )
 textual        : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
-binary         : '#' ('b' 1+ | 'o' 7+ | 'd' 9+ | 'x' #+ ):number
-number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number
+binary         : '#'< ('b'< 1+ | 'o'< 7+ | 'x'< #+ | 'd'? 9+ ):number nb?
+number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number nb?
+% nota bene (call site comments)
+nb             : '\' @+ 
 
 values         : literal-set | literal-range | constant-range
 literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
@@ -60,7 +60,7 @@ constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 
 % Types
 modifier       : { Faulty Optional Transient }
-class          : { TypeOf LazyOf PointerOf }
+class          : { TypeOf LazyOf }
 length-type    : 9+ | '*' | Type | TypeVariable
 range-type     : length-type:min '-' length-type:max
 dimension-type : '['< (range-type|length-type)? ']' | '..'
@@ -69,7 +69,7 @@ base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariab
 array-type     : -base-type dimension-type+
 list-type      : '['< base-type? ']'
 set-type       : '{'< base-type? '}'
-tuple-type     : Embed? '(' [ type ( ',' >> type )* ] ')'
+tuple-type     : '(' [ type ( ',' >> type )* ] ')'
 fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
@@ -81,7 +81,7 @@ array-kind     : -base-kind dimension-type+
 list-kind      : '[' base-kind? ']'
 set-kind       : '{' base-kind? '}'
 tuple-kind1    : '..' | kind
-tuple-kind     : Embed? ('(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')')
+tuple-kind     : '(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')'
 fn-kind        : '(->)' | '(' kind >> '->' ( >> kind >> '->' )*  >> kind ')'
 op-kind        : ( Wildcard | Operation ) fn-kind
 
@@ -91,7 +91,7 @@ namespace      : form
 
 % Implementation
 module         : (, declaration)+ .
-declaration    : val | instances | fn | op | protocol | fault | notation | data | system | unit | dimension
+declaration    : val | instances | fn | op | behaviour | fault | notation | data | system | unit | dimension
 
 fault          : 'fault' >> Fault >> '::', < Type, values?
 
@@ -103,9 +103,10 @@ equation       : literal >> '=' >> literal
 val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
 
 data           : 'data' ^< Data >> '::', (record | type), format*, enumeration?
-record         : Embed? '('<, field, (',', field,)* ')'
+record         : '('<, field, (',', field,)* ')'
 field          : type ^ Field
-format         : '<~>', ( tuple-type | array-type | Data ),
+format         : ':'<, ('#'< -pattern '[]'? | '"' -pattern '"' ),
+pattern        : '(' ( (type | literal)+','?,)+ ')'
 enumeration    : '=', form
 
 dimension      : 'dimension' >> -primitive, enumeration?
@@ -115,12 +116,12 @@ primitive      : Type < >> ['[' Symbol ']'] >> '::', ((Atom ^)*):aspects  [Type 
 % Somewhat abstract data types
 notation       : 'notation' >>< Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
 
-protocol       : 'protocol' >>< Protocol >> '::', [Protocol, (',', Protocol,)] ['=', '{', Operation, (',', Operation,)* '}']
+behaviour       : 'behaviour' >>< Behaviour >> '::', [Behaviour, (',', Behaviour,)] ['=', '{', Operation, (',', Operation,)* '}']
 
 % Functions
-op             : 'op' >> Operation >> < ['[' Operator ']'] >> '::', Operation?, signature
+op             : 'op' >>< Operation >> ['[' Operator ']'] >> '::', Operation?, signature
 
-fn             : 'fn' >> Function >> < ['[' Operator ']'] >> '::', signature?, ( '=', ':native' | implementation, [ where ]) 
+fn             : ('fn'|'proc') >>< Function >> ['[' Operator ']'] >> '::', signature?, ( '=', ':native' | implementation, [ where ]) 
 signature      : -descriptor | '('< >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ -Identifier:name

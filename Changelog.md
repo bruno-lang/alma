@@ -19,5 +19,5 @@ Types carry information about certain kinds of data.
 - structure of the data (arrays, records, functions)
 - value range of the data
 - invariants on the data
-- available operations on the data (operations, protocols, notations)
+- available operations on the data (operations, behaviours, notations)
 - text and bit representation of data

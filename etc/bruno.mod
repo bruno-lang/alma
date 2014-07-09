@@ -1,5 +1,5 @@
 
-	data Unit :: :(
+	data Unit :: (
 		Text name, 
 		Atom? symbol, 
 		[Atom] aspects, 

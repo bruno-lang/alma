@@ -6,7 +6,7 @@
 	instances T :: _
 	instances E :: _
 
-	fn foo´ :: ({([T], E[])} e -> E) = x
+	fn foo :: ({([T], E[])} e -> E) = x
 
 	op cons [+] :: ([T] l -> E e -> [T])
 	
@@ -26,15 +26,15 @@
 	val January :: Int = '1
 	val Day :: Hours='24h
 	
-	protocol List :: = { cons, size }	
+	behaviour List :: = { cons, size }	
 	
 	fault div-by-zero! :: Int '0 .. '0
 	
 	notation JSON :: 
 	
-	unit Year [Y] :: Int <~> (Digit, Digit, Digit, Digit)
+	unit Year [Y] :: Int : "(Digit Digit Digit Digit)"
 	
-	data Point :: (X- x, Y- y) <~> (X-, Colon, Y-)
+	data Point :: (X- x, Y- y) : "(X- ':' Y-)"
 	data Points :: [Point]
 	
 	unit system SI :: =
@@ -96,8 +96,8 @@
 	
 	dimension Month :: Int '1 .. '12 = [Januar, Februar, December]
 	
-	unit Int :: Number <~> (Sign?, Digits)
-	unit Float :: Number <~> (Int, Dot, Digits)
+	unit Int :: Number : "(Sign?, Digits)"
+	unit Float :: Number : "(Int '.' Digits)"
 
 	dimension Char ['] :: Number #x0000 .. #xFFFF
 	unit Digit :: Char '0' .. '9'
@@ -123,7 +123,7 @@
 	op at :: L l -> Index i -> E?
 	op slice :: L l -> Index from -> Index to -> L
 	
-	protocol List :: = {force, cons, append, concat, take, 
+	behaviour List :: = {force, cons, append, concat, take, 
 	                                    drop, remove, insert, at, slice}
 	                                    
 	                                    
@@ -169,8 +169,7 @@
 	dimension Coordinate :: Int
 	dimension X- :: Coordinate
 	dimension Y- :: Coordinate
-	unit Colon :: Char {':'}
-	data Point :: (X- x, Y- y) <~> (X-, Colon, Y-)
+	data Point :: (X- x, Y- y) : "(X- ':' Y-)"
 	data Points :: [Point]
 	
 	fn move :: Point p -> Int dx -> Int dy -> Point
@@ -183,7 +182,7 @@
 	
 	instances T :: _
 	instances S :: T
-	fn specialise [~>] :: T value -> $S type -> S 
+	fn specialise [=>>] :: T value -> $S type -> S 
 		= (`ast `specialise ?value ?type) 
 	
 	val Bla :: String = """
@@ -220,7 +219,7 @@ or even source code like
 	data Array :: ( [JSON] elements )
 	
 	fn show :: Array a -> String
-		= a elements show
+		= a elements show~
 	
 	data Object :: ( [Member] members )
 	data Member :: ( Name name, JSON value )
@@ -244,8 +243,6 @@ or even source code like
 		
 	data Array2D :: Int[2][2]..
 	
-	instances S :: :(,)
-	
 	fn plus [+] :: Int a -> Int b -> Int! = (`ast `iadd ?a ?b)
 	
 	fn partially-ast-impl :: Some a -> Thing 
@@ -256,11 +253,6 @@ or even source code like
 	instances A :: 6-8
 	
 	data Tuple :: (Int[A] one, String[A] other)
-	
-	data Embedding :: :(EmbeddedFoo foo, EmbeddedBar bar)
-	data Embedding :: :(Embedded a, @Referenced b)
-	
-	instances P :: @_
 	
 	instances M :: *
 	instances L :: 0-M
@@ -283,7 +275,7 @@ or even source code like
 	
 	fn empty? :: E[] array -> Bool = array length == '0
 	
-	val Pi :: Int = (:= pi-gauss-legendre '0.000001 )
+	val Pi :: Int = (:= pi-gauss-legendre '0.000001\precision )
 	
 	fn first :: = at '0
 	
@@ -291,3 +283,7 @@ or even source code like
 		= one ^first == other ^first
 		
 	val Menu :: Food[Weekday] = ["Pasta", "Pizza"]
+	
+	val Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
+	
+	proc assoc [=>] :: K key -> V value -> (K, V) = (key, value)
