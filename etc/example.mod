@@ -17,7 +17,7 @@
 	
 	dimension Bool :: = [ False, True ]
 
-	dimension Bit :: = [ `0, `1 ]
+	dimension Bit :: = [ `0 `1 ]
 	
 	dimension Time [T] :: Natural
 	
@@ -52,9 +52,8 @@
 		
 		
 	fn quicksort :: [T] list -> [T] 
-		\ list length <= '1 \
-			= list 
-		= (less ++ same ++ more)
+		\ list length <= '1 \= list 
+		                     = (less ++ same ++ more)
 	where
             T pivot  = list head
             [T] less = list filter pivot >  | quicksort
@@ -74,8 +73,6 @@
 		\ Monday \= "Monday"
 		\ Tuesday \= "Tuesday" 
 		
-	fn a-native-fn :: (String s -> String) = :native
-	
 	fn another :: [Int] n -> Int idx -> Int
 		\ n == :
 		\ []   \= '0
@@ -87,10 +84,8 @@
 		   (b c),
 		   (c d))
 	
-	fn clojure :: [] e -> () = :native
-	
 	fn range :: Int low -> Int high -> [Int]
-		= :native 
+		= (`ast `range ?low ?high) 
 	
 	dimension Suit :: = { Spades, Hearts, Diamonds, Clubs }
 	
@@ -243,7 +238,7 @@ or even source code like
 		
 	data Array2D :: Int[2][2]..
 	
-	fn plus [+] :: Int a -> Int b -> Int! = (`ast `iadd ?a ?b)
+	fn plus [+] :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
 	
 	fn partially-ast-impl :: Some a -> Thing 
 		\ foo bar \= (`ast baz)
@@ -279,11 +274,14 @@ or even source code like
 	
 	fn first :: = at '0
 	
-	fn example :: E.. one -> E.. other -> Bool
-		= one ^first == other ^first
+	fn call-side-inline :: E.. one -> E.. other -> Bool
+		= one ^last == other ^last
 		
 	val Menu :: Food[Weekday] = ["Pasta", "Pizza"]
 	
 	val Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
 	
 	proc assoc [=>] :: K key -> V value -> (K, V) = (key, value)
+	
+	instances E :: _
+	fn at :: @E[] s -> Index i -> Int = (`ast `get ?s ?i) 

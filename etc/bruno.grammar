@@ -7,6 +7,7 @@ Identifier     : -Verb {'?' '~' }?
 % Type Variant Symbols
 TypeOf         : '$'
 LazyOf         : '^'
+SliceOf        : '@'
 Optional       : '?'
 Faulty         : '!'
 Transient      : '*'
@@ -50,7 +51,7 @@ conceptual     : ''' ( (-number['e'number:exponent] Symbol?) | ($ .. UnitLetter)
 textual        : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
 binary         : '#'< ('b'< 1+ | 'o'< 7+ | 'x'< #+ | 'd'? 9+ ):number nb?
 number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number nb?
-% nota bene (call site comments)
+% nota bene (call site literal comments)
 nb             : '\' @+ 
 
 values         : literal-set | literal-range | constant-range
@@ -60,7 +61,7 @@ constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 
 % Types
 modifier       : { Faulty Optional Transient }
-class          : { TypeOf LazyOf }
+class          : { TypeOf LazyOf SliceOf }
 length-type    : 9+ | '*' | Type | TypeVariable
 range-type     : length-type:min '-' length-type:max
 dimension-type : '['< (range-type|length-type)? ']' | '..'
@@ -95,38 +96,38 @@ declaration    : val | instances | fn | op | behaviour | fault | notation | data
 
 fault          : 'fault' >> Fault >> '::', < Type, values?
 
-system         : 'unit' ^ 'system' ^< System >> '::', '=', (ratio,)*
-ratio          : 'ratio' ^< Ratio >> '::', '[', equation, (',', equation,)* ']' .
+system         : 'unit' ^ 'system' < ^ System >> '::', '=', (ratio,)*
+ratio          : 'ratio' < ^ Ratio >> '::', '[', equation, (',', equation,)* ']' .
 equation       : literal >> '=' >> literal
 
 % Values
-val            : 'val' >> Constant >> '::' < >> [type >>] '=' >> expr
+val            : 'val' < ^ Constant >> '::' < >> [type >>] '=' >> expr
 
-data           : 'data' ^< Data >> '::', (record | type), format*, enumeration?
+data           : 'data' < ^ Data >> '::', (record | type), format*, enumeration?
 record         : '('<, field, (',', field,)* ')'
 field          : type ^ Field
 format         : ':'<, ('#'< -pattern '[]'? | '"' -pattern '"' ),
 pattern        : '(' ( (type | literal)+','?,)+ ')'
 enumeration    : '=', form
 
-dimension      : 'dimension' >> -primitive, enumeration?
-unit           : 'unit' >> -primitive
+dimension      : 'dimension' < ^ -primitive, enumeration?
+unit           : 'unit' < ^ -primitive
 primitive      : Type < >> ['[' Symbol ']'] >> '::', ((Atom ^)*):aspects  [Type >> values?], format*
 
 % Somewhat abstract data types
-notation       : 'notation' >>< Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
+notation       : 'notation' < ^ Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
 
-behaviour       : 'behaviour' >>< Behaviour >> '::', [Behaviour, (',', Behaviour,)] ['=', '{', Operation, (',', Operation,)* '}']
+behaviour      : 'behaviour' < ^ Behaviour >> '::', [Behaviour, (',', Behaviour,)] ['=', '{', Operation, (',', Operation,)* '}']
 
 % Functions
-op             : 'op' >>< Operation >> ['[' Operator ']'] >> '::', Operation?, signature
+op             : 'op' < ^ Operation >> ['[' Operator ']'] >> '::', Operation?, signature
 
-fn             : ('fn'|'proc') >>< Function >> ['[' Operator ']'] >> '::', signature?, ( '=', ':native' | implementation, [ where ]) 
+fn             : ('fn'|'proc') < ^ Function >> ['[' Operator ']'] >> '::', signature?, implementation, [ where ] 
 signature      : -descriptor | '('< >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ -Identifier:name
 implementation : ['\' >> expr >> ':' .] ('\' >> -vector >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
-where          : 'where', clause >> (clause >> )*
+where          : 'where' < , clause >> (clause >> )*
 clause         : variable | specialisation
 variable       : type ^ Identifier >> '=' >> expr .
 specialisation : bind | promotion
