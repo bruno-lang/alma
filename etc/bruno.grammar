@@ -1,13 +1,13 @@
 % Fragments
-Dashed         : { z 9 '-' }* { z 9 }?
-Verb           : z -Dashed?
-Noun           : Z { @ '-' } { @  9 }*
-Identifier     : -Verb {'?' '~' }?
+Verb           : z { z 9 '-' }* { z 9 }?
+Noun           : Z { @ '-' }+ { @  9 }*
+Identifier     : -Verb {'?' '!'}?
 
 % Type Variant Symbols
 TypeOf         : '$'
-LazyOf         : '^'
-SliceOf        : '@'
+LazyOf         : '~'
+SliceOf        : ':'
+KeyOf          : '&'
 Optional       : '?'
 Faulty         : '!'
 Transient      : '*'
@@ -18,11 +18,11 @@ Artifact       : '.' z {z 9 '-'}*
 Field          : -Verb
 Constant       : -Noun
 Atom           : '`'{ !_ }+
+Key            : '@'{ !_ !',' }+
 Variable       : '?'{ @ 9 '-' '_' }+
 
-Operation      : -Verb
+Operation      : Identifier
 Function       : Identifier
-Fault          : -Verb '!'
 
 Module         : -Artifact
 Library        : -Artifact
@@ -37,6 +37,8 @@ Unit           : -Noun
 Dimension      : -Noun
 Notation       : -Noun
 Type           : -Noun
+Process        : -Noun
+Fault          : -Noun '!'
 
 % Operators
 Operator       : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }x1-3
@@ -61,22 +63,24 @@ constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 
 % Types
 modifier       : { Faulty Optional Transient }
-class          : { TypeOf LazyOf SliceOf }
+class          : { TypeOf LazyOf KeyOf }
 length-type    : 9+ | '*' | Type | TypeVariable
 range-type     : length-type:min '-' length-type:max
-dimension-type : '['< (range-type|length-type)? ']' | '..'
-type           : class? -base-type dimension-type* modifier? | op-type
+dimension-type : '['< SliceOf? (range-type|length-type)? ']' | '..'
+channel-type   : {'[' ']'} {'<' '>'} {'[' ']'}
+variant        : channel-type* dimension-type* modifier?
+type           : class? -base-type variant? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 array-type     : -base-type dimension-type+
-list-type      : '['< base-type? ']'
-set-type       : '{'< base-type? '}'
+list-type      : '['< -base-type? ']'
+set-type       : '{'< -base-type? '}'
 tuple-type     : '(' [ type ( ',' >> type )* ] ')'
 fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
 
 % Type Variables / Kinds
 instances      : 'instances', < TypeVariable, '::', kind [, '&' >> Operation+]
-kind           : op-kind | class? -base-kind dimension-type* modifier?
+kind           : op-kind | class? -base-kind variant?
 base-kind      : Wildcard | Type | range-type | length-type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
 array-kind     : -base-kind dimension-type+
 list-kind      : '[' base-kind? ']'
@@ -92,7 +96,7 @@ namespace      : form
 
 % Implementation
 module         : (, declaration)+ .
-declaration    : val | instances | fn | op | behaviour | fault | notation | data | system | unit | dimension
+declaration    : val | instances | process | fn | op | behaviour | fault | notation | data | system | unit | dimension | when | comment
 
 fault          : 'fault' >> Fault >> '::', < Type, values?
 
@@ -139,9 +143,18 @@ vector         : expr (, {',' ';'}?, expr )*
 expr           : form ( >> form )*
 form           : eval | tuple | list | set | comment | term
 eval           : '(:=', -vector, ')'
-inline         : '^' Function
+inline         : '~' Function
 tuple          : '()' | '(', -vector, ')'
 list           : '[]' | '[', -vector, ']'
 set            : '{}' | '{', -vector, '}'
 comment        : '%' .. '%'
-term           : Wildcard | Atom | values | literal | Artifact | Constant | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
+term           : Wildcard | Atom | Key | values | literal | Artifact | Constant | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
+
+% Processes
+process        : 'process' < ^ Process >> '::', (list | set)
+when           : 'when' < ^ state >> '::', signature, effects, transitions, where?
+state          : Fault | ('_!'):any-fault | Constant
+effects        : (effect .)*
+effect         : 9'.' < ^ expr
+transitions    : '..', ( (transition .)* | .)
+transition     : ['\'< >> vector >> '\',] >> Constant >> ':', expr

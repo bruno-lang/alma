@@ -28,7 +28,7 @@
 	
 	behaviour List :: = { cons, size }	
 	
-	fault div-by-zero! :: Int '0 .. '0
+	fault Div-by-zero! :: Int '0 .. '0
 	
 	notation JSON :: 
 	
@@ -144,7 +144,7 @@
 	instances A :: _
 	instances B :: _
 
-	fn lazy :: (A -> P -> B) f -> A v -> P p -> ^B
+	fn lazy :: (A -> P -> B) f -> A v -> P p -> ~B
 	    = () -> (a f p)
         
         
@@ -214,7 +214,7 @@ or even source code like
 	data Array :: ( [JSON] elements )
 	
 	fn show :: Array a -> String
-		= a elements show~
+		= a elements show?
 	
 	data Object :: ( [Member] members )
 	data Member :: ( Name name, JSON value )
@@ -270,12 +270,12 @@ or even source code like
 	
 	fn empty? :: E[] array -> Bool = array length == '0
 	
-	val Pi :: Int = (:= pi-gauss-legendre '0.000001\precision )
+	val Pi :: Float = (:= pi-gauss-legendre '0.000001\precision )
 	
 	fn first :: = at '0
 	
 	fn call-side-inline :: E.. one -> E.. other -> Bool
-		= one ^last == other ^last
+		= one~last == other~last
 		
 	val Menu :: Food[Weekday] = ["Pasta", "Pizza"]
 	
@@ -284,4 +284,69 @@ or even source code like
 	proc assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 	
 	instances E :: _
-	fn at :: @E[] s -> Index i -> Int = (`ast `get ?s ?i) 
+	fn at :: E[:] s -> Index i -> Int = (`ast `get ?s ?i)
+	
+	% keys %
+	
+	instances V :: _
+	fn get :: T obj -> &V key -> V? = @akey-in-action 
+	
+	fn put :: T obj -> &V key -> V value -> T
+	
+	fn canonical-name :: &V key -> String
+	
+	fn on-channel :: Int[>] chan -> Int[>]
+	
+	fn yields-channel :: &T[>] key -> T[>]
+
+	% blocking, non blocking and unknown output %
+	instances O1 :: _[>]
+	instances O2 :: _]>[
+	instances O3 :: _]>]
+	
+	% blocking, non blocking and unknown input %
+	instances I1 :: _[<]
+	instances I2 :: _]<[
+	instances I3 :: _]<]
+	
+	% processes %
+	process Server :: { Ready => [ Ready ], _ => [ Ready ] }
+	
+	% single process %
+	when Ready :: HttpServer server -> HttpServer
+		1. server responds >> (server process (server requests <<))
+		.. Ready: server	
+
+	% single process with where %		
+	when Ready :: HttpServer server -> HttpServer
+		1. server responds >> response
+		.. Ready: server
+	where
+		Response response = server process request
+		Request request = server requests <<
+		
+	% parallel with ad-hoc helper processes %
+	when Ready :: HttpServer server -> HttpServer
+		1. server respond! (server requests <<)
+		.. Ready: server 
+
+	fn respond! :: HttpServer server -> Request request -> ()
+		=< server responds send! (server process request)	
+		
+	% parallel with process "pool" %
+	when Ready :: HttpServer server -> HttpServer
+		1. idle-worker-input >> (server requests <<)
+		.. Ready: server
+	where 
+		HttpRequest[>] idle-worker-input = @pool receive-queue <<	
+
+	when Idle :: Worker worker -> Worker
+		1. worker responds >> (worker process (worker requests <<))
+		2. @pool send-queue >> (worker requests key)
+		.. Idle: worker
+		
+	when _! :: Worker worker -> Worker
+		.. Init: worker 	
+		
+	when Out-Of-Memory! :: Worker worker -> Worker?
+		..		
