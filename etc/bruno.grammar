@@ -128,9 +128,10 @@ fn             : ('fn'|'proc') < ^ Function >> ['[' Operator ']'] >> '::', signa
 signature      : -descriptor | '('< >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ -Identifier:name
-implementation : ['\' >> expr >> ':' .] ('\' >> -vector >> '\', assign )* [['\' >> '\'], assign ]
+implementation : ('\' >> -vector >> '\', assign )* [['\' >> '\'], assign ]
 where          : 'where' < , clause >> (clause >> )*
-clause         : variable | specialisation
+clause         : variable | specialisation | switch
+switch         : '\' >> -vector >> '\'.
 variable       : type ^ Identifier >> assign
 assign         : direct | select
 direct         : '=' >> expr .

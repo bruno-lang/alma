@@ -69,15 +69,24 @@
 	fn assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 
 	fn switch :: (Weekday d -> String)
-		\ d == :
 		\ Monday \= "Monday"
-		\ Tuesday \= "Tuesday" 
+		\ Tuesday \= "Tuesday"
+	where
+		\ d == _ \ 
 		
 	fn another :: [Int] n -> Int idx -> Int
-		\ n == :
 		\ []   \= '0
 		\ ['1] \= '1
-		\      \= n at idx	
+		\      \= n at idx
+	where
+		\ n == _  \
+		
+	fn pairs :: Point p -> Int
+		\ '1 , '2 \= '1
+		\ '0 , '4 \= '2
+		\         \= '3
+	where
+		\ p x == _, p y == _ \
 		
 	fn clojure :: [T] e -> (T, T) 
 		= ((a b),
@@ -376,4 +385,6 @@ or even source code like
 			
 	fn example3 :: Int[>] channel -> Int
 		|= channel <<
-		L= '2			
+		L= '2
+		
+	% DSLs %
