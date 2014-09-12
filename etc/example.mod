@@ -350,3 +350,30 @@ or even source code like
 		
 	when Out-Of-Memory! :: Worker worker -> Worker?
 		..		
+		
+	% working with channels %
+	
+	fn broadcast :: T value -> [T]>]] channels -> ()
+		= foreach (channel >> value)
+	where
+		T]>] channel = each channel	
+		
+	proc send? [>|>] :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
+		|= value >> channel
+		|= value >> (timeout make-channel) than-return channel
+		
+		
+	fn example :: T[>][3] channels -> T = value
+	where 
+		T value 
+			|= channels at #0 <<
+			|= channels at #1 <<
+			|= channels at #2 <<	
+	
+	fn example2 :: Int[>] channel -> Int
+		|= channel <<
+		|= '7 after '6ms
+			
+	fn example3 :: Int[>] channel -> Int
+		|= channel <<
+		L= '2			

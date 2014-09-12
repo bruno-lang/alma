@@ -71,9 +71,8 @@ channel-type   : {'[' ']'} {'<' '>'} {'[' ']'}
 variant        : channel-type* dimension-type* modifier?
 type           : class? -base-type variant? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
-array-type     : -base-type dimension-type+
-list-type      : '['< -base-type? ']'
-set-type       : '{'< -base-type? '}'
+list-type      : '['< -type? ']'
+set-type       : '{'< -type? '}'
 tuple-type     : '(' [ type ( ',' >> type )* ] ')'
 fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
 op-type        : Operation fn-type
@@ -82,9 +81,8 @@ op-type        : Operation fn-type
 instances      : 'instances', < TypeVariable, '::', kind [, '&' >> Operation+]
 kind           : op-kind | class? -base-kind variant?
 base-kind      : Wildcard | Type | range-type | length-type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
-array-kind     : -base-kind dimension-type+
-list-kind      : '[' base-kind? ']'
-set-kind       : '{' base-kind? '}'
+list-kind      : '[' -kind? ']'
+set-kind       : '{' -kind? '}'
 tuple-kind1    : '..' | kind
 tuple-kind     : '(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')'
 fn-kind        : '(->)' | '(' kind >> '->' ( >> kind >> '->' )*  >> kind ')'
@@ -130,10 +128,13 @@ fn             : ('fn'|'proc') < ^ Function >> ['[' Operator ']'] >> '::', signa
 signature      : -descriptor | '('< >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
 parameter      : type ^ -Identifier:name
-implementation : ['\' >> expr >> ':' .] ('\' >> -vector >> '\', '=' >> expr . )* [['\' >> '\'] '=' >> expr . ]
+implementation : ['\' >> expr >> ':' .] ('\' >> -vector >> '\', assign )* [['\' >> '\'], assign ]
 where          : 'where' < , clause >> (clause >> )*
 clause         : variable | specialisation
-variable       : type ^ Identifier >> '=' >> expr .
+variable       : type ^ Identifier >> assign
+assign         : direct | select
+direct         : '=' >> expr .
+select         : (, '|=' >> expr . )+ [, 'L=' >> expr .] 
 specialisation : bind | promotion
 promotion      : type >> '~>' >> Type .
 bind           : Function >> '~>' >> Operation (>> type)* .
