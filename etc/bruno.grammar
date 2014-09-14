@@ -7,7 +7,7 @@ Identifier     : -Verb {'?' '!'}?
 TypeOf         : '$'
 LazyOf         : '~'
 SliceOf        : ':'
-KeyOf          : '&'
+KeyOf          : '@'
 Optional       : '?'
 Faulty         : '!'
 Transient      : '*'
@@ -18,11 +18,11 @@ Artifact       : '.' z {z 9 '-'}*
 Field          : -Verb
 Constant       : -Noun
 Atom           : '`'{ !_ }+
-Key            : '@'{ !_ !',' }+
+Key            : -KeyOf{ !_ !',' }+
 Variable       : '?'{ @ 9 '-' '_' }+
 
-Operation      : Identifier
-Function       : Identifier
+Operation      : -Identifier
+Function       : -Identifier
 
 Module         : -Artifact
 Library        : -Artifact
@@ -44,7 +44,7 @@ Fault          : -Noun '!'
 Operator       : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }x1-3
 
 % Symbols
-Symbol         : { @ UnitLetter }+
+Symbol         : { @ -UnitLetter }+
 UnitLetter     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
@@ -59,16 +59,17 @@ nb             : '\' @+
 values         : literal-set | literal-range | constant-range
 literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
 literal-range  : literal [ >> '..' >> literal ] | '..' >> literal
-constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
+constant-range : -Constant [ >> '..' >> -Constant ] | '..' >> -Constant
 
 % Types
 modifier       : { Faulty Optional Transient }
 class          : { TypeOf LazyOf KeyOf }
 length-type    : 9+ | '*' | Type | TypeVariable
 range-type     : length-type:min '-' length-type:max
-dimension-type : '['< SliceOf? (range-type|length-type)? ']' | '..'
-channel-type   : {'[' ']'} {'<' '>'} {'[' ']'}
-variant        : channel-type* dimension-type* modifier?
+dimension-type : '[' SliceOf? (range-type|length-type)? ']' | '..'
+channel-type   : {'[' ']'} {'<' '>'}x1-2 < {'[' ']'}
+stream-type    : {'<' '>'}
+variant        : stream-type? dimension-type* [channel-type* dimension-type?] modifier?
 type           : class? -base-type variant? | op-type
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 list-type      : '['< -type? ']'
@@ -94,7 +95,7 @@ namespace      : form
 
 % Implementation
 module         : (, declaration)+ .
-declaration    : val | instances | process | fn | op | behaviour | fault | notation | data | system | unit | dimension | when | comment
+declaration    : val | key | instances | process | fn | op | behaviour | fault | notation | data | system | unit | dimension | when | comment
 
 fault          : 'fault' >> Fault >> '::', < Type, values?
 
@@ -103,7 +104,8 @@ ratio          : 'ratio' < ^ Ratio >> '::', '[', equation, (',', equation,)* ']'
 equation       : literal >> '=' >> literal
 
 % Values
-val            : 'val' < ^ Constant >> '::' < >> [type >>] '=' >> expr
+val            : 'val' < ^ Constant >> '::' >> [type >>] '=' >> expr .
+key            : 'key' < ^ Key >> '::' >> type .
 
 data           : 'data' < ^ Data >> '::', (record | type), format*, enumeration?
 record         : '('<, field, (',', field,)* ')'
@@ -150,13 +152,14 @@ tuple          : '()' | '(', -vector, ')'
 list           : '[]' | '[', -vector, ']'
 set            : '{}' | '{', -vector, '}'
 comment        : '%' .. '%'
-term           : Wildcard | Atom | Key | values | literal | Artifact | Constant | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
+term           : Wildcard | Atom | Key | values | literal | Artifact | Constant 
+               | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
 
 % Processes
 process        : 'process' < ^ Process >> '::', (list | set)
-when           : 'when' < ^ state >> '::', signature, effects, transitions, where?
+when           : 'when' < ^ state >> '::', signature, effects, -transitions, where?
 state          : Fault | ('_!'):any-fault | Constant
 effects        : (effect .)*
 effect         : 9'.' < ^ expr
 transitions    : '..', ( (transition .)* | .)
-transition     : ['\'< >> vector >> '\',] >> Constant >> ':', expr
+transition     : ['\'< >> -vector >> '\',] >> Constant >> ':', expr

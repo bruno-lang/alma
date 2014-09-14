@@ -298,15 +298,15 @@ or even source code like
 	% keys %
 	
 	instances V :: _
-	fn get :: T obj -> &V key -> V? = @akey-in-action 
+	fn get :: T obj -> @V key -> V? = @akey-in-action-but-impl-doesn't-make-sense
 	
-	fn put :: T obj -> &V key -> V value -> T
+	fn put :: T obj -> @V key -> V value -> T
 	
-	fn canonical-name :: &V key -> String
+	fn canonical-name :: @V key -> String
 	
 	fn on-channel :: Int[>] chan -> Int[>]
 	
-	fn yields-channel :: &T[>] key -> T[>]
+	fn yields-channel :: @T[>] key -> T[>]
 
 	% blocking, non blocking and unknown output %
 	instances O1 :: _[>]
@@ -387,4 +387,13 @@ or even source code like
 		|= channel <<
 		L= '2
 		
-	% DSLs %
+	% Streams %
+	
+	instances O :: _>
+	instances I :: _<
+	
+	fn append :: Byte> file -> [Byte] bytes -> Byte> = file ++ b
+	where
+		Byte b =<< bytes 
+
+	key @process-pool :: @Worker[>][<>]
