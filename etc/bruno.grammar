@@ -11,6 +11,7 @@ KeyOf          : '@'
 Optional       : '?'
 Faulty         : '!'
 Transient      : '*'
+Specialisation : '~>'
 
 % Identifiers
 Wildcard       : '_'
@@ -43,29 +44,29 @@ Fault          : -Noun '!'
 % Operators
 Operator       : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }x1-3
 
-% Symbols
-Symbol         : { @ -UnitLetter }+
+% Unit Symbols
+UnitSymbol     : { @ -UnitLetter }+
 UnitLetter     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
 literal        : conceptual | textual | binary
-conceptual     : ''' ( (-number['e'number:exponent] Symbol?) | ($ .. UnitLetter):value )
-textual        : '"""', (..):text (, '"""') | '"' (!'"'*):text '"'
-binary         : '#'< ('b'< 1+ | 'o'< 7+ | 'x'< #+ | 'd'? 9+ ):number nb?
-number         : ({'+' '-'}?):sign ({9 '.' ',' '_'}+):number nb?
+conceptual     : ''' ( (number['e'number:EXPONENT] UnitSymbol?) | ($ .. UnitLetter):VALUE )
+textual        : '"""', (..):TEXT (, '"""') | '"' (!'"'*):TEXT '"'
+binary         : '#'< ('b'< 1+ | 'o'< 7+ | 'x'< #+ | 'd'? 9+ ):NUMBER nb?
+number         : ({'+' '-'}?):SIGN ({9 '.' ',' '_'}+):NUMBER nb?
 % nota bene (call site literal comments)
 nb             : '\' @+ 
 
 values         : literal-set | literal-range | constant-range
 literal-set    : '{' >> literal >> (',' >> literal >> )* '}'
 literal-range  : literal [ >> '..' >> literal ] | '..' >> literal
-constant-range : -Constant [ >> '..' >> -Constant ] | '..' >> -Constant
+constant-range : Constant [ >> '..' >> Constant ] | '..' >> Constant
 
 % Types
 modifier       : { Faulty Optional Transient }
 class          : { TypeOf LazyOf KeyOf }
 length-type    : 9+ | '*' | Type | TypeVariable
-range-type     : length-type:min '-' length-type:max
+range-type     : length-type:MIN '-' length-type:MAX
 dimension-type : '[' SliceOf? (range-type|length-type)? ']' | '..'
 channel-type   : {'[' ']'} {'<' '>'}x1-2 < {'[' ']'}
 stream-type    : {'<' '>'}
@@ -75,7 +76,7 @@ base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariab
 list-type      : '['< -type? ']'
 set-type       : '{'< -type? '}'
 tuple-type     : '(' [ type ( ',' >> type )* ] ')'
-fn-type        : '(' type >> '->' ( >> type >> '->' )* >> type ')'
+fn-type        : '(' type:INSTANCE >> '->' ( >> type >> '->' )* >> type:RETURN ')'
 op-type        : Operation fn-type
 
 % Type Variables / Kinds
@@ -84,9 +85,9 @@ kind           : op-kind | class? -base-kind variant?
 base-kind      : Wildcard | Type | range-type | length-type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
 list-kind      : '[' -kind? ']'
 set-kind       : '{' -kind? '}'
-tuple-kind1    : '..' | kind
-tuple-kind     : '(,)' | '(' [ -tuple-kind1 ( ',' >> -tuple-kind1 )* ]  ')'
-fn-kind        : '(->)' | '(' kind >> '->' ( >> kind >> '->' )*  >> kind ')'
+elem-kind      : '..' | kind
+tuple-kind     : '(,)' | '(' [ -elem-kind ( ',' >> -elem-kind )* ]  ')'
+fn-kind        : '(->)' | '(' kind:INSTANCE >> '->' ( >> kind >> '->' )*  >> kind:RETURN ')'
 op-kind        : ( Wildcard | Operation ) fn-kind
 
 % Modularisation
@@ -94,7 +95,7 @@ file           : module | namespace
 namespace      : form
 
 % Implementation
-module         : (, declaration)+ .
+module         : (, -declaration)+ .
 declaration    : val | key | instances | process | fn | op | behaviour | fault | notation | data | system | unit | dimension | when | comment
 
 fault          : 'fault' >> Fault >> '::', < Type, values?
@@ -116,7 +117,7 @@ enumeration    : '=', form
 
 dimension      : 'dimension' < ^ -primitive, enumeration?
 unit           : 'unit' < ^ -primitive
-primitive      : Type < >> ['[' Symbol ']'] >> '::', ((Atom ^)*):aspects  [Type >> values?], format*
+primitive      : Type < >> ['[' UnitSymbol ']'] >> '::', ((Atom ^)*):aspects  [Type >> values? >> (',' >> Constant >>)*], format*
 
 % Somewhat abstract data types
 notation       : 'notation' < ^ Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
@@ -129,18 +130,17 @@ op             : 'op' < ^ Operation >> ['[' Operator ']'] >> '::', Operation?, s
 fn             : ('fn'|'proc') < ^ Function >> ['[' Operator ']'] >> '::', signature?, implementation, [ where ] 
 signature      : -descriptor | '('< >> -descriptor >> ')'
 descriptor     : ( parameter >> '->' >> )+ type
-parameter      : type ^ -Identifier:name
-implementation : ('\' >> -vector >> '\', assign )* [['\' >> '\'], assign ]
-where          : 'where' < , clause >> (clause >> )*
-clause         : variable | specialisation | switch
+parameter      : type ^ -Identifier:NAME
+implementation : ('\' >> -vector >> '\', -assign )* [['\' >> '\'], -assign ]
+where          : 'where' < , -clause >> (-clause >> )*
+clause         : variable | bind | specialisation | switch
 switch         : '\' >> -vector >> '\'.
-variable       : type ^ Identifier >> assign
+variable       : type ^ Identifier >> -assign
 assign         : direct | select
 direct         : '=' >> expr .
 select         : (, '|=' >> expr . )+ [, 'L=' >> expr .] 
-specialisation : bind | promotion
-promotion      : type >> '~>' >> Type .
-bind           : Function >> '~>' >> Operation (>> type)* .
+specialisation : type >> -Specialisation >> Type .
+bind           : Function >> -Specialisation >> Operation (>> type)* .
 
 % Expressions
 vector         : expr (, {',' ';'}?, expr )*
