@@ -14,6 +14,8 @@
 		= a
 		
 	unit Digit :: Char '0 .. '9
+
+	dimension Float :: Number '-2e18 .. '+2e18, NaN
 	
 	dimension Bool :: = [ False, True ]
 

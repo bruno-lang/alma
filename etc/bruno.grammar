@@ -53,7 +53,7 @@ literal        : conceptual | textual | binary
 conceptual     : ''' ( (number['e'number:EXPONENT] UnitSymbol?) | ($ .. UnitLetter):VALUE )
 textual        : '"""', (..):TEXT (, '"""') | '"' (!'"'*):TEXT '"'
 binary         : '#'< ('b'< 1+ | 'o'< 7+ | 'x'< #+ | 'd'? 9+ ):NUMBER nb?
-number         : ({'+' '-'}?):SIGN ({9 '.' ',' '_'}+):NUMBER nb?
+number         : ({'+' '-'}?):SIGN (9+ (','? 9+)*):DECIMAL ['.' 9+]:FRACTIONAL nb?
 % nota bene (call site literal comments)
 nb             : '\' @+ 
 
