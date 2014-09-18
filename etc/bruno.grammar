@@ -104,6 +104,8 @@ system         : 'unit' ^ 'system' < ^ System >> '::', '=', (ratio,)*
 ratio          : 'ratio' < ^ Ratio >> '::', '[', equation, (',', equation,)* ']' .
 equation       : literal >> '=' >> literal
 
+aspects        : (Atom ^)*
+
 % Values
 val            : 'val' < ^ Constant >> '::' >> [type >>] '=' >> expr .
 key            : 'key' < ^ Key >> '::' >> type .
@@ -117,7 +119,7 @@ enumeration    : '=', form
 
 dimension      : 'dimension' < ^ -primitive, enumeration?
 unit           : 'unit' < ^ -primitive
-primitive      : Type < >> ['[' UnitSymbol ']'] >> '::', ((Atom ^)*):aspects  [Type >> values? >> (',' >> Constant >>)*], format*
+primitive      : Type < >> ['[' UnitSymbol ']'] >> '::', aspects?  [Type >> values? >> (',' >> Constant >>)*], format*
 
 % Somewhat abstract data types
 notation       : 'notation' < ^ Notation >> '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
