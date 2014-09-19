@@ -35,9 +35,10 @@ a grammar can parse a source in accordance with the grammar.
 Now we _only_ have to write a grammar that both we as well as the parser do
 understand. Although we also need to understand how the parser processes the 
 grammar so that we can make it do what we want. This sounds a lot like giving 
-instructions - doesn't it?[^1] Such a parser is a _virtual machine_ that given 
-_instructions_ in form of a grammar can process our source _programs_ to produce
-parse-trees. 
+instructions - doesn't it?(see also: Damian Conway - 
+[Everything You Know About Regexes Is Wrong](http://www.infoq.com/presentations/regex)) 
+Such a parser is a _virtual machine_ that given _instructions_ in form of a 
+grammar can process our source _programs_ to produce parse-trees. 
 Luckily we are used to programming, to give instructions and reason about their 
 implications. This becomes possible as soon as we have learned the language we 
 are programming in and the instructions it offers.
@@ -131,10 +132,10 @@ _Pseudo-code:_
 		continue at match
 
 ##### 4 Selection
-Test a sequence of alternatives until the **first match**. If no alternative 
+Tests a sequence of alternatives until the **first match**. If no alternative 
 matches the selection is a mismatch. Note that this is not a logical _OR_, the
-first matching instruction is continued, the sequence of alternatives is very
-important. This is important to be able to reason about what will happen for
+first matching instruction is continued, the sequence of alternatives is 
+relevant. This is important to be able to reason about what will happen for
 a certain input sequence.
 
 Alternatives are separated with the vertical bar `|`.
@@ -177,12 +178,35 @@ _Pseudo-code:_
 
 #### Capturing Matches
 Instructions 0-5 control the parsing process by instructing the parser.
-The next 2 instructions 6 and 7 are used to a) shape the resulting parse-tree 
+The next two instructions 6 and 7 are used to a) shape the resulting parse-tree 
 and b) allow to form reusable compositions and recursion. 
 
 ##### 6 Reference
+Combinations of instructions are _assigned_ to a named rule.
+
+		comment = '<!--' .. '-->'
+
+Such rules can be referenced on the right hand side of another rule through
+their name.
+
+		xml = comment | element
+
+The rule `xml` _reuses_ the rules `comment` and `element` as alternatives of a
+selection. 
+
+References can always be resolved before a grammar is actually used to control
+a parser so in practice they might just be used to initially describe the
+grammar through instructions but in the actual grammar instance they might not
+appear any longer. But this can be implemented either way. 
+
+_Pseudo-code (during parsing):_
+
+		referenced-instruction = context resolve reference-name
+		continue at referenced-instruction exec (input, position)
 
 ##### 7 Capture
+Records the start and end position of the _annotated_ **rule instruction** by
+pushing a frame onto a stack being the parse-tree in a sequential form.
 
 #### Optional
 There are 3 more instructions that are not essential for the concept to work
@@ -226,5 +250,7 @@ expressions what would undermine the interoperability of the parser/grammars.
 
 ## Q & A
 
-
-[^1] Damian Conway - [Everything You Know About Regexes Is Wrong](http://www.infoq.com/presentations/regex)
+## What more?
+I later discovered [Parsing with Derivatives](https://www.youtube.com/watch?v=ZzsK8Am6dKU) 
+by Matthew Might from Stanford University having ideas for parsing that seam to 
+be related to me but tackled from the theoretically point of view.
