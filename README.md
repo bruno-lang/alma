@@ -37,8 +37,8 @@ giving  instructions - doesn't it? (_see also:_ Damian Conway -
 
 Following that thought a parser is sort of a _virtual machine_ that - given 
 _instructions_ in form of a grammar - can process input _programs_ what produces
- parse-trees as output
-. 
+ parse-trees as output.
+ 
 Luckily we are used to programming, to give instructions and reason about their 
 implications and conditions. As soon as we have learned the _machine's primitives_ 
 a grammar can be written like a program. No special parsing theory or tool 
@@ -196,11 +196,13 @@ _Instruction pseudo-code:_
 				continue at position
 		mismatch at end
 
-Completions can be _expensive_ as the position is incremented one by one in case
-the end-instruction is not a a literal or terminal.
+Completions can be _expensive_ in case the end-instruction is not a a literal 
+or terminal as the position is incremented one by one.
 
 #### Capturing Matches
-Instructions 0-5 control the parsing process by instructing the parser.
+Instructions 0-5 control the parsing process by instructing the parser what or
+how to match input.
+
 The next two instructions 6 and 7 are used to a) shape the resulting parse-tree 
 and b) allow to form reusable compositions and recursion. 
 
@@ -219,12 +221,13 @@ The rule `xml` _reuses_ the rules `comment` and `element` as alternatives of a
 selection. 
 
 References can always be resolved before a grammar is actually used to control
-a parser so in practice they might just be used to initially describe recursion 
-and reuse in a grammar through instructions. In a actual grammar instance (in 
-its runtime representation) they might not appear any longer. But this can be 
-implemented either way. 
+a parser. In practice they might just be used to initially describe recursion 
+and reuse in a grammar through a instruction. Later on they might not appear 
+any longer in an actual grammar instance (the runtime representation) as they
+have been substituted with the actual referenced rule. 
+However, this can be implemented either way. 
 
-_Instruction pseudo-code (during parsing):_
+_Instruction pseudo-code (when resolved during parsing):_
 
 		referenced-instruction = context resolve reference-name
 		continue at referenced-instruction exec (input, position)
