@@ -1,15 +1,15 @@
 grammar       : member (, member)*
 member        : comment | rule
 comment       : '%' (!\n+):text
-rule          : name, ('=' | (':' ':'? '='?)), selection ';'? .
-selection     : sequence (, '|' >> sequence )*
-sequence      : element ( >> element )*
-element       : (distinction | completion | group | option | lookahead | string | terminal | ref ) occurrence?
-distinction   : '<'
+rule          : name, ('=' | (':' ':'? '='?)), selection .
+selection     : sequence (, '|' > sequence )*
+sequence      : element ( > element )*
+element       : (decision | completion | group | option | lookahead | string | terminal | ref ) occurrence?
+decision      : '&'
 completion    : '..' capture
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
-lookahead     : '>(', < selection, ')'
+lookahead     : '>('&, selection, ')'
 
 occurrence    : 'x'? num:min {'-' '+'}:to? num:max? | qmark | star | plus
 num           : 9+
@@ -46,10 +46,10 @@ binary        : '1'
 not           : '!'
 whitespace    : '_'
 gap           : ','
-pad           : '~'
+pad           : ';'
 wrap          : '.'
-indent        : '>>'
-separator     : '^'
+indent        : '>'
+separator     : '>>'
 
 shortname     : tab | lf | cr
 tab           : '\t'

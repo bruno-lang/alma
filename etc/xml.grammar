@@ -11,7 +11,7 @@ element :
 nodes :
 	node (, node)*
 attributes :
-	~ attribute (~ attribute)*
+	(; attribute)+
 attribute :
 	name '=' '"' ..:value '"'
 text :

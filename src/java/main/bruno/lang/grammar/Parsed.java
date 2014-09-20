@@ -1,6 +1,5 @@
 package bruno.lang.grammar;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -33,8 +32,7 @@ public final class Parsed {
 		return tree.toString();
 	}
 
-	public static Parsed parse(String src, String start, Grammar grammar)
-			throws FileNotFoundException, IOException {
+	public static Parsed parse(String src, Grammar grammar, String start) throws IOException {
 		RandomAccessFile aFile = new RandomAccessFile(src, "r");
 		FileChannel in = aFile.getChannel();
 		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());

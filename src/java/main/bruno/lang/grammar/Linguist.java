@@ -86,11 +86,11 @@ public final class Linguist {
 			return rule.elements[0];
 		}
 		if (rule.type == RuleType.SEQUENCE) { // inline nested sequences
-			if (!rule.isDistinctive() && hasSequenceElement(rule)) {
+			if (!rule.isDecisionMaking() && hasSequenceElement(rule)) {
 				List<Rule> elems = new ArrayList<>();
 				for (Rule e : rule.elements) {
 					Rule u = unpack(e, followed);
-					if (u.type == RuleType.SEQUENCE && !u.isDistinctive()) {
+					if (u.type == RuleType.SEQUENCE && !u.isDecisionMaking()) {
 						elems.addAll(Arrays.asList(u.elements));
 					} else {
 						elems.add(u);
@@ -109,7 +109,7 @@ public final class Linguist {
 	private static boolean hasSequenceElement(Rule rule) {
 		for (int i = 0; i < rule.elements.length; i++) {
 			Rule e = rule.elements[i];
-			if (e.type == RuleType.SEQUENCE && !e.isDistinctive()) {
+			if (e.type == RuleType.SEQUENCE && !e.isDecisionMaking()) {
 				return true;
 			}
 		}

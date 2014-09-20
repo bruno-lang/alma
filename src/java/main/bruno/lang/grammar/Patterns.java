@@ -9,15 +9,15 @@ public final class Patterns {
 	 */
 	public static final Pattern GAP = new Gap();
 	/**
-	 * <code>~</code>
+	 * <code>;</code>
 	 */
 	public static final Pattern PAD = new Pad();
 	/**
-	 * <code>>></code>
+	 * <code>></code>
 	 */
 	public static final Pattern INDENT = new Indent();
 	/**
-	 * <code>^</code>
+	 * <code>>></code>
 	 */
 	public static final Pattern SEPARATOR = new Separator();
 	/**
@@ -80,7 +80,7 @@ public final class Patterns {
 		
 		@Override
 		public String toString() {
-			return "^";
+			return ">>";
 		}
 
 	}
@@ -101,7 +101,7 @@ public final class Patterns {
 		
 		@Override
 		public String toString() {
-			return ">>";
+			return ">";
 		}
 
 	}
@@ -118,7 +118,7 @@ public final class Patterns {
 		
 		@Override
 		public String toString() {
-			return "~";
+			return ";";
 		}
 
 	}

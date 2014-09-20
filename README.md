@@ -43,7 +43,6 @@ Luckily we are used to programming, to give instructions and reason about their
 implications. This becomes possible as soon as we have learned the language we 
 are programming in and the instructions it offers.
 
-
 ## Instructions
 The following describes the 8 essential and 3 optional instructions of the 
 underlying parser's _machine language_ through the surface syntax `lingukit`,
@@ -56,6 +55,7 @@ and results in a new _matched_ input position or a _mismatch_.
 `lingukit` is designed to match bytes (of UTF8 characters) but the principle
 can be applied to any _basic unit_.
 
+---------
 ##### 0 Literal
 Tests if input at current position literally matches a constant of one or more 
 bytes given as a string literal with single quotes `'`.
@@ -69,6 +69,7 @@ _Pseudo-code:_
 		else
 			mismatch at position
 
+---------
 ##### 1 Terminal
 Tests if input at current position is contained in a set of Unicode code-points.
 Sets are given in curly braces by single characters and character ranges:
@@ -88,6 +89,7 @@ _Pseudo-code:_
 			mismatch at position
 
 #### Matching _Words_
+---------
 ##### 2 Sequence
 A sequence of instructions is - surprise - given by writing the instructions 
 one after another (separated by whitespace where ambiguous otherwise). 
@@ -110,6 +112,7 @@ _Pseudo-code:_
 				mismatch at position
 		continue at cursor
 
+---------
 ##### 3 Iteration
 Executes an instruction several times (between a minimum and a maximum). The
 iteration count is directly appended to the repeated instruction using 
@@ -131,6 +134,7 @@ _Pseudo-code:_
 				match = cursor
 		continue at match
 
+---------
 ##### 4 Selection
 Tests a sequence of alternatives until the **first match**. If no alternative 
 matches the selection is a mismatch. Note that this is not a logical _OR_, the
@@ -153,6 +157,7 @@ _Pseudo-code:_
 				furthest-mismatch = furthest(cursor, furthest-mismatch)
 		mismatch at furthest-mismatch
 
+---------
 ##### 5 Completion
 Consumes the input until the completed instruction matches at the current 
 position. So instead of describing what to match the input is processed until
@@ -181,6 +186,7 @@ Instructions 0-5 control the parsing process by instructing the parser.
 The next two instructions 6 and 7 are used to a) shape the resulting parse-tree 
 and b) allow to form reusable compositions and recursion. 
 
+---------
 ##### 6 Reference
 Combinations of instructions are _assigned_ to a named rule.
 
@@ -204,6 +210,7 @@ _Pseudo-code (during parsing):_
 		referenced-instruction = context resolve reference-name
 		continue at referenced-instruction exec (input, position)
 
+---------
 ##### 7 Capture
 Records the start and end position of the _annotated_ **rule instruction** by
 pushing a frame onto a stack being the parse-tree in a sequential form.
@@ -212,6 +219,7 @@ pushing a frame onto a stack being the parse-tree in a sequential form.
 There are 3 more instructions that are not essential for the concept to work
 but that can improve and extend its functionality. 
 
+---------
 ##### 8 Pattern
 Patterns are abstract basic units. The instructions asks a pattern how many 
 bytes at the current input position are matching. 
@@ -219,10 +227,10 @@ bytes at the current input position are matching.
 `lingukit` has a fixed set of patterns exclusively used for processing
 whitespace but the principle could be applied for any reason. 
 
-* Indent: `>>` = `{' ' \t}*` (may be whitespace on same line)
-* Separator `^` = `{' ' \t}+` (must be whitespace on same line)
+* Indent: `>` = `{' ' \t}*` (may be whitespace on same line)
+* Separator `>>` = `{' ' \t}+` (must be whitespace on same line)
 * Gap: `,` = `_*` (may be whitespace)
-* Pad: `~` = `_+` (must be whitespace)
+* Pad: `;` = `_+` (must be whitespace)
 * Wrap: `.` = `>> \n >>` (must be line wrap)
 
 _Pseudo-code:_
@@ -241,16 +249,62 @@ be used with caution. For the same reason RegExes should not be included as
 different platforms have different support and interpretation of regular 
 expressions what would undermine the interoperability of the parser/grammars.
 
+---------
 ##### 9 Decision
 
+---------
 ##### 10 Look-ahead
 
 
 ## Syntactic Sugar 
+
+
+## Implementation
+#### Components
+##### Parser
+The general parser is very straight forward to implement in all common languages.
+The full pseudo-code is given with each instruction. Everything is based on very
+basic programming constructs usually known already on novice programmer levels.
+Depending on the language a parser might be written in about 30-200 LOC.
+
+##### Instructions/Rules
+Instructions are basically data records or abstract data types with no _own_
+functionality regarding the parsing process. 
+
+##### Parse-Tree
+The parse tree is nothing more than a stack of records of form
+
+		record
+			rule
+			nesting-level
+			start-position
+			end-position
+
+This is similar or known as _index overlay parse-tree_.
+
+#### Performance
+I never measured performance but I know that pushing and pulling frames off and
+from the stack is easy to implement so that is boils done to a few array store
+operations and integer arithmetic. The parser itself will only require 
+relatively small stack frames for each nesting of instructions in the grammar.
+Further heap allocation is not needed. No other mutation than the parse-tree
+stack takes place.
+
+The costs of comparing input with expectations have to be paid in any parser 
+technology but the slim process that does all work in one step keeps this almost 
+as essential as possible.
+
+The way parsing works also implies that neither large grammars nor huge input
+affect the parsing in a non-linear manner. For the most part these do not 
+matter. It should also be mentioned that in contrast to _common wisdom_ parsing
+`lingukit` grammars will necessarily be written so that the first path that 
+matches is taken (independently of the questions if other alternatives might 
+match as well). This should keep mismatching alternatives short on average.
 
 ## Q & A
 
 ## What more?
 I later discovered [Parsing with Derivatives](https://www.youtube.com/watch?v=ZzsK8Am6dKU) 
 by Matthew Might from Stanford University having ideas for parsing that seam to 
-be related to me but tackled from the theoretically point of view.
+be related to me but tackling it from the theoretically point of view with a lot
+of mathematical yadda yadda yadda.

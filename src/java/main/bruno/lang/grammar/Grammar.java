@@ -71,7 +71,7 @@ public final class Grammar {
 
 	public static final class Rule {
 
-		public static final int UNDISTINGUISHABLE = Integer.MAX_VALUE;
+		public static final int UNDECIDED = Integer.MAX_VALUE;
 		
 		private static final Rule[] NO_ELEMENTS = new Rule[0];
 		private static final byte[] NO_LITERAL = new byte[0];
@@ -94,7 +94,7 @@ public final class Grammar {
 
 		public static Rule seq(Rule...elements) {
 			complete(elements);
-			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_LITERAL, null, null, UNDISTINGUISHABLE);
+			return new Rule(RuleType.SEQUENCE, "", elements, Occur.once, NO_LITERAL, null, null, UNDECIDED);
 		}
 
 		public static Rule symbol( int codePoint ) {
@@ -120,9 +120,9 @@ public final class Grammar {
 		public final byte[] literal;
 		public final Terminal terminal;
 		public final Pattern pattern;
-		public final int distinctFromIndex;
+		public final int decisionIndex;
 
-		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern, int distinctFromIndex) {
+		private Rule(RuleType type, String name, Rule[] elements, Occur occur, byte[] literal, Terminal terminal, Pattern pattern, int decisionIndex) {
 			super();
 			this.type = type;
 			this.name = name.intern();
@@ -131,12 +131,12 @@ public final class Grammar {
 			this.literal = literal;
 			this.terminal = terminal;
 			this.pattern = pattern;
-			this.distinctFromIndex = distinctFromIndex;
+			this.decisionIndex = decisionIndex;
 		}
 
 		public Rule as(String name) {
 			if (name.length() > 0 && name.charAt(0) == '-') {
-				return new Rule(type, name, elements, occur, literal, terminal, pattern, distinctFromIndex);
+				return new Rule(type, name, elements, occur, literal, terminal, pattern, decisionIndex);
 			}
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
 			return new Rule(RuleType.CAPTURE, name, elems, Occur.once, NO_LITERAL, null, null, 0);
@@ -163,7 +163,7 @@ public final class Grammar {
 			return new Rule(RuleType.ITERATION, "", new Rule[] { this }, occur, NO_LITERAL, null, null, 0);
 		}
 		
-		public Rule distinctFrom(int index) {
+		public Rule decisionAt(int index) {
 			return new Rule(type, name, elements, occur, literal, terminal, pattern, index);
 		}
 
@@ -229,8 +229,8 @@ public final class Grammar {
 			return type+" "+Arrays.toString(elements);
 		}
 
-		public boolean isDistinctive() {
-			return distinctFromIndex != Rule.UNDISTINGUISHABLE;
+		public boolean isDecisionMaking() {
+			return decisionIndex != Rule.UNDECIDED;
 		}
 	}
 }

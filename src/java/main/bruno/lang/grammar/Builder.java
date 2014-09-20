@@ -25,9 +25,9 @@ public final class Builder {
 	public static Rule[] buildGrammar(Parsed grammar) {
 		final List<Rule> rules = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
-		final int c = tokens.count();
+		final int count = tokens.count();
 		int token = 0;
-		while (token < c) {
+		while (token < count) {
 			Rule r = tokens.rule(token);
 			if (r == Lingukit.grammar_) {
 				token++;
@@ -55,9 +55,10 @@ public final class Builder {
 		check(token, grammar, Lingukit.selection_);
 		final List<Rule> alternatives = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
+		final int count = tokens.count();
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (tokens.rule(i) == Lingukit.sequence_ && tokens.end(i) <= end) {
+		while (i < count && tokens.rule(i) == Lingukit.sequence_ && tokens.end(i) <= end) {
 			alternatives.add(buildSequence(i, grammar));
 			i = tokens.next(i);
 		}
@@ -71,10 +72,11 @@ public final class Builder {
 		check(token, grammar, Lingukit.sequence_);
 		final List<Rule> elems = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
+		final int count = tokens.count();
 		final int end = tokens.end(token)+1;
-		int distinctFrom = Rule.UNDISTINGUISHABLE;
+		int distinctFrom = Rule.UNDECIDED;
 		int i = token+1;
-		while (tokens.rule(i) == Lingukit.element_ && tokens.end(i) <= end) {
+		while (i < count && tokens.rule(i) == Lingukit.element_ && tokens.end(i) <= end) {
 			Rule e = buildElement(i, grammar);
 			if (e != DISTINCT_FROM) {
 				elems.add(e);
@@ -86,7 +88,7 @@ public final class Builder {
 		if (elems.size() == 1) {
 			return elems.get(0);
 		}
-		return Rule.seq(elems.toArray(new Rule[0])).distinctFrom(distinctFrom);
+		return Rule.seq(elems.toArray(new Rule[0])).decisionAt(distinctFrom);
 	}
 
 	private static Rule buildElement(int token, Parsed grammar) {
@@ -94,7 +96,7 @@ public final class Builder {
 		final ParseTree tokens = grammar.tree;
 		Occur occur = buildOccur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
-		if (r == Lingukit.distinction_) {
+		if (r == Lingukit.decision_) {
 			return DISTINCT_FROM;
 		}
 		if (r == Lingukit.completion_) {
@@ -188,11 +190,12 @@ public final class Builder {
 	private static Rule buildFigures(int token, Parsed grammar) {
 		check(token, grammar, Lingukit.figures_);
 		final ParseTree tokens = grammar.tree;
+		final int count = tokens.count();
 		final int end = tokens.end(token);
 		Terminal terminal = null;
 		int i = token+1;
 		List<Rule> refs = new ArrayList<>();
-		while (tokens.end(i) <= end && tokens.rule(i) != Lingukit.capture_) {
+		while (i < count && tokens.end(i) <= end && tokens.rule(i) != Lingukit.capture_) {
 			Rule figure = tokens.rule(i);
 			if (figure == Lingukit.ranges_) {
 				Rule ranges = buildRanges(i, grammar);

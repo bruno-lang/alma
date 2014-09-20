@@ -2,13 +2,13 @@
 
 library        : 'library', Library+, '::', '{', Module, (',', Module,)* '}'
 namespace      : 'namespace', Namespace+, '::', import*, auto*, invariant*
-import         : ('-use' | '-share') ~ ['strict' ~] resource ,
-resource       : Library+ >> confinement?, aliases?
-confinement    : '[' >> Module (>>','?>> Module)*, ']'
+import         : ('-use' | '-share') ; ['strict' ;] resource ,
+resource       : Library+ > confinement?, aliases?
+confinement    : '[' > Module (>','?> Module)*, ']'
 aliases        : '{', alias, (','?, alias,)* '}'
-alias          : Type >> '=>' >> Type | Operation >> '=>' >> Operation
+alias          : Type > '=>' > Type | Operation > '=>' > Operation
 
-auto           : '-auto' ^ < specialisation
-invariant      : '-invariant' ^ < Type >> '<~' (>> Function)+ .
+auto           : '-auto' >> & specialisation
+invariant      : '-invariant' >> & Type > '<~' (> Function)+ .
 
-include        : '-use' ^ < resource
+include        : '-use' >> & resource
