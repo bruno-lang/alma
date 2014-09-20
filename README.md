@@ -10,16 +10,15 @@ _easy understandable parsing_
 
 Now, was any of the madness you **do** know about parsing relevant in this?
 
-Isn't it amazing how much fun it is to design languages in our imagination
-and how frustrating it became to make a machine parse it in the reality of 
-_common wisdom_ parsing?
+Imagining and design languages is real fun - making a machine parse it in the 
+reality of _common wisdom_ parsing however often is exhausting if not frustrating.
 
-I chose to ignore and forget this wisdom and explore parsing once again.
+I chose to ignore and _forget_ this wisdom and explore parsing once again.
 
 
 ## A Journey from Grammars to Parse-Trees
 We are willing to write a grammar so we can use a parser that gives us 
-parse-trees for source files.
+parse-trees for input source files.
 
 		(Grammar -> Parser) -> Source -> ParseTree
 
@@ -30,27 +29,29 @@ a grammar can parse a source in accordance with the grammar.
 
 		Parser -> (Grammar, Source) -> ParseTree
 
-Now we _only_ have to write a grammar that both we as well as the parser do
+Now we _only_ have to write a grammar that we as well as the parser do
 understand. Although we also need to understand how the parser processes the 
-grammar so that we can make it do what we want. This sounds a lot like giving 
-instructions - doesn't it? (_see also:_ Damian Conway - 
+grammar so that we can make it do what we meant to say. This sounds a lot like 
+giving  instructions - doesn't it? (_see also:_ Damian Conway - 
 [Everything You Know About Regexes Is Wrong](http://www.infoq.com/presentations/regex)) 
 
-Following that thought a parser is sort of a _virtual machine_ that given 
-_instructions_ in form of a grammar can process a input _programs_ what produces
- parse-trees. 
+Following that thought a parser is sort of a _virtual machine_ that - given 
+_instructions_ in form of a grammar - can process input _programs_ what produces
+ parse-trees as output
+. 
 Luckily we are used to programming, to give instructions and reason about their 
-implications and conditions. As soon as we have learned the _machine's_ 
-language grammars can be written like programs. No special parsing theory 
-or tool behaviour knowledge is required to do this.
+implications and conditions. As soon as we have learned the _machine's primitives_ 
+a grammar can be written like a program. No special parsing theory or tool 
+behaviour knowledge is required to do this.
 
 ## Instructions
-The following describes the 8 essential and 3 optional instructions of the 
-underlying parser's _machine language_ through the surface syntax `lingukit`,
- that maps almost 1:1 to these _machine instructions_.
+The following describes 8 essential and 3 optional instructions of a 
+underlying parser's _machine language_ through a surface syntax called 
+`lingukit`, that maps roughly 1:1 to _machine instructions_.
 
-A instruction is always executed in the context of the current input position 
-and results in a new _matched_ input position or a _mismatch_.
+Executing a instruction results either in a new _matched_ input position or a 
+_mismatch_ position. The _execution context_ is the current position and the
+parse-tree build so far.
 
 #### Matching Characters
 `lingukit` is designed to match bytes (of UTF8 characters) but the principle
@@ -61,14 +62,14 @@ can be applied to any _basic unit_.
 Tests if input at current position literally matches a constant of one or more 
 bytes given as a string literal with single quotes `'`.
 
-		'what we are looking for'
+		'a' 'what we are looking for'
 
 Alternativly a unicode character can be given by its code-point value in 
-hexadecimal notation prefixed with `U+`:
+hexadecimal notation prefixed with `U+` (here _\n_ what is decimal 10):
 
 		U+000A
 
-_Pseudo-code:_
+_Instruction Pseudo-code:_
 
 		if (input starts-at position == literal)
 			continue at position + length(literal)
@@ -82,9 +83,9 @@ Sets are given in curly braces by single characters and character ranges:
 
 		{'a' 'b' 'c'} {'a'-'z'} {U+0041-U+005A}
 
-Of course literals used in set definition must be single code-point literals.
+Of course literals used in set definitions must be single code-point literals.
 Sets can also exclude characters using `!` _NOT_ in front of a character or 
-character-range.
+character-range in from `<low>-<high>`.
 
 		{!'?'} {!'0'-'9'}
 
@@ -96,7 +97,7 @@ set.
 
 		{ Z '0'-'9' }
 
-_Pseudo-code:_
+_Instruction pseudo-code:_
 
 		if (character-set contains (input code-point at position))
 			continue at position + length(code-point at position)
@@ -118,7 +119,7 @@ Parentheses can be used to group sequences for nesting structures.
 If one instruction in a sequences results in a mismatch the sequence results in 
 a mismatch as well.
 
-_Pseudo-code:_
+_Instruction pseudo-code:_
 
 		cursor = position
 		foreach instruction in sequence
@@ -135,7 +136,7 @@ iteration count is directly appended to the repeated instruction using
 
 		'a'x1-2 'b'x4 ('c' 'd')x3 {'0'-'9'}x2-4
 
-_Pseudo-code:_
+_Instruction pseudo-code:_
 
 		match = position
 		do maximum times
@@ -161,7 +162,7 @@ Alternatives are separated with the vertical bar `|`.
 
 		'ab' | 'cd'
 
-_Pseudo-code:_
+_Instruction pseudo-code:_
 
 		furthest-mismatch = mismatch at position
 		foreach instruction in sequence
@@ -184,7 +185,7 @@ an example to match XML comments:
 
 		'<!--' .. '-->'
 
-_Pseudo-code:_
+_Instruction pseudo-code:_
 
 		end = length(input)
 		while (position < end)
@@ -223,7 +224,7 @@ and reuse in a grammar through instructions. In a actual grammar instance (in
 its runtime representation) they might not appear any longer. But this can be 
 implemented either way. 
 
-_Pseudo-code (during parsing):_
+_Instruction pseudo-code (during parsing):_
 
 		referenced-instruction = context resolve reference-name
 		continue at referenced-instruction exec (input, position)
@@ -256,7 +257,7 @@ do not support patterns at all.
 * Pad: `;` = `_+` (must be white-space)
 * Wrap: `.` = `>> \n >>` (must be line wrap)
 
-_Pseudo-code:_
+_Instruction pseudo-code:_
 
 		length = pattern length-of-match(input, position)
 		if (length >= 0)
