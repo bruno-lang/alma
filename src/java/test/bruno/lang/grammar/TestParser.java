@@ -19,7 +19,7 @@ public class TestParser {
 
 	@Test
 	public void thatBrunoLangCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/bruno.grammar", Lingukit.GRAMMAR, "grammar");
+		Parsed t = Parsed.parse("examples/bruno.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar bruno = grammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
 		printer.process(Parsed.parse("etc/example.ns", bruno, "namespace"));
@@ -28,7 +28,7 @@ public class TestParser {
 	
 	@Test
 	public void thatBrunoASTCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/bruno.grammar", Lingukit.GRAMMAR, "grammar");
+		Parsed t = Parsed.parse("examples/bruno.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar bruno = grammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
 		printer.process(Parsed.parse("etc/example.ast", bruno, "namespace"));
@@ -38,15 +38,15 @@ public class TestParser {
 	@Test
 	public void thatLingukitGrammarCanBeParsed() throws IOException {
 		Grammar g0 = Lingukit.GRAMMAR;
-		Parsed t1 = Parsed.parse("etc/lingukit.grammar", g0, "grammar");
+		Parsed t1 = Parsed.parse("examples/lingukit.grammar", g0, "grammar");
 		Grammar g1 = grammar(t1);
-		Parsed t2 = Parsed.parse("etc/lingukit.grammar", g1, "grammar");
+		Parsed t2 = Parsed.parse("examples/lingukit.grammar", g1, "grammar");
 		Printer.rulePrinter(System.out).process(t2);
 	}
 	
 	@Test
 	public void thatLookaheadWorks() throws IOException {
-		Parsed p = Parsed.parse("etc/test.grammar", Lingukit.GRAMMAR, "grammar");
+		Parsed p = Parsed.parse("examples/test.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar test = grammar(p);
 		Parsed example = Parsed.parse("etc/example.test", test, "start");
 		assertEquals("y", example.tree.rule(1).name);
@@ -58,7 +58,7 @@ public class TestParser {
 	
 	@Test
 	public void thatJSONGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/json.grammar", Lingukit.GRAMMAR, "grammar");
+		Parsed t = Parsed.parse("examples/json.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar json = grammar(t);
 		Parsed jsont = Parsed.parse("etc/example.json", json, "file");
 		Printer.rulePrinter(System.out).process(jsont);
@@ -66,7 +66,7 @@ public class TestParser {
 	
 	@Test
 	public void thatHugeJSONCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/json.grammar", Lingukit.GRAMMAR, "grammar");
+		Parsed t = Parsed.parse("examples/json.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar json = grammar(t);
 		Parsed jsont = Parsed.parse("../../../huge.json", json, "file");
 		assertNotNull(jsont);
@@ -74,7 +74,7 @@ public class TestParser {
 	
 	@Test
 	public void thatXMLGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/xml.grammar", Lingukit.GRAMMAR, "grammar");
+		Parsed t = Parsed.parse("examples/xml.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar xml = grammar(t);
 		Parsed xmlt = Parsed.parse("etc/example.xml", xml, "document");
 		Printer.rulePrinter(System.out).process(xmlt);
@@ -92,7 +92,7 @@ public class TestParser {
 	
 	@Test
 	public void thatJavaGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("etc/java.grammar", Lingukit.GRAMMAR, "grammar");
+		Parsed t = Parsed.parse("examples/java.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar java = grammar(t);
 		assertParses(java, new File("src/java/main/bruno/lang/grammar/"), ".java");
 		assertParses(java, new File("src/java/main/bruno/lang/grammar/print/"), ".java");

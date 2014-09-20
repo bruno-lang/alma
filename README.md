@@ -63,6 +63,11 @@ bytes given as a string literal with single quotes `'`.
 
 		'what we are looking for'
 
+Alternativly a unicode character can be given by its code-point value in 
+hexadecimal notation prefixed with `U+`:
+
+		U+000A
+
 _Pseudo-code:_
 
 		if (input starts-at position == literal)
@@ -75,12 +80,21 @@ _Pseudo-code:_
 Tests if input at current position is contained in a set of Unicode code-points.
 Sets are given in curly braces by single characters and character ranges:
 
-		{'a' 'b' 'c'} {'a'-'z'}
+		{'a' 'b' 'c'} {'a'-'z'} {U+0041-U+005A}
 
-Sets can also exclude characters using `!` in front of a character or character-
-range.
+Of course literals used in set definition must be single code-point literals.
+Sets can also exclude characters using `!` _NOT_ in front of a character or 
+character-range.
 
-		{!'@'} {!'0'-'9'}
+		{!'?'} {!'0'-'9'}
+
+There are also a couple of short hands (see syntactic sugar) that are not quoted.
+For example `Z` is the short-hand for `{'A'-'Z'}`. Such short hands or named
+sets (as described in capturing section) may as well appear within another set
+definition what is combined with _OR_ usually or as _AND_ in case of exclusion 
+set.
+
+		{ Z '0'-'9' }
 
 _Pseudo-code:_
 
@@ -181,6 +195,8 @@ _Pseudo-code:_
 				continue at position
 		mismatch at end
 
+Completions can be _expensive_ as the position is incremented one by one in case
+the end-instruction is not a a literal or terminal.
 
 #### Capturing Matches
 Instructions 0-5 control the parsing process by instructing the parser.
@@ -202,9 +218,10 @@ The rule `xml` _reuses_ the rules `comment` and `element` as alternatives of a
 selection. 
 
 References can always be resolved before a grammar is actually used to control
-a parser so in practice they might just be used to initially describe the
-grammar through instructions but in the actual grammar instance they might not
-appear any longer. But this can be implemented either way. 
+a parser so in practice they might just be used to initially describe recursion 
+and reuse in a grammar through instructions. In a actual grammar instance (in 
+its runtime representation) they might not appear any longer. But this can be 
+implemented either way. 
 
 _Pseudo-code (during parsing):_
 
@@ -229,6 +246,9 @@ bytes at the current input position are matching.
 
 `lingukit` has a fixed set of patterns exclusively used for processing
 white-space but the principle could be applied for any purpose. 
+The patterns used by `lingukit` are all expressible through the essential 
+instructions what ensures interoperability also for those parser platforms that
+do not support patterns at all. 
 
 * Indent: `>` = `{' ' \t}*` (may be indenting white-space; on same line)
 * Separator `>>` = `{' ' \t}+` (must be indenting white-space; on same line)
@@ -263,10 +283,25 @@ TODO
 
 TODO
 
-## Syntactic Sugar 
+---------
+##### Comments
+
+TODO
+
+## Syntactic Sugar
+
+#### White-space Characters
+As there is no escaping for quoted literals white-space has to be defined using
+the code-point syntax. For better readability there are the following 
+short-hands (note that no quotes are used as for literals!):
+
+* LF (Line Feed): `\n` = `U+000A`
+* CR (Carriage Return): `\r` = `U+000D`
+* HT (Horizontal Tabulation, tab) : `\t` = `U+0009` 
+
 #### Character Sets
-The `lingukit` syntax offers several short hands for character sets commonly
-occurring character sets that can be used everywhere a set is valid.
+The `lingukit` syntax offers several short hands for commonly occurring 
+character sets that can be used everywhere a set is valid.
 
 * ASCII White-space: `_` = `{ U+0009 U+0013 U+0032 }`
 * ASCII Letters (upper) = `Z` = `{'A'-'Z'}`
@@ -321,12 +356,35 @@ matter. It should also be mentioned that in contrast to _common wisdom_ parsing
 matches is taken (independently of the questions if other alternatives might 
 match as well). This should keep mismatching alternatives short on average.
 
+#### Tweaks & Optimisations
+Grammars are instruction trees, a data structure that can be analysed and 
+optimised before it is used. Rules can be rewritten/replaced with simplified 
+ones that will have the same behaviour. The most trivial example is to fuse
+multiple literals following each other in a sequence into one longer literal.
+The goal always is to reduce the nesting and size of the tree as smaller trees
+will result in less function calls, thus less stack frames and branching.
+
+In principle this also enables to formulate grammars in inadequate way (e.g. 
+using left recursion) as long as a rewriting procedure is known that transforms
+the instruction tree to a adequate one with the intended behaviour. 
+
+#### Extensions & Modifications
+The core idea is to use instruction trees and a parsing _machine_ interpreting
+these. In principle both the essential as well as the optional instructions 
+chosen for `lingukit` so far are not special in some way - they just were 
+obvious useful to me. Each of them could be removed, other instruction not 
+described or thought of here could be added.
+
 ## Q & A
 
 TODO
 - Possible Languages?
 - Ambiguity?
 - Left-recursive, right recursive?
+- lexer, lexing, white-space?
+- terminal-, non-terminal tokens?
+- Memoization
+- multi-threading
 
 ## What more?
 I later discovered [Parsing with Derivatives](https://www.youtube.com/watch?v=ZzsK8Am6dKU) 
