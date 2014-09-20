@@ -2,15 +2,13 @@
 
 _easy understandable parsing_
 
-This is _serious_...
-
 1. Pretend you don't know anything about parsing (theory/practice).
 2. Imagine a language!
 3. Think: How would one read and understand its elements or structure?
 4. Picture how you could formalise this to let a machine do what you just did 
    in your mind.
 
-Now, was any of the crazyness you **do** know about parsing relevant in this?
+Now, was any of the madness you **do** know about parsing relevant in this?
 
 Isn't it amazing how much fun it is to design languages in our imagination
 and how frustrating it became to make a machine parse it in the reality of 
@@ -35,13 +33,16 @@ a grammar can parse a source in accordance with the grammar.
 Now we _only_ have to write a grammar that both we as well as the parser do
 understand. Although we also need to understand how the parser processes the 
 grammar so that we can make it do what we want. This sounds a lot like giving 
-instructions - doesn't it?(see also: Damian Conway - 
+instructions - doesn't it? (_see also:_ Damian Conway - 
 [Everything You Know About Regexes Is Wrong](http://www.infoq.com/presentations/regex)) 
-Such a parser is a _virtual machine_ that given _instructions_ in form of a 
-grammar can process our source _programs_ to produce parse-trees. 
+
+Following that thought a parser is sort of a _virtual machine_ that given 
+_instructions_ in form of a grammar can process a input _programs_ what produces
+ parse-trees. 
 Luckily we are used to programming, to give instructions and reason about their 
-implications. This becomes possible as soon as we have learned the language we 
-are programming in and the instructions it offers.
+implications and conditions. As soon as we have learned the _machine's_ 
+language grammars can be written like programs. No special parsing theory 
+or tool behaviour knowledge is required to do this.
 
 ## Instructions
 The following describes the 8 essential and 3 optional instructions of the 
@@ -92,7 +93,7 @@ _Pseudo-code:_
 ---------
 ##### 2 Sequence
 A sequence of instructions is - surprise - given by writing the instructions 
-one after another (separated by whitespace where ambiguous otherwise). 
+one after another (separated by white-space where ambiguous otherwise). 
 
 		'a' 'b' 'c'
 
@@ -215,6 +216,8 @@ _Pseudo-code (during parsing):_
 Records the start and end position of the _annotated_ **rule instruction** by
 pushing a frame onto a stack being the parse-tree in a sequential form.
 
+TODO
+
 #### Optional
 There are 3 more instructions that are not essential for the concept to work
 but that can improve and extend its functionality. 
@@ -225,12 +228,12 @@ Patterns are abstract basic units. The instructions asks a pattern how many
 bytes at the current input position are matching. 
 
 `lingukit` has a fixed set of patterns exclusively used for processing
-whitespace but the principle could be applied for any reason. 
+white-space but the principle could be applied for any purpose. 
 
-* Indent: `>` = `{' ' \t}*` (may be whitespace on same line)
-* Separator `>>` = `{' ' \t}+` (must be whitespace on same line)
-* Gap: `,` = `_*` (may be whitespace)
-* Pad: `;` = `_+` (must be whitespace)
+* Indent: `>` = `{' ' \t}*` (may be indenting white-space; on same line)
+* Separator `>>` = `{' ' \t}+` (must be indenting white-space; on same line)
+* Gap: `,` = `_*` (may be white-space)
+* Pad: `;` = `_+` (must be white-space)
 * Wrap: `.` = `>> \n >>` (must be line wrap)
 
 _Pseudo-code:_
@@ -244,20 +247,36 @@ _Pseudo-code:_
 Patterns are mostly a performance optimisations as almost all could similarly 
 be modelled using combinations of other instructions. 
 
-Different parsers might support different sets of named patterns so they should
-be used with caution. For the same reason RegExes should not be included as 
-different platforms have different support and interpretation of regular 
-expressions what would undermine the interoperability of the parser/grammars.
+**Obs!!** Different parsers might support different sets of named patterns so 
+they should be used with caution. For the same reason RegExes should not be 
+included as different platforms have different support and interpretation of 
+regular expressions what would undermine the interoperability of the 
+parser/grammars.
 
 ---------
 ##### 9 Decision
 
+TODO
+
 ---------
 ##### 10 Look-ahead
 
+TODO
 
 ## Syntactic Sugar 
+#### Character Sets
+The `lingukit` syntax offers several short hands for character sets commonly
+occurring character sets that can be used everywhere a set is valid.
 
+* ASCII White-space: `_` = `{ U+0009 U+0013 U+0032 }`
+* ASCII Letters (upper) = `Z` = `{'A'-'Z'}`
+* ASCII Letters (lower) = `z` = `{'a'-'z'}`
+* ASCII Letters (upper and lower): `@` = `{z Z}` = `{'a'-'z' 'A'-'Z'}`
+* ASCII Numbers (hexa) = `#` = `{'0'-'9' 'A'-'F'}`
+* ASCII Numbers (decimal) = `9` = `{'0'-'9'}`
+* ASCII Numbers (octal) = `7` = `{'0'-'7'}`
+* ASCII Numbers (binary) = `1` = `{'0' '1'}`
+* Any Unicode code-point = `$` = `{ U+0000-U+7FFFFFFF }`
 
 ## Implementation
 #### Components
@@ -272,15 +291,16 @@ Instructions are basically data records or abstract data types with no _own_
 functionality regarding the parsing process. 
 
 ##### Parse-Tree
-The parse tree is nothing more than a stack of records of form
+The parse tree is nothing more than a stack of `token` records of form:
 
-		record
+		token
 			rule
 			nesting-level
 			start-position
 			end-position
 
-This is similar or known as _index overlay parse-tree_.
+This is similar or known as _index overlay parse-tree_. The level allows to
+view a sequence of records as tree.
 
 #### Performance
 I never measured performance but I know that pushing and pulling frames off and
@@ -302,6 +322,11 @@ matches is taken (independently of the questions if other alternatives might
 match as well). This should keep mismatching alternatives short on average.
 
 ## Q & A
+
+TODO
+- Possible Languages?
+- Ambiguity?
+- Left-recursive, right recursive?
 
 ## What more?
 I later discovered [Parsing with Derivatives](https://www.youtube.com/watch?v=ZzsK8Am6dKU) 
