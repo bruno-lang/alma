@@ -234,10 +234,51 @@ _Instruction pseudo-code (when resolved during parsing):_
 
 ---------
 ##### 7 Capture
-Records the start and end position of the _annotated_ **rule instruction** by
-pushing a frame onto a stack being the parse-tree in a sequential form.
+Records the start and end position of the captured **rule instruction** by
+pushing a frame onto a stack (a the parse-tree in a sequential form).
 
-TODO
+Rules (simple or complex named instructions) also serve for the purpose to 
+_mark_ a section of interest that should be reflected in the resulting 
+parse-tree. 
+By assigning instructions to a identifier the given combination of instructions
+is of interest to us and will be represented in the parse-tree by a node with
+the identifier given.
+
+		identifier = <instructions>
+
+A matched section becomes a stack frame (tree node) describing the rule that 
+matched (most importantly its identity/name) as well as the start and end 
+position of the match. The stack will itself add nesting depth information
+so that a sequence of frames can be looked at as a tree.
+
+If combinations of instructions are not of interest as a complete element but
+should be used as a fragment to be able to reuse partial structures a reference
+to a fragment is prefixed with the minus `-` sign.
+
+		upper = {'A'-'Z'}
+		lower = {'a'-'z'}
+		first-name = -upper -lower+
+		last-name = -upper -lower+
+		full-name = first-name >> last-name
+
+As `upper` and `lower` are prefixed for `first-name` and `last-name` rule
+they will not appear in the result tree. `first-name` and `last-name` on the 
+other hand will become tree-nodes as they are referenced by not prefixed. The
+resulting tree for `full-name` will have the structure:
+
+		full-name
+			first-name
+			last-name
+
+_Instruction pseudo-code_
+
+		stack open frame (rule, position)
+		end = captured-instruction exec (input, position)
+		if (is-mismatch)
+			stack pop
+		else
+			stack close frame at end
+		continue at end
 
 #### Optional
 There are 3 more instructions that are not essential for the concept to work
@@ -272,7 +313,7 @@ Patterns are mostly a performance optimisations as almost all could similarly
 be modelled using combinations of other instructions. 
 
 **Obs!!** Different parsers might support different sets of named patterns so 
-they should be used with caution. For the same reason RegExes should not be 
+they should be used with caution. For the same reason Regexes should not be 
 included as different platforms have different support and interpretation of 
 regular expressions what would undermine the interoperability of the 
 parser/grammars.
@@ -280,7 +321,38 @@ parser/grammars.
 ---------
 ##### 9 Decision
 
-TODO
+This additional instruction is used as an element in a sequence to mark the
+position in that sequence where it is clear that the sequence is meant and 
+should fully match. If the sequence matched up to the decision but mismatches
+at a later point the parsing has failed, no other alternatives should or have to
+be tried. The syntax error is at the mismatch position in the sequence.
+
+A decision position is marked with an ampersand `&` sign. In a JSON grammar
+the `array` rule might be given as:
+
+		json ::= object | array | bool | null | string | number
+		array ::= '['&, -elements?, ']'
+
+An `array` is the second alternative for a `json` element. If the element starts
+with an square bracket `[` we can be sure it has to be an array and the rule
+should fully match, otherwise the JSON is malformed. 
+
+_Instruction pseudo-code (modification only):_
+
+A simple way to implement the instruction is to modify the machine behaviour
+of the sequence instruction. The _mismatch_ path throws an exception in case
+the sequence had a decision and has been matches beyond it.
+
+		if (sequence decision-index < current-element-index)
+			raise exception "parseing failed"
+		else
+			mismatch at position
+
+The decision instruction is a very useful instruction to be able to give helpful
+feedback in case of malformed input. Especially recursive data formats like JSON
+will otherwise often result in bad feedback as all alternatives will be tried
+first before the parsing fails whereby the parse-tree will be reduced to nothing
+when the mismatch travels up the parser's call stack. 
 
 ---------
 ##### 10 Look-ahead
@@ -289,8 +361,13 @@ TODO
 
 ---------
 ##### Comments
+`lingukit` allows to write comment lines. A comment line has to start with the
+percent sign `%` and ends at the end of the line.
 
-TODO
+		% a comment
+
+Comments have no further function or consequence than to add some prose to a
+grammar file.
 
 ## Syntactic Sugar
 
@@ -378,6 +455,18 @@ these. In principle both the essential as well as the optional instructions
 chosen for `lingukit` so far are not special in some way - they just were 
 obvious useful to me. Each of them could be removed, other instruction not 
 described or thought of here could be added.
+
+#### Tooling
+As grammars are data general tools can be build around them, interpreting their
+tree structure e.g. to convert it to other formats like a visual graph.
+
+#### Non-Textual Implementations
+While `lingukit` is a somewhat BNF like syntax in which grammars are described 
+as text that is parsed to tree from which a runtime grammar is build this 
+additional step might not be worth it in some languages. In particular 
+functional languages like Haskell or lisps are well suited to directly 
+_formulate_ a grammar's data structures in the host language itself. 
+This approach is also used to bootstrap a parser for the `lingukit` language. 
 
 ## Q & A
 

@@ -1,9 +1,9 @@
 file ::= json ,
 json ::= object | array | bool | null | string | number
-object ::= '{'&, members?, '}'
+object ::= '{'&, -members?, '}'
 members ::= member (, ',', member)*
 member ::= name, ':', json
-array ::= '['&, elements?, ']'
+array ::= '['&, -elements?, ']'
 elements ::= json (, ',', json)*
 string ::= '"' .. '"'
 number ::= {'-' '+'}? 9* ['.' 9*]
