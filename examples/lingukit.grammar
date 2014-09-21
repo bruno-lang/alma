@@ -9,7 +9,7 @@ decision      : '&'
 completion    : '..' capture
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
-lookahead     : '>('&, selection, ')'
+lookahead     : '~('&, selection, ')'
 
 occurrence    : 'x'? num:min {'-' '+'}:to? num:max? | qmark | star | plus
 num           : 9+

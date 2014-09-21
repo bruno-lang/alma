@@ -202,7 +202,7 @@ public final class Grammar {
 				return "..`"+elements[0]+"`";
 			}
 			if (type == RuleType.LOOKAHEAD) {
-				return ">("+elements[0]+")";
+				return "~("+elements[0]+")";
 			}
 			if (type == RuleType.SELECTION) {
 				StringBuilder b = new StringBuilder();

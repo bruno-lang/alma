@@ -16,7 +16,7 @@ reality of _common wisdom_ parsing however often is exhausting if not frustratin
 I chose to ignore and _forget_ this wisdom and explore parsing once again.
 
 
-### A Journey from Grammars to Parse-Trees
+#### A Journey from Grammars to Parse-Trees
 We are willing to write a grammar so we can use a parser that gives us 
 parse-trees for input source files.
 
@@ -371,11 +371,10 @@ It is used as last element in sequences to describe how we expect the input to
 continue to make the sequence match but without counting that tail as part of 
 the match for the sequence. 
 
-Look-ahead is a group prefixed with a `>( {look-ahead-instructions} )` right 
-arrow.
+Look-ahead is a group prefixed with a tilde `~( {look-ahead-instructions} )`.
 
-		a = ('a' 'sequence' 'continues' >('with' something) )		
-		b = ('a' 'sequence' 'continues' >('with' nothing) )		
+		a = ('a' 'sequence' 'continues' ~('with' something) )		
+		b = ('a' 'sequence' 'continues' ~('with' nothing) )		
 
 As the start of both `a` and `b` is identical we cannot tell which of them we
 should choose. The look-ahead can than be used to distinguish them without
