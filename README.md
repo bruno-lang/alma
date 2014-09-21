@@ -16,7 +16,7 @@ reality of _common wisdom_ parsing however often is exhausting if not frustratin
 I chose to ignore and _forget_ this wisdom and explore parsing once again.
 
 
-## A Journey from Grammars to Parse-Trees
+### A Journey from Grammars to Parse-Trees
 We are willing to write a grammar so we can use a parser that gives us 
 parse-trees for input source files.
 
@@ -85,7 +85,7 @@ Sets are given in curly braces by single characters and character ranges:
 
 Of course literals used in set definitions must be single code-point literals.
 Sets can also exclude characters using `!` _NOT_ in front of a character or 
-character-range in from `<low>-<high>`.
+character-range in from `{low}-{high}`.
 
 		{!'?'} {!'0'-'9'}
 
@@ -132,7 +132,7 @@ _Instruction pseudo-code:_
 ##### 3 Iteration
 Executes an instruction several times (between a minimum and a maximum). The
 iteration count is directly appended to the repeated instruction using 
-`x{min-max}`. Some examples:
+`x{min}-{max}`. Some examples:
 
 		'a'x1-2 'b'x4 ('c' 'd')x3 {'0'-'9'}x2-4
 
@@ -206,6 +206,7 @@ how to match input.
 The next two instructions 6 and 7 are used to a) shape the resulting parse-tree 
 and b) allow to form reusable compositions and recursion. 
 
+
 ---------
 ##### 6 Reference
 Combinations of instructions are _assigned_ to a named rule.
@@ -232,6 +233,7 @@ _Instruction pseudo-code (when resolved during parsing):_
 		referenced-instruction = context resolve reference-name
 		continue at referenced-instruction exec (input, position)
 
+
 ---------
 ##### 7 Capture
 Records the start and end position of the captured **rule instruction** by
@@ -244,7 +246,7 @@ By assigning instructions to a identifier the given combination of instructions
 is of interest to us and will be represented in the parse-tree by a node with
 the identifier given.
 
-		identifier = <instructions>
+		identifier = {instructions}
 
 A matched section becomes a stack frame (tree node) describing the rule that 
 matched (most importantly its identity/name) as well as the start and end 
@@ -284,6 +286,7 @@ _Instruction pseudo-code_
 There are 3 more instructions that are not essential for the concept to work
 but that can improve and extend its functionality. 
 
+
 ---------
 ##### 8 Pattern
 Patterns are abstract basic units. The instructions asks a pattern how many 
@@ -318,9 +321,9 @@ included as different platforms have different support and interpretation of
 regular expressions what would undermine the interoperability of the 
 parser/grammars.
 
+
 ---------
 ##### 9 Decision
-
 This additional instruction is used as an element in a sequence to mark the
 position in that sequence where it is clear that the sequence is meant and 
 should fully match. If the sequence matched up to the decision but mismatches
@@ -354,10 +357,43 @@ will otherwise often result in bad feedback as all alternatives will be tried
 first before the parsing fails whereby the parse-tree will be reduced to nothing
 when the mismatch travels up the parser's call stack. 
 
+
 ---------
 ##### 10 Look-ahead
 
-TODO
+The described parser _machine_ has no different parsing modes as described so
+far as greedy/non-greedy is a source of confusion and unintuitive complexity. 
+
+Especially grammars for already existing languages might be ambiguous in a way
+that can just be resolved when looking _ahead_ in the input stream without
+actually processing it as usual. The look-ahead instruction does this. 
+It is used as last element in sequences to describe how we expect the input to
+continue to make the sequence match but without counting that tail as part of 
+the match for the sequence. 
+
+Look-ahead is a group prefixed with a `>( {look-ahead-instructions} )` right 
+arrow.
+
+		a = ('a' 'sequence' 'continues' >('with' something) )		
+		b = ('a' 'sequence' 'continues' >('with' nothing) )		
+
+As the start of both `a` and `b` is identical we cannot tell which of them we
+should choose. The look-ahead can than be used to distinguish them without
+_consuming_ further input.
+
+_Instruction pseudo-code (modification only):_
+
+The instruction is also easiest implemented by modifying the sequence behaviour
+of the parser machine. Everything that has to be done is to check at the end of
+the loop iterating over the elements of the sequence if the currently processed
+instruction was of type _look-ahead_. In that case the end position is not
+updated but the the flow directly continues with the end position thus far 
+(before the look-ahead instruction).
+
+		if (current-instruction type == look-ahead)
+			continue at end
+		else
+			end = cursor
 
 ---------
 ##### Comments
@@ -461,9 +497,9 @@ As grammars are data general tools can be build around them, interpreting their
 tree structure e.g. to convert it to other formats like a visual graph.
 
 #### Non-Textual Implementations
-While `lingukit` is a somewhat BNF like syntax in which grammars are described 
-as text that is parsed to tree from which a runtime grammar is build this 
-additional step might not be worth it in some languages. In particular 
+`lingukit` is a somewhat BNF like syntax in which grammars are described as text 
+that is parsed to tree from which a runtime grammar is build.  
+This additional step might not be worth it in some languages. In particular 
 functional languages like Haskell or lisps are well suited to directly 
 _formulate_ a grammar's data structures in the host language itself. 
 This approach is also used to bootstrap a parser for the `lingukit` language. 
