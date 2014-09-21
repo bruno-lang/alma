@@ -44,6 +44,11 @@ implications and conditions. As soon as we have learned the _machine's primitive
 a grammar can be written like a program. No special parsing theory or tool 
 behaviour knowledge is required to do this.
 
+## Examples
+See in the `examples` folder for actual grammars. The Java implementation is
+the _leading_ including all updates. Dart implementation has not been updated 
+lately. 
+
 ## Instructions
 The following describes 8 essential and 3 optional instructions of a 
 underlying parser's _machine language_ through a surface syntax called 
