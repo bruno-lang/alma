@@ -217,7 +217,7 @@ _Instruction pseudo-code:_
 Completions can be _expensive_ in case the end-instruction is not a a literal 
 or terminal as the position is incremented one by one.
 
-#### Capturing Matches
+### Capturing Matches
 Instructions 0-5 control the parsing process by instructing the parser what or
 how to match input.
 
