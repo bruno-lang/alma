@@ -599,8 +599,8 @@ could be forked on selections to compute each in parallel to faster find the
 first one matching. But as they push and pop on and off the stack while they 
 parse this would also require to given each thread its own stack merging the one 
 of the matching option back to the main stack. One is most like better off with
-starting multiple parsers for different input files in parallel thread each
-being single threaded.
+starting multiple parsers for different input files in parallel threads each
+parsing single threaded.
 
 ## What more?
 I later discovered [Parsing with Derivatives](https://www.youtube.com/watch?v=ZzsK8Am6dKU) 
