@@ -563,9 +563,9 @@ parser makes progress.
 **Won't right recursion cause problems with the stack, a _large_ parser?**
 
 Classic grammars had no iteration construct so theoretically endless 
-list of elements had to be modelled using left or right recursion where in case
+lists of elements had to be modelled using left or right recursion where in case
 of right recursion each recursion would create another stack frame. However,
-`lingukit` has a iteration instruction that allows repetition of rules without
+`lingukit` has an iteration instruction that allows repetition of rules without
 using the stack, thus it is not a problem.
 
 **How to make white-space significant or captured in the parse-tree?**
@@ -573,8 +573,8 @@ using the stack, thus it is not a problem.
 The described parser machine has no lexer or lexing phase. White-space is as
 good as any other input, that is to say it is always significant and captured
 in the same way other input is or is not. This is why most grammars heavily use
-`,` as it mean _any white-space_. As this syntactic sugar has no name it is by
-default not captured. If white-space should be captured it just has to be named
+`,` as it means _any white-space_. As this syntactic sugar has no name it is not 
+captured by default. If white-space should be captured it just has to be named
 like `(,):white-space` would do.
 
 **How to describe or distinguish terminal/non-terminal tokens and fragments?**
@@ -582,11 +582,16 @@ like `(,):white-space` would do.
 To distinguish terminal and non-terminal tokens might be theoretically 
 interesting but is of little importance when writing grammars. Rules without a
 reference are terminals, the rest isn't. However it is of far bigger practical
-interest to distinguish rule that form _words_ (no white-space between the parts)
-and rules that form _sentences_ (white-space between the parts). As white-space
-is explicit in `lingukit` there isn't a difference. Use white-space literals or
-syntax sugar to gobble it between the words of a sentence or not use it between
-the letters of a word.
+interest to distinguish rules that form _words_ (no white-space between the parts)
+and rules that form _sentences_ (white-space between the parts). Now, as 
+white-space is explicit in `lingukit` there isn't really a difference here. 
+Use white-space literals or syntax sugar to gobble it between the words of a 
+sentence or not use it between the letters of a word.
+
+To use something as a fragment a reference is prefixed with minus `-` so that
+the referenced rule will not be captured itself. Note however that references
+in such a rule again have to be prefixed to not be captured. Otherwise the
+parser will assume we are interested to have a node for them.
 
 **Can the parser benefit from memoization?**
 
@@ -596,11 +601,12 @@ Most likely not.
 
 Not really. Parsing is a inherently sequential problem. Theoretically the flow 
 could be forked on selections to compute each in parallel to faster find the 
-first one matching. But as they push and pop on and off the stack while they 
-parse this would also require to given each thread its own stack merging the one 
-of the matching option back to the main stack. One is most like better off with
-starting multiple parsers for different input files in parallel threads each
-parsing single threaded.
+first one matching throwing away everything else. 
+But as they push and pop on and off the stack while they parse this would also 
+require to given each thread its own stack merging the one of the matching 
+option back to the main stack. One is most like better off with starting 
+multiple parsers for different input files in parallel threads each parsing 
+single threaded.
 
 ## What more?
 I later discovered [Parsing with Derivatives](https://www.youtube.com/watch?v=ZzsK8Am6dKU) 
