@@ -509,7 +509,7 @@ multiple literals following each other in a sequence into one longer literal.
 The goal always is to reduce the nesting and size of the tree as smaller trees
 will result in less function calls, thus less stack frames and branching.
 
-In principle this also enables to formulate grammars in inadequate way (e.g. 
+In principle this also enables to formulate grammars in inadequate ways (e.g. 
 using left recursion) as long as a rewriting procedure is known that transforms
 the instruction tree to a adequate one with the intended behaviour. 
 
@@ -517,8 +517,8 @@ the instruction tree to a adequate one with the intended behaviour.
 The core idea is to use instruction trees and a parsing _machine_ interpreting
 these. In principle both the essential as well as the optional instructions 
 chosen for `lingukit` so far are not special in some way - they just were 
-obvious useful to me. Each of them could be removed, other instruction not 
-described or thought of here could be added.
+obvious and useful to me. Each of them could be removed, other instructions (not 
+described or thought of here) could be added.
 
 #### Tooling
 As grammars are data general tools can be build around them, interpreting their
@@ -534,15 +534,73 @@ This approach is also used to bootstrap a parser for the `lingukit` language.
 
 ## Q & A
 
-TODO
+**Can all languages (syntaxes) be expressed?**
 
-- Possible Languages?
-- Ambiguity?
-- Left-recursive, right recursive?
-- lexer, lexing, white-space?
-- terminal-, non-terminal tokens?
-- Memoization
-- multi-threading
+No. Selection sticks to the first match. When using the same rule nested within
+different parents and expecting them to match different options for the same
+input sequence depending on the parent or grant parent etc. will not work. Using
+look-ahead might help to fix some ambiguity shortly after the matched selection
+options but in general the grammar has to be written so that the first matching
+option is what we want. If this does not do it cannot be said.
+
+**How to resolve ambiguity in syntaxes, give precedence to a rule?**
+
+Remember that a selection goes with the first option that matches. To give an 
+option a higher precedence move it to occur earlier in the selection. Or in 
+other words sort options by their precedence starting with the highest.
+Naturally it is a good idea to design a syntax so that most of the options
+start with a literal that is different from the other options first literal. 
+Also it is good practice to have options starting with a literal first, options
+with variable start last.
+
+**Can the grammars be declared using left-recursive/right-recursive rules?**
+
+Currently any left-recursive grammar will cause the parser to eat stack until a
+stack overflow occurs. Thus recursion may never occur as first element of a rule
+sequence. Some input has to be consumed before recursion occurs to make sure the
+parser makes progress. 
+
+**Won't right recursion cause problems with the stack, a _large_ parser?**
+
+Classic grammars had no iteration construct so theoretically endless 
+list of elements had to be modelled using left or right recursion where in case
+of right recursion each recursion would create another stack frame. However,
+`lingukit` has a iteration instruction that allows repetition of rules without
+using the stack, thus it is not a problem.
+
+**How to make white-space significant or captured in the parse-tree?**
+
+The described parser machine has no lexer or lexing phase. White-space is as
+good as any other input, that is to say it is always significant and captured
+in the same way other input is or is not. This is why most grammars heavily use
+`,` as it mean _any white-space_. As this syntactic sugar has no name it is by
+default not captured. If white-space should be captured it just has to be named
+like `(,):white-space` would do.
+
+**How to describe or distinguish terminal/non-terminal tokens and fragments?**
+
+To distinguish terminal and non-terminal tokens might be theoretically 
+interesting but is of little importance when writing grammars. Rules without a
+reference are terminals, the rest isn't. However it is of far bigger practical
+interest to distinguish rule that form _words_ (no white-space between the parts)
+and rules that form _sentences_ (white-space between the parts). As white-space
+is explicit in `lingukit` there isn't a difference. Use white-space literals or
+syntax sugar to gobble it between the words of a sentence or not use it between
+the letters of a word.
+
+**Can the parser benefit from memoization?**
+
+Most likely not. 
+
+**Can the parser be parallelised (use multi-threading)?**
+
+Not really. Parsing is a inherently sequential problem. Theoretically the flow 
+could be forked on selections to compute each in parallel to faster find the 
+first one matching. But as they push and pop on and off the stack while they 
+parse this would also require to given each thread its own stack merging the one 
+of the matching option back to the main stack. One is most like better off with
+starting multiple parsers for different input files in parallel thread each
+being single threaded.
 
 ## What more?
 I later discovered [Parsing with Derivatives](https://www.youtube.com/watch?v=ZzsK8Am6dKU) 
