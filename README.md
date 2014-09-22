@@ -2,6 +2,12 @@
 
 _easy understandable parsing_
 
+(this document is available as [PDF](https://github.com/bruno-lang/lingukit/blob/master/README.pdf) 
+ or [HTML](https://github.com/bruno-lang/lingukit/blob/master/README.html) for 
+printing, source is markdown)
+
+#### Self-Experiment
+
 1. Pretend you don't know anything about parsing (theory/practice).
 2. Imagine a language!
 3. Think: How would one read and understand its elements or structure?
@@ -24,7 +30,7 @@ parse-trees for input source files.
 
 That's basically how we used to think of it - because we made the assumption
 that we need a specific parser for a specific grammar. While this appears 
-_natural_ to us it is a fallacy. It is enough to have **one parser** that given 
+_natural_ it is a fallacy. It is enough to have **one parser** that given 
 a grammar can parse a source in accordance with the grammar.
 
 		Parser -> (Grammar, Source) -> ParseTree
@@ -39,15 +45,15 @@ Following that thought a parser is sort of a _virtual machine_ that - given
 _instructions_ in form of a grammar - can process input _programs_ what produces
  parse-trees as output.
  
-Luckily we are used to programming, to give instructions and reason about their 
+Fortunately we are used to programming, to give instructions and reason about their 
 implications and conditions. As soon as we have learned the _machine's primitives_ 
 a grammar can be written like a program. No special parsing theory or tool 
-behaviour knowledge is required to do this.
+behaviour knowledge is required following this path.
 
-## Examples
-See in the `examples` folder for actual grammars. The Java implementation is
-the _leading_ including all updates. Dart implementation has not been updated 
-lately. 
+## Examples & Reference Implementation
+See in the [`examples`](https://github.com/bruno-lang/lingukit/tree/master/examples) 
+folder for actual grammars. There is a reference implementation in Java. 
+The Dart implementation has not been updated lately with the latest changes. 
 
 ## Instructions
 The following describes 8 essential and 3 optional instructions of a 
@@ -58,19 +64,20 @@ Executing a instruction results either in a new _matched_ input position or a
 _mismatch_ position. The _execution context_ is the current position and the
 parse-tree build so far.
 
-#### Matching Characters
+### Matching Characters
 `lingukit` is designed to match bytes (of UTF8 characters) but the principle
 can be applied to any _basic unit_.
 
 ---------
-##### 0 Literal
+
+#### 0 Literal
 Tests if input at current position literally matches a constant of one or more 
 bytes given as a string literal with single quotes `'`.
 
 		'a' 'what we are looking for'
 
 Alternativly a unicode character can be given by its code-point value in 
-hexadecimal notation prefixed with `U+` (here _\n_ what is decimal 10):
+hexadecimal notation prefixed with `U+` (here `\n` what is decimal 10):
 
 		U+000A
 
@@ -82,7 +89,8 @@ _Instruction Pseudo-code:_
 			mismatch at position
 
 ---------
-##### 1 Terminal
+
+#### 1 Terminal
 Tests if input at current position is contained in a set of Unicode code-points.
 Sets are given in curly braces by single characters and character ranges:
 
@@ -109,9 +117,11 @@ _Instruction pseudo-code:_
 		else
 			mismatch at position
 
-#### Matching _Words_
+### Matching _Words_
+
 ---------
-##### 2 Sequence
+
+#### 2 Sequence
 A sequence of instructions is - surprise - given by writing the instructions 
 one after another (separated by white-space where ambiguous otherwise). 
 
@@ -134,7 +144,8 @@ _Instruction pseudo-code:_
 		continue at cursor
 
 ---------
-##### 3 Iteration
+
+#### 3 Iteration
 Executes an instruction several times (between a minimum and a maximum). The
 iteration count is directly appended to the repeated instruction using 
 `x{min}-{max}`. Some examples:
@@ -156,7 +167,8 @@ _Instruction pseudo-code:_
 		continue at match
 
 ---------
-##### 4 Selection
+
+#### 4 Selection
 Tests a sequence of alternatives until the **first match**. If no alternative 
 matches the selection is a mismatch. Note that this is not a logical _OR_, the
 first matching instruction is continued, the sequence of alternatives is 
@@ -179,7 +191,8 @@ _Instruction pseudo-code:_
 		mismatch at furthest-mismatch
 
 ---------
-##### 5 Completion
+
+#### 5 Completion
 Consumes the input until the completed instruction matches at the current 
 position. So instead of describing what to match the input is processed until
 a specific end is found matched through any another simple or composed 
@@ -213,7 +226,8 @@ and b) allow to form reusable compositions and recursion.
 
 
 ---------
-##### 6 Reference
+
+#### 6 Reference
 Combinations of instructions are _assigned_ to a named rule.
 
 		comment = '<!--' .. '-->'
@@ -240,7 +254,8 @@ _Instruction pseudo-code (when resolved during parsing):_
 
 
 ---------
-##### 7 Capture
+
+#### 7 Capture
 Records the start and end position of the captured **rule instruction** by
 pushing a frame onto a stack (a the parse-tree in a sequential form).
 
@@ -287,13 +302,14 @@ _Instruction pseudo-code_
 			stack close frame at end
 		continue at end
 
-#### Optional
+### Additional Instructions
 There are 3 more instructions that are not essential for the concept to work
 but that can improve and extend its functionality. 
 
 
 ---------
-##### 8 Pattern
+
+#### 8 Pattern
 Patterns are abstract basic units. The instructions asks a pattern how many 
 bytes at the current input position are matching. 
 
@@ -328,7 +344,8 @@ parser/grammars.
 
 
 ---------
-##### 9 Decision
+
+#### 9 Decision
 This additional instruction is used as an element in a sequence to mark the
 position in that sequence where it is clear that the sequence is meant and 
 should fully match. If the sequence matched up to the decision but mismatches
@@ -364,7 +381,8 @@ when the mismatch travels up the parser's call stack.
 
 
 ---------
-##### 10 Look-ahead
+
+#### 10 Look-ahead
 
 The described parser _machine_ has no different parsing modes as described so
 far as greedy/non-greedy is a source of confusion and unintuitive complexity. 
@@ -400,7 +418,8 @@ updated but the the flow directly continues with the end position thus far
 			end = cursor
 
 ---------
-##### Comments
+
+### Comments
 `lingukit` allows to write comment lines. A comment line has to start with the
 percent sign `%` and ends at the end of the line.
 
@@ -434,17 +453,22 @@ character sets that can be used everywhere a set is valid.
 * ASCII Numbers (binary) = `1` = `{'0' '1'}`
 * Any Unicode code-point = `$` = `{ U+0000-U+7FFFFFFF }`
 
-## Implementation
+## Implementation Notes
+
 #### Components
+
 ##### Parser
-The general parser is very straight forward to implement in all common languages.
+The universal parser is very straight forward to implement in all common languages.
 The full pseudo-code is given with each instruction. Everything is based on very
-basic programming constructs usually known already on novice programmer levels.
-Depending on the language a parser might be written in about 30-200 LOC.
+basic programming constructs usually known and mastered already on novice 
+programmer levels.
+Depending on the host language a parser might be written in about 30-200 LOC.
 
 ##### Instructions/Rules
-Instructions are basically data records or abstract data types with no _own_
-functionality regarding the parsing process. 
+Instructions are basically data records or abstract data types (depending on
+the host language support) with no _own_ functionality regarding the parsing 
+process. Their task is to make instruction details available for the parser
+machine to interpretate. 
 
 ##### Parse-Tree
 The parse tree is nothing more than a stack of `token` records of form:
@@ -511,6 +535,7 @@ This approach is also used to bootstrap a parser for the `lingukit` language.
 ## Q & A
 
 TODO
+
 - Possible Languages?
 - Ambiguity?
 - Left-recursive, right recursive?
