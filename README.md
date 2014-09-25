@@ -453,6 +453,9 @@ character sets that can be used everywhere a set is valid.
 * ASCII Numbers (binary) = `1` = `{'0' '1'}`
 * Any Unicode code-point = `$` = `{ U+0000-U+7FFFFFFF }`
 
+#### Optional Group
+Instead of `( {instructions} )?` the square brackets can be used: `[ {instructions} ]`.
+
 ## Implementation Notes
 
 #### Components
