@@ -443,7 +443,7 @@ short-hands (note that no quotes are used as for literals!):
 The `lingukit` syntax offers several short hands for commonly occurring 
 character sets that can be used everywhere a set is valid.
 
-* ASCII White-space: `_` = `{ U+0009 U+0013 U+0032 }`
+* ASCII White-space: `_` = `{ U+0009-U+000D U+0020 }`
 * ASCII Letters (upper) = `Z` = `{'A'-'Z'}`
 * ASCII Letters (lower) = `z` = `{'a'-'z'}`
 * ASCII Letters (upper and lower): `@` = `{z Z}` = `{'a'-'z' 'A'-'Z'}`
@@ -452,6 +452,9 @@ character sets that can be used everywhere a set is valid.
 * ASCII Numbers (octal) = `7` = `{'0'-'7'}`
 * ASCII Numbers (binary) = `1` = `{'0' '1'}`
 * Any Unicode code-point = `$` = `{ U+0000-U+7FFFFFFF }`
+
+#### Optional Group
+Instead of `( {instructions} )?` the square brackets can be used: `[ {instructions} ]`.
 
 ## Implementation Notes
 

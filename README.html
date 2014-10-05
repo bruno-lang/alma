@@ -120,7 +120,7 @@
             continue at position
     mismatch at end</code></pre>
 <p>Completions can be <em>expensive</em> in case the end-instruction is not a a literal or terminal as the position is incremented one by one.</p>
-<h4 id="capturing-matches">Capturing Matches</h4>
+<h3 id="capturing-matches">Capturing Matches</h3>
 <p>Instructions 0-5 control the parsing process by instructing the parser what or how to match input.</p>
 <p>The next two instructions 6 and 7 are used to a) shape the resulting parse-tree and b) allow to form reusable compositions and recursion.</p>
 <hr />
@@ -253,24 +253,31 @@
 <p>The way parsing works also implies that neither large grammars nor huge input affect the parsing in a non-linear manner. For the most part these do not matter. It should also be mentioned that in contrast to <em>common wisdom</em> parsing <code>lingukit</code> grammars will necessarily be written so that the first path that matches is taken (independently of the questions if other alternatives might match as well). This should keep mismatching alternatives short on average.</p>
 <h4 id="tweaks-optimisations">Tweaks &amp; Optimisations</h4>
 <p>Grammars are instruction trees, a data structure that can be analysed and optimised before it is used. Rules can be rewritten/replaced with simplified ones that will have the same behaviour. The most trivial example is to fuse multiple literals following each other in a sequence into one longer literal. The goal always is to reduce the nesting and size of the tree as smaller trees will result in less function calls, thus less stack frames and branching.</p>
-<p>In principle this also enables to formulate grammars in inadequate way (e.g. using left recursion) as long as a rewriting procedure is known that transforms the instruction tree to a adequate one with the intended behaviour.</p>
+<p>In principle this also enables to formulate grammars in inadequate ways (e.g. using left recursion) as long as a rewriting procedure is known that transforms the instruction tree to a adequate one with the intended behaviour.</p>
 <h4 id="extensions-modifications">Extensions &amp; Modifications</h4>
-<p>The core idea is to use instruction trees and a parsing <em>machine</em> interpreting these. In principle both the essential as well as the optional instructions chosen for <code>lingukit</code> so far are not special in some way - they just were obvious useful to me. Each of them could be removed, other instruction not described or thought of here could be added.</p>
+<p>The core idea is to use instruction trees and a parsing <em>machine</em> interpreting these. In principle both the essential as well as the optional instructions chosen for <code>lingukit</code> so far are not special in some way - they just were obvious and useful to me. Each of them could be removed, other instructions (not described or thought of here) could be added.</p>
 <h4 id="tooling">Tooling</h4>
 <p>As grammars are data general tools can be build around them, interpreting their tree structure e.g. to convert it to other formats like a visual graph.</p>
 <h4 id="non-textual-implementations">Non-Textual Implementations</h4>
 <p><code>lingukit</code> is a somewhat BNF like syntax in which grammars are described as text that is parsed to tree from which a runtime grammar is build.<br />This additional step might not be worth it in some languages. In particular functional languages like Haskell or lisps are well suited to directly <em>formulate</em> a grammar's data structures in the host language itself. This approach is also used to bootstrap a parser for the <code>lingukit</code> language.</p>
 <h2 id="q-a">Q &amp; A</h2>
-<p>TODO</p>
-<ul>
-<li>Possible Languages?</li>
-<li>Ambiguity?</li>
-<li>Left-recursive, right recursive?</li>
-<li>lexer, lexing, white-space?</li>
-<li>terminal-, non-terminal tokens?</li>
-<li>Memoization</li>
-<li>multi-threading</li>
-</ul>
+<p><strong>Can all languages (syntaxes) be expressed?</strong></p>
+<p>No. Selection sticks to the first match. When using the same rule nested within different parents and expecting them to match different options for the same input sequence depending on the parent or grant parent etc. will not work. Using look-ahead might help to fix some ambiguity shortly after the matched selection options but in general the grammar has to be written so that the first matching option is what we want. If this does not do it cannot be said.</p>
+<p><strong>How to resolve ambiguity in syntaxes, give precedence to a rule?</strong></p>
+<p>Remember that a selection goes with the first option that matches. To give an option a higher precedence move it to occur earlier in the selection. Or in other words sort options by their precedence starting with the highest. Naturally it is a good idea to design a syntax so that most of the options start with a literal that is different from the other options first literal. Also it is good practice to have options starting with a literal first, options with variable start last.</p>
+<p><strong>Can the grammars be declared using left-recursive/right-recursive rules?</strong></p>
+<p>Currently any left-recursive grammar will cause the parser to eat stack until a stack overflow occurs. Thus recursion may never occur as first element of a rule sequence. Some input has to be consumed before recursion occurs to make sure the parser makes progress.</p>
+<p><strong>Won't right recursion cause problems with the stack, a <em>large</em> parser?</strong></p>
+<p>Classic grammars had no iteration construct so theoretically endless lists of elements had to be modelled using left or right recursion where in case of right recursion each recursion would create another stack frame. However, <code>lingukit</code> has an iteration instruction that allows repetition of rules without using the stack, thus it is not a problem.</p>
+<p><strong>How to make white-space significant or captured in the parse-tree?</strong></p>
+<p>The described parser machine has no lexer or lexing phase. White-space is as good as any other input, that is to say it is always significant and captured in the same way other input is or is not. This is why most grammars heavily use <code>,</code> as it means <em>any white-space</em>. As this syntactic sugar has no name it is not captured by default. If white-space should be captured it just has to be named like <code>(,):white-space</code> would do.</p>
+<p><strong>How to describe or distinguish terminal/non-terminal tokens and fragments?</strong></p>
+<p>To distinguish terminal and non-terminal tokens might be theoretically interesting but is of little importance when writing grammars. Rules without a reference are terminals, the rest isn't. However it is of far bigger practical interest to distinguish rules that form <em>words</em> (no white-space between the parts) and rules that form <em>sentences</em> (white-space between the parts). Now, as white-space is explicit in <code>lingukit</code> there isn't really a difference here. Use white-space literals or syntax sugar to gobble it between the words of a sentence or not use it between the letters of a word.</p>
+<p>To use something as a fragment a reference is prefixed with minus <code>-</code> so that the referenced rule will not be captured itself. Note however that references in such a rule again have to be prefixed to not be captured. Otherwise the parser will assume we are interested to have a node for them.</p>
+<p><strong>Can the parser benefit from memoization?</strong></p>
+<p>Most likely not.</p>
+<p><strong>Can the parser be parallelised (use multi-threading)?</strong></p>
+<p>Not really. Parsing is a inherently sequential problem. Theoretically the flow could be forked on selections to compute each in parallel to faster find the first one matching throwing away everything else. But as they push and pop on and off the stack while they parse this would also require to given each thread its own stack merging the one of the matching option back to the main stack. One is most like better off with starting multiple parsers for different input files in parallel threads each parsing single threaded.</p>
 <h2 id="what-more">What more?</h2>
 <p>I later discovered <a href="https://www.youtube.com/watch?v=ZzsK8Am6dKU">Parsing with Derivatives</a> by Matthew Might from Stanford University having ideas for parsing that seam to be related to me but tackling it from the theoretically point of view with a lot of mathematical yadda yadda yadda.</p>
 </body>
