@@ -19,7 +19,7 @@ Artifact       : '.' z {z 9 '-'}*
 Field          : -Verb
 Constant       : -Noun
 Atom           : '`'{ !_ }+
-Key            : -KeyOf{ !_ !',' }+
+Key            : -KeyOf{ !Z !_ !',' }{ !_ !',' }*
 Variable       : '?'{ @ 9 '-' '_' }+
 
 Operation      : -Identifier
@@ -42,10 +42,11 @@ Process        : -Noun
 Fault          : -Noun '!'
 
 % Operators
-Operator       : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }x1-3
+Operator       : -OperatorSymbol { OperatorSymbol '!' '?' }x0-2
+OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }
 
 % Unit Symbols
-UnitSymbol     : { @ -UnitLetter }+
+UnitSymbol     : { @ UnitLetter }+
 UnitLetter     : { ''' '$' '€' '/' '°' '"' }
 
 % Literals
@@ -53,7 +54,8 @@ literal        : conceptual | textual | binary
 conceptual     : ''' ( (number['e'number:EXPONENT] UnitSymbol?) | ($ .. UnitLetter):VALUE )
 textual        : '"""', (..):TEXT (, '"""') | '"' (!'"'*):TEXT '"'
 binary         : '#'& ('b'& 1+ | 'o'& 7+ | 'x'& #+ | 'd'? 9+ ):NUMBER nb?
-number         : ({'+' '-'}?):SIGN (9+ (','? 9+)*):DECIMAL ['.' 9+]:FRACTIONAL nb?
+number         : ({'+' '-'}?):SIGN -numeral  ['/' -numeral]:DENOMINATOR nb?
+numeral        : (9+ (','? 9+)*):DECIMAL ['.' 9+]:FRACTIONAL
 % nota bene (call site literal comments)
 nb             : '\' @+ 
 
@@ -71,22 +73,25 @@ dimension-type : '[' SliceOf? (range-type|length-type)? ']' | '..'
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
 stream-type    : {'<' '>'}
 variant        : stream-type? dimension-type* [channel-type* dimension-type?] modifier?
-type           : class? -base-type variant? | op-type
+type           : shape | op-type | class? -base-type variant?
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 list-type      : '['& -type? ']'
 set-type       : '{'& -type? '}'
-tuple-type     : '(' [ type ( ',' > type )* ] ')'
+tuple-type     : '(' [ type (> ',' > type )* ] ')'
 fn-type        : '(' type:INSTANCE > '->' ( > type > '->' )* > type:RETURN ')'
 op-type        : Operation fn-type
 
+% Shapes
+shape          : '[]' | '{}' | '""' | Atom | Key
+
 % Type Variables / Kinds
 instances      : 'instances', & TypeVariable, '::', kind [, '&' > Operation+]
-kind           : op-kind | class? -base-kind variant?
+kind           : shape | op-kind | class? -base-kind variant?
 base-kind      : Wildcard | Type | range-type | length-type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
 list-kind      : '[' -kind? ']'
 set-kind       : '{' -kind? '}'
 elem-kind      : '..' | kind
-tuple-kind     : '(,)' | '(' [ -elem-kind ( ',' > -elem-kind )* ]  ')'
+tuple-kind     : '(,)' | '(' [ -elem-kind (> ',' > -elem-kind )* ]  ')'
 fn-kind        : '(->)' | '(' kind:INSTANCE > '->' ( > kind > '->' )*  > kind:RETURN ')'
 op-kind        : ( Wildcard | Operation ) fn-kind
 

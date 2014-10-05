@@ -399,3 +399,25 @@ or even source code like
 		Byte b =<< bytes 
 
 	key @process-pool :: @Worker[>][<>]
+	
+	fn numbers! :: Foo f -> Bar
+		= ['1/2 '1.2/4]
+		
+	fn force-plus [+!] :: Int! a -> Int b -> Int!
+		= (`ast (`add ?a ?b))
+		
+	% Shapes %
+	
+	fn shapes :: ([] x -> {}) = "example"
+	fn shapes :: "" x -> String = "another example"
+	fn shapes :: `foo x -> String = "another example"
+	fn shapes :: @foo x -> String = "another example"
+
+	fn show :: True t -> String = "true"
+	fn show :: False f -> String = "false"
+
+	instances A :: (`ast , ..)
+
+	% testing some things... %
+	
+	data Menu :: Meal[Weekday]
