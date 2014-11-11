@@ -1,0 +1,37 @@
+(`library @lang.util [
+	(`export { Collections, Math })
+	
+	(`import @lang )
+	(`import @lang.io )
+	
+	(`import @fooLib [ModA, ModB] {Mathematics => Math, Characters => Chars})
+	(`import @libX [ModY] { 
+			Int => Number,
+			Float => Real,
+			eq => equal
+	})
+	(`import @lang.io.streams)
+	
+	(`preset @lang.io)
+	(`reject @lang.extras )
+
+	(`auto [] EmptyList)
+
+	(`invariant Int even)
+	
+	(`tag `module Module)
+	
+	(`module Math [
+		(`import @utilx)
+		(`import @foo.bar {Original => Alias, Que => Foo})
+		
+		(`auto eq		equals [Int])
+		(`auto [Digit] 	Digits)
+		(`auto []      	NoElements)
+		
+		(`invariant Digits non-empty)
+		(`invariant Int [positive odd])
+		
+		(`mixin Characters Digits)
+	])
+])

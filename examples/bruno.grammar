@@ -15,19 +15,14 @@ Specialisation : '~>'
 
 % Identifiers
 Wildcard       : '_'
-Artifact       : '.' z {z 9 '-'}*
 Field          : -Verb
 Constant       : -Noun
 Atom           : '`'{ !_ }+
-Key            : -KeyOf{ !Z !_ !',' }{ !_ !',' }*
+Key            : -KeyOf{ !Z !_ !',' }{ !_ !',' !'{' !'}' !'(' !')' !'[' !']'}*
 Variable       : '?'{ @ 9 '-' '_' }+
 
 Operation      : -Identifier
 Function       : -Identifier
-
-Module         : -Artifact
-Library        : -Artifact
-Namespace      : -Artifact
 
 TypeVariable   : Z 9?
 Behaviour      : -Noun
@@ -96,8 +91,8 @@ fn-kind        : '(->)' | '(' kind:INSTANCE > '->' ( > kind > '->' )*  > kind:RE
 op-kind        : ( Wildcard | Operation ) fn-kind
 
 % Modularisation
-file           : module | namespace
-namespace      : form
+file           : module | library
+library        : form
 
 % Implementation
 module         : (, -declaration)+ .
@@ -159,7 +154,7 @@ tuple          : '()' | '(', -vector, ')'
 list           : '[]' | '[', -vector, ']'
 set            : '{}' | '{', -vector, '}'
 comment        : '%' .. '%'
-term           : Wildcard | Atom | Key | values | literal | Artifact | Constant 
+term           : Wildcard | Atom | Key | values | literal | Constant 
                | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
 
 % Processes

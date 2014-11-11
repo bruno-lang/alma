@@ -213,7 +213,7 @@ or even source code like
 	
 	val SomeTHING :: = `some-thing
 	
-	fn test :: Int i -> Int = .math
+	fn test :: Int i -> Int = Math x
 	
 	
 	
@@ -309,6 +309,8 @@ or even source code like
 	fn on-channel :: Int[>] chan -> Int[>]
 	
 	fn yields-channel :: @T[>] key -> T[>]
+
+	% == [ Processes & Channels ]== %
 
 	% blocking, non blocking and unknown output %
 	instances O1 :: _[>]
@@ -421,3 +423,7 @@ or even source code like
 	% testing some things... %
 	
 	data Menu :: Meal[Weekday]
+	
+	when Greet :: Char> out -> ()
+		1. out print "Hello World"
+		.. 	

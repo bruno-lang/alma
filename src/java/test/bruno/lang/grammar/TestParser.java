@@ -22,7 +22,7 @@ public class TestParser {
 		Parsed t = Parsed.parse("examples/bruno.grammar", Lingukit.GRAMMAR, "grammar");
 		Grammar bruno = grammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
-		printer.process(Parsed.parse("etc/example.ns", bruno, "namespace"));
+		printer.process(Parsed.parse("etc/example.lib", bruno, "library"));
 		printer.process(Parsed.parse("etc/example.mod", bruno, "module"));
 	}
 	

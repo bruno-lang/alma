@@ -1,6 +1,7 @@
 package bruno.lang.grammar;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 
@@ -11,13 +12,18 @@ import java.util.NoSuchElementException;
  * 
  * @author jan
  */
-public final class Grammar {
+public final class Grammar implements Iterable<Grammar.Rule>{
 
 	private final Rule[] rules;
 
 	public Grammar(Rule... namedRules) {
 		super();
 		this.rules = namedRules;
+	}
+	
+	@Override
+	public Iterator<Rule> iterator() {
+		return Arrays.asList(rules).iterator();
 	}
 
 	public Rule rule(String name) {
