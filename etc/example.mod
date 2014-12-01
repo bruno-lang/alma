@@ -1,16 +1,16 @@
 
-	instances F1 :: (T -> T -> Bool)
+	family F1 :: (T -> T -> Bool)
 
-	instances X :: (Int[3], [T])
+	family X :: (Int[3], [T])
 
-	instances T :: _
-	instances E :: _
+	family T :: _
+	family E :: _
 
 	fn foo :: ({([T], E[])} e -> E) = x
 
 	op cons [+] :: ([T] l -> E e -> [T])
 	
-	fn div [/] :: Int a -> Int b -> Int!
+	fn div [/] :: Int a -> Int b -> Int!		
 		= a
 		
 	unit Digit :: Char '0 .. '9
@@ -18,6 +18,8 @@
 	dimension Float :: Number '-2e18 .. '+2e18, NaN
 	
 	dimension Bool :: = [ False, True ]
+	
+	dimension Bool :: () = [ False, True ]
 
 	dimension Bit :: = [ `0 `1 ]
 	
@@ -39,23 +41,24 @@
 	data Point :: (X- x, Y- y) : "(X- ':' Y-)"
 	data Points :: [Point]
 	
-	unit system SI :: =
-		ratio Time :: [
-			'1h   = '60min,
-			'1min = '60sec,
-			'1sec = '1000ms 
-		]
-		ratio XY :: [ 'x$ = 'y€	]
+	dimension SI :: ()
+	
+	ratio Time :: SI = {
+		'1h   = '60min,
+		'1min = '60sec,
+		'1sec = '1000ms 
+	}
+	ratio XY :: SI = { 'x$ = 'y€	}
 
 
-	fn max :: (Int a -> Int b -> Int) 
-	  \ a > b \ = a 	
-	  = b
+	fn max :: (Int a -> Int b -> Int) =
+	  a > b : a 	
+	        : b
 		
 		
-	fn quicksort :: [T] list -> [T] 
-		\ list length <= '1 \= list 
-		                     = (less ++ same ++ more)
+	fn quicksort :: [T] list -> [T] =
+		list length <= '1 : list 
+		                  : (less ++ same ++ more)
 	where
             T pivot  = list head
             [T] less = list filter pivot >  | quicksort
@@ -66,29 +69,29 @@
 		= { a => b, 
 		    c => d }
 
-	instances K :: _
-	instances V :: _
+	family K :: _
+	family V :: _
 	fn assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 
-	fn switch :: (Weekday d -> String)
-		\ Monday \= "Monday"
-		\ Tuesday \= "Tuesday"
+	fn switch :: (Weekday d -> String) =
+		Monday  : "Monday"
+		Tuesday : "Tuesday"
 	where
-		\ d == _ \ 
+		* = d == _
 		
-	fn another :: [Int] n -> Int idx -> Int
-		\ []   \= '0
-		\ ['1] \= '1
-		\      \= n at idx
+	fn another :: [Int] n -> Int idx -> Int =
+		a. []   : '0
+		b. ['1] : '1
+		c.      : n at idx
 	where
-		\ n == _  \
+		* = n == _
 		
-	fn pairs :: Point p -> Int
-		\ '1 , '2 \= '1
-		\ '0 , '4 \= '2
-		\         \= '3
+	fn pairs :: Point p -> Int =
+		'1 , '2 : '1
+		'0 , '4 : '2
+		        : '3
 	where
-		\ p x == _, p y == _ \
+		* = [ p x == _, p y == _ ]
 		
 	fn clojure :: [T] e -> (T, T) 
 		= ((a b),
@@ -116,8 +119,8 @@
 	unit Days :: `relative Time 
 	unit DayOfMonth :: `absolute Time
 	
-	instances E :: _
-	instances L :: [E]
+	family E :: _
+	family L :: [E]
 	
 	op cons :: L l -> E e -> L
 	op append :: L l -> E e -> L
@@ -133,7 +136,7 @@
 	                                    drop, remove, insert, at, slice}
 	                                    
 	                                    
-	instances E :: _
+	family E :: _
 
 	data Elements :: (
 	    Length length,
@@ -141,19 +144,19 @@
 	    [E] tail
 	)
 	
-	fn at :: Elements list -> Index i -> E?
-	    \ i < list length \= list at i
-	    \                 \= list tail at (i - list length)
+	fn at :: Elements list -> Index i -> E? =
+	    i < list length : list at i
+	                    : list tail at (i - list length)
 	
-	fn insert :: Elements list -> Index i -> T e -> [E]
-	    \ i == '0 \= list prepand e
-	    \ i == '1 \= list take '1 append e ++ (list drop '1)
-	    \ i >= list length \= (list length + '1, elements, tail insert at (i - list length))
-	    = (list take i) ++ (drop i prepand e)
+	fn insert :: Elements list -> Index i -> T e -> [E] =
+	    i == '0 : list prepand e
+	    i == '1 : list take '1 append e ++ (list drop '1)
+	    i >= list length : (list length + '1, elements, tail insert at (i - list length))
+	                     : (list take i) ++ (drop i prepand e)
 	    
-	instances P :: (,)
-	instances A :: _
-	instances B :: _
+	family P :: (,)
+	family A :: _
+	family B :: _
 
 	fn lazy :: (A -> P -> B) f -> A v -> P p -> ~B
 	    = () -> (a f p)
@@ -162,15 +165,15 @@
 	val Hour :: Milliseconds = '1h
 	val Xyz :: Seconds = '2h + '42min
 	
-	instances T :: _
-	fn or-default :: T? v -> T default -> T 
-	    \ v exists \= v
-	    \          \= default	
+	family T :: _
+	fn or-default :: T? v -> T default -> T =
+	    v exists : v
+	             : default	
 	    
-	instances T :: _ & eq
-	fn first :: [T] list -> T sample -> Index start -> T
-	    \ sample == list at start \= e
-	    \                        \= list first sample (start + '1) 
+	family T :: _ & eq
+	fn first :: [T] list -> T sample -> Index start -> T =
+	    sample == list at start : e
+	                            : list first sample (start + '1) 
 	    
 	dimension Coordinate :: Int
 	dimension X- :: Coordinate
@@ -186,8 +189,8 @@
 	data String :: [Char]
 	data Octal :: Char[8]
 	
-	instances T :: _
-	instances S :: T
+	family T :: _
+	family S :: T
 	fn specialise [=>>] :: T value -> $S type -> S 
 		= (`ast `specialise ?value ?type) 
 	
@@ -200,13 +203,13 @@ or even source code like
   
 	"""
 	
-	instances A :: _
-	instances B :: _
-	instances F :: (A -> P -> B)
+	family A :: _
+	family B :: _
+	family F :: (A -> P -> B)
 	
 	fn invoke :: F f -> A a -> P p -> B = a f p
 	
-	fn map :: [A] l -> (A -> B) fn -> [B]
+	fn map :: [A] l -> (A -> B) fn -> [B] = "XXX"
 	fn singleton :: A v -> {A} = {v}
 	
 	val Setify :: ([A] -> [{A}]) = (_ map singleton)
@@ -236,14 +239,14 @@ or even source code like
 	fn show :: Member m -> String
 		= m name ++ "," ++ m value show
 		
-	instances T :: (Name, ..)
+	family T :: (Name, ..)
 	notation Tag :: T 
 	
-	fn signum :: Relation v -> Int
-		\ v is Less \= '-1
-		\ v is More \= '1
-		             = '0
-		             
+	fn signum :: Relation v -> Int =
+		v is Less : '-1
+		v is More : '1
+		          : '0
+
 	fn real :: Int v -> Real
 		= '100,000.00e-34
 		
@@ -251,33 +254,33 @@ or even source code like
 	
 	fn plus [+] :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
 	
-	fn partially-ast-impl :: Some a -> Thing 
-		\ foo bar \= (`ast baz)
-		= (`ast que)
+	fn partially-ast-impl :: Some a -> Thing =
+		foo bar : (`ast baz)
+		        : (`ast que)
 	
 		
-	instances A :: 6-8
+	family A :: 6-8
 	
 	data Tuple :: (Int[A] one, String[A] other)
 	
-	instances M :: *
-	instances L :: 0-M
+	family M :: *
+	family L :: 0-M
 
 	fn fill :: T[L] a -> T e -> T[L]
 		= a fill-with-from-to '0 M
 	
-	instances E :: _
-	instances A :: E[*]
+	family E :: _
+	family A :: E[*]
 	
-	fn same-length-array :: A a -> A b -> A		
+	fn same-length-array :: A a -> A b -> A	= "?"
 	
 	fn rotate180 :: Matrix* m -> Matrix 
 		= m rotate90 rotate90
 		
-	instances F1 :: (->)
-	instances F2 :: (_ -> _)
-	instances F3 :: (_ -> _ -> _)
-	instances O1 :: _(->)
+	family F1 :: (->)
+	family F2 :: (_ -> _)
+	family F3 :: (_ -> _ -> _)
+	family O1 :: _(->)
 	
 	fn empty? :: E[] array -> Bool = array length == '0
 	
@@ -294,36 +297,36 @@ or even source code like
 	
 	proc assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 	
-	instances E :: _
+	family E :: _
 	fn at :: E[:] s -> Index i -> Int = (`ast `get ?s ?i)
 	
 	% keys %
 	
-	instances V :: _
+	family V :: _
 	fn get :: T obj -> @V key -> V? = @akey-in-action-but-impl-doesn't-make-sense
 	
-	fn put :: T obj -> @V key -> V value -> T
+	fn put :: T obj -> @V key -> V value -> T = ?
 	
-	fn canonical-name :: @V key -> String
+	fn canonical-name :: @V key -> String = ?
 	
-	fn on-channel :: Int[>] chan -> Int[>]
-	
-	fn yields-channel :: @T[>] key -> T[>]
+	fn on-channel :: Int[>] chan -> Int[>] = ?
+		
+	fn yields-channel :: @T[>] key -> T[>] = ?
 
 	% == [ Processes & Channels ]== %
 
 	% blocking, non blocking and unknown output %
-	instances O1 :: _[>]
-	instances O2 :: _]>[
-	instances O3 :: _]>]
+	family O1 :: _[>]
+	family O2 :: _]>[
+	family O3 :: _]>]
 	
 	% blocking, non blocking and unknown input %
-	instances I1 :: _[<]
-	instances I2 :: _]<[
-	instances I3 :: _]<]
+	family I1 :: _[<]
+	family I2 :: _]<[
+	family I3 :: _]<]
 	
 	% processes %
-	process Server :: { Ready => [ Ready ], _ => [ Ready ] }
+	process Server :: = { Ready => [ Ready ], _ => [ Ready ] }
 	
 	% single process %
 	when Ready :: HttpServer server -> HttpServer
@@ -354,8 +357,8 @@ or even source code like
 		HttpRequest[>] idle-worker-input = @pool receive-queue <<	
 
 	when Idle :: Worker worker -> Worker
-		1. worker responds >> (worker process (worker requests <<))
-		2. @pool send-queue >> (worker requests key)
+		1. Work: worker responds >> (worker process (worker requests <<))
+		2. Register: @pool send-queue >> (worker requests key)
 		.. Idle: worker
 		
 	when _! :: Worker worker -> Worker
@@ -393,8 +396,8 @@ or even source code like
 		
 	% Streams %
 	
-	instances O :: _>
-	instances I :: _<
+	family O :: _>
+	family I :: _<
 	
 	fn append :: Byte> file -> [Byte] bytes -> Byte> = file ++ b
 	where
@@ -418,7 +421,7 @@ or even source code like
 	fn show :: True t -> String = "true"
 	fn show :: False f -> String = "false"
 
-	instances A :: (`ast , ..)
+	family A :: (`ast , ..)
 
 	% testing some things... %
 	
