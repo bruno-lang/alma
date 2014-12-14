@@ -60,15 +60,15 @@ literal-range  : literal [ > '..' > literal ] | '..' > literal
 constant-range : Constant [ > '..' > Constant ] | '..' > Constant
 
 % Types
-modifier       : { Faulty Optional Transient }
-class          : { TypeOf LazyOf KeyOf }
+variant        : { Faulty Optional Transient }
+mode           : { TypeOf LazyOf KeyOf }
 length-type    : 9+ | '*' | Type | TypeVariable
 range-type     : length-type:MIN '-' length-type:MAX
 dimension-type : '[' SliceOf? (range-type|length-type)? ']' | '..'
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
 stream-type    : {'<' '>'}
-variant        : stream-type? dimension-type* [channel-type* dimension-type?] modifier?
-type           : shape | op-type | class? -base-type variant?
+dimensions     : stream-type? dimension-type* [channel-type* dimension-type?]
+type           : shape | op-type | mode? -base-type dimensions? variant?
 base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
 list-type      : '['& -type? ']'
 set-type       : '{'& -type? '}'
@@ -79,16 +79,17 @@ op-type        : Operation fn-type
 % Shapes
 shape          : '[]' | '{}' | '""' | Atom | Key
 
-% Type Variables / Kinds
-family         : 'family', & TypeVariable, '::', kind [, '&' > Operation+]
-kind           : shape | op-kind | class? -base-kind variant?
-base-kind      : Wildcard | Type | range-type | length-type | list-kind | set-kind | tuple-kind | fn-kind | TypeVariable
-list-kind      : '[' -kind? ']'
-set-kind       : '{' -kind? '}'
-elem-kind      : '..' | kind
-tuple-kind     : '(,)' | '(' [ -elem-kind (> ',' > -elem-kind )* ]  ')'
-fn-kind        : '(->)' | '(' kind:INSTANCE > '->' ( > kind > '->' )*  > kind:RETURN ')'
-op-kind        : ( Wildcard | Operation ) fn-kind
+% Type Families / Variables
+family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-behaviour (>',' as-behaviour)* ] [, 'with' > Operation (> ',' > Operation)*]
+as-behaviour   : > Behaviour (>> TypeVariable)*
+type-var       : shape | op-var | mode? -kind-var dimensions? variant?
+kind-var       : Wildcard | Type | range-type | length-type | list-var | set-var | tuple-var | fn-var | TypeVariable
+list-var       : '[' -type-var? ']'
+set-var        : '{' -type-var? '}'
+elem-var       : '..' | type-var
+tuple-var      : '(,)' | '(' [ -elem-var (> ',' > -elem-var )* ]  ')'
+fn-var         : '(->)' | '(' type-var:INSTANCE > '->' ( > type-var > '->' )*  > type-var:RETURN ')'
+op-var         : ( '*' | Operation ) fn-var
 
 % Modularisation
 file           : module | library
@@ -117,12 +118,12 @@ enumeration    : '=', form
 
 dimension      : 'dimension' & >> -primitive, enumeration?
 unit           : 'unit' & >> -primitive
-primitive      : Type & > ['[' UnitSymbol ']'] > '::', aspects?  [('()'|Type) > values? > (',' > Constant >)*], format*
+primitive      : Type & > ['[' UnitSymbol ']'] > '::', aspects  [('()'|Type) > values? > (',' > Constant >)*], format*
 
 % Somewhat abstract data types
 notation       : 'notation' & >> Notation > '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
 
-behaviour      : 'behaviour' & >> Behaviour > '::', [Behaviour, (',', Behaviour,)] ['=', '{', Operation, (',', Operation,)* '}']
+behaviour      : 'behaviour' & >> Behaviour (>> TypeVariable)* > '::', '=' > '{', Operation, (',', Operation,)* '}'
 
 % Functions
 op             : 'op' & >> Operation > ['[' Operator ']'] > '::', Operation?, signature
@@ -131,14 +132,13 @@ fn             : ('fn'|'proc') & >> Function > ['[' Operator ']'] > '::', signat
 signature      : -descriptor | '('& > -descriptor > ')'
 descriptor     : ( parameter > '->' > )+ type
 parameter      : type >> -Identifier:NAME
-implementation : select | cases 
-cases          : '='& (((,[z'.'>] -seq > ':' -case)+ [,[z'.'>]':' -case]) | -case | ,'?'. )
+implementation : '='& (((,[z'.'>] -seq > ':' -case)+ [,[z'.'>]':' -case]) | -case | ,'?'. )
 case           : , expr .
 where          : 'where' & , -clause > (-clause > )*
 clause         : switch | variable | bind | specialisation
 switch         : '*' > '='& > expr .
 variable       : type >> Identifier > (select | '=' > expr .)
-select         : (, '|='& > expr . )+ [, 'L='& > expr .] 
+select         : (, '|='& > expr . )+
 specialisation : type > -Specialisation > Type .
 bind           : Function > -Specialisation > Operation (> type)* .
 

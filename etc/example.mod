@@ -170,7 +170,7 @@
 	    v exists : v
 	             : default	
 	    
-	family T :: _ & eq
+	family T :: _ with eq
 	fn first :: [T] list -> T sample -> Index start -> T =
 	    sample == list at start : e
 	                            : list first sample (start + '1) 
@@ -280,7 +280,7 @@ or even source code like
 	family F1 :: (->)
 	family F2 :: (_ -> _)
 	family F3 :: (_ -> _ -> _)
-	family O1 :: _(->)
+	family O1 :: *(->)
 	
 	fn empty? :: E[] array -> Bool = array length == '0
 	
@@ -375,8 +375,11 @@ or even source code like
 		T]>] channel = each channel	
 		
 	proc send? [>|>] :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
-		|= value >> channel
-		|= value >> (timeout make-channel) than-return channel
+		= res
+		where
+		Int res
+			|= value >> channel
+			|= value >> (timeout make-channel) than-return channel
 		
 		
 	fn example :: T[>][3] channels -> T = value
@@ -386,13 +389,17 @@ or even source code like
 			|= channels at #1 <<
 			|= channels at #2 <<	
 	
-	fn example2 :: Int[>] channel -> Int
-		|= channel <<
-		|= '7 after '6ms
+	fn example2 :: Int[>] channel -> Int = res
+	where
+		Int res
+			|= channel <<
+			|= '7 after '6ms
 			
-	fn example3 :: Int[>] channel -> Int
-		|= channel <<
-		L= '2
+	fn example3 :: Int[>] channel -> Int = res
+	where
+		Int res
+			|= channel <<
+			|= '2
 		
 	% Streams %
 	
@@ -430,3 +437,12 @@ or even source code like
 	when Greet :: Char> out -> ()
 		1. out print "Hello World"
 		.. 	
+		
+	% Behaviours (again) %
+	
+	family X :: _ with eq, compare
+	
+	family S :: [E] as Stack E with at
+	
+	behaviour Stack E :: = { push, pop }
+	family S2 :: _ as Stack E, Collection E

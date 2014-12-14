@@ -28,6 +28,7 @@
 		(`auto eq		equals [Int])
 		(`auto [Digit] 	Digits)
 		(`auto []      	NoElements)
+		(`auto Stack { push => push, pop => pop, peek => peek })
 		
 		(`invariant Digits non-empty)
 		(`invariant Int [positive odd])
