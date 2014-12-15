@@ -77,21 +77,21 @@
 		Monday  : "Monday"
 		Tuesday : "Tuesday"
 	where
-		* = d == _
+		?. d == _ :
 		
 	fn another :: [Int] n -> Int idx -> Int =
 		a. []   : '0
 		b. ['1] : '1
 		c.      : n at idx
 	where
-		* = n == _
+		?. n == _ :
 		
 	fn pairs :: Point p -> Int =
 		'1 , '2 : '1
 		'0 , '4 : '2
 		        : '3
 	where
-		* = [ p x == _, p y == _ ]
+		?. p x == _, p y == _ :
 		
 	fn clojure :: [T] e -> (T, T) 
 		= ((a b),
@@ -446,3 +446,27 @@ or even source code like
 	
 	behaviour Stack E :: = { push, pop }
 	family S2 :: _ as Stack E, Collection E
+	
+	
+	family T :: (,)
+	family F :: (->)
+	family A :: _[]
+	family V :: _[:]
+	family L :: [_]
+	family S :: {_}
+	family D :: *
+	
+	family O :: *(->)
+	family R :: _[<]
+	family W :: _[>]
+	
+	family M :: _?
+	family E :: _!
+	family P :: _*
+	
+	family T :: $_
+	family L :: ~_
+	family K :: @_	
+	
+	family E :: _ as Stack, Collection
+	family F :: _ as Stack with plus

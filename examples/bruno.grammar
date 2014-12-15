@@ -103,22 +103,24 @@ fault          : 'fault' & >> Fault > '::', Type, values?
 
 ratio          : 'ratio' & >> Ratio > '::', Type, '=', set .
 
-aspects        : (Atom >>)*
+natures        : (Atom >>)*
 
 % Values
 val            : 'val' & >> Constant > '::' > [type >] '=' > expr .
 key            : 'key' & >> Key > '::' > type .
 
-data           : 'data' & >> Data > '::', (record | type), format*, enumeration?
+data           : 'data' & >> Data > '::', (record | type), aspects, enumeration?
 record         : '('& , field, (',', field,)* ')'
 field          : type >> Field
-format         : ':'&, ('#'& -pattern '[]'? | '"' -pattern '"' ),
+aspects        : [aspect (, aspect)*]
+aspect         : ':'&, ('#'& -pattern '[]'? | '"' -pattern '"' )
 pattern        : '(' ( (type | literal)+','?,)+ ')'
 enumeration    : '=', form
 
+
 dimension      : 'dimension' & >> -primitive, enumeration?
 unit           : 'unit' & >> -primitive
-primitive      : Type & > ['[' UnitSymbol ']'] > '::', aspects  [('()'|Type) > values? > (',' > Constant >)*], format*
+primitive      : Type & > ['[' UnitSymbol ']'] > '::', natures  [('()'|Type) > values? > (',' > Constant >)*], aspects
 
 % Somewhat abstract data types
 notation       : 'notation' & >> Notation > '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
@@ -136,7 +138,7 @@ implementation : '='& (((,[z'.'>] -seq > ':' -case)+ [,[z'.'>]':' -case]) | -cas
 case           : , expr .
 where          : 'where' & , -clause > (-clause > )*
 clause         : switch | variable | bind | specialisation
-switch         : '*' > '='& > expr .
+switch         : '?.'& > seq > ':'.
 variable       : type >> Identifier > (select | '=' > expr .)
 select         : (, '|='& > expr . )+
 specialisation : type > -Specialisation > Type .
