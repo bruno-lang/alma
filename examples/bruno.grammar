@@ -11,7 +11,7 @@ KeyOf          : '@'
 Optional       : '?'
 Faulty         : '!'
 Transient      : '*'
-Specialisation : '~>'
+Specialisation : '+>'
 
 % Identifiers
 Wildcard       : '_'
@@ -40,56 +40,52 @@ Fault          : -Noun '!'
 Operator       : -OperatorSymbol { OperatorSymbol '!' '?' }x0-2
 OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }
 
-% Unit Symbols
-UnitSymbol     : { @ UnitLetter }+
-UnitLetter     : { ''' '$' '€' '/' '°' '"' }
-
 % Literals
+LiteralSymbol  : { !_ !'?' !'#' !'"' !'=' !'>' !'<' !'&' !'|' !')' !'}' !']' !':' !'.' !',' !';' !'*'}
 literal        : conceptual | textual | binary
-conceptual     : ''' ( (number['e'number:EXPONENT] UnitSymbol?) | ($ .. UnitLetter):VALUE )
-textual        : '"""', (..):TEXT (, '"""') | '"' (!'"'*):TEXT '"'
-binary         : '#'& ('b'& 1+ | 'o'& 7+ | 'x'& #+ | 'd'? 9+ ):NUMBER nb?
-number         : ({'+' '-'}?):SIGN -numeral  ['/' -numeral]:DENOMINATOR nb?
-numeral        : (9+ (','? 9+)*):DECIMAL ['.' 9+]:FRACTIONAL
-% nota bene (call site literal comments)
-nb             : '\' @+ 
+conceptual     : ''' $ -LiteralSymbol* | numeric (numeric | -LiteralSymbol)*
 
-values         : literal-set | literal-range | constant-range
-literal-set    : '{' > literal > (',' > literal > )* '}'
-literal-range  : literal [ > '..' > literal ] | '..' > literal
-constant-range : Constant [ > '..' > Constant ] | '..' > Constant
+textual        : '"""', (..):TEXT (, '"""') | '"' (!'"'*):TEXT '"'
+binary         : '#'& ('b'& 1+ | 'o'& 7+ | 'x'& #+ | 'd'? 9+ ):NUMBER 
+numeric        : ({'+' '-'}?):SIGN (9+ ({'.' ','} 9+)*):DECIMAL  
 
 % Types
 variant        : { Faulty Optional Transient }
-mode           : { TypeOf LazyOf KeyOf }
+indirection    : { TypeOf LazyOf KeyOf }
+
 length-type    : 9+ | '*' | Type | TypeVariable
-range-type     : length-type:MIN '-' length-type:MAX
-dimension-type : '[' SliceOf? (range-type|length-type)? ']' | '..'
+span-type      : length-type:MIN '-' length-type:MAX
+dimension-type : '[' SliceOf? [span-type|length-type] ']'
+
+range-type     : '{' [literal:MIN] ':'& [literal:MAX] '}' 
+value-set-type : '{'& literal ('|' literal)* '}'
+
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
 stream-type    : {'<' '>'}
 dimensions     : stream-type? dimension-type* [channel-type* dimension-type?]
-type           : shape | op-type | mode? -base-type dimensions? variant?
-base-type      : Type | list-type | set-type | tuple-type | fn-type | TypeVariable
-list-type      : '['& -type? ']'
-set-type       : '{'& -type? '}'
-tuple-type     : '(' [ type (> ',' > type )* ] ')'
-fn-type        : '(' type:INSTANCE > '->' ( > type > '->' )* > type:RETURN ')'
+type           : shape | op-type | indirection? -base-type dimensions? variant?
+base-type      : simple-type | list-type | set-type | tuple-type | fn-type | TypeVariable
+simple-type    : Type [range-type | value-set-type]
+list-type      : '['& -type ']'
+set-type       : '{'& -type '}'
+tuple-type     : '(' [ type (('..'|','?' ') type )* ] ')'
+fn-type        : '(' type:INSTANCE > '->'& ( > type > '->' )* > type:RETURN ')'
 op-type        : Operation fn-type
 
 % Shapes
-shape          : '[]' | '{}' | '""' | Atom | Key
+shape          : '[]' | '{}' | '""' | Atom | Key | conceptual:SHAPE
 
 % Type Families / Variables
 family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-behaviour (>',' as-behaviour)* ] [, 'with' > Operation (> ',' > Operation)*]
 as-behaviour   : > Behaviour (>> TypeVariable)*
-type-var       : shape | op-var | mode? -kind-var dimensions? variant?
-kind-var       : Wildcard | Type | range-type | length-type | list-var | set-var | tuple-var | fn-var | TypeVariable
-list-var       : '[' -type-var? ']'
-set-var        : '{' -type-var? '}'
+type-var       : shape | op-var | indirection? -kind-var dimensions? variant?
+kind-var       : Wildcard | simple-type | span-type | length-type | list-var | set-var | tuple-var | fn-var | TypeVariable
+list-var       : '[' -type-var ']'
+set-var        : '{' -type-var '}'
 elem-var       : '..' | type-var
 tuple-var      : '(,)' | '(' [ -elem-var (> ',' > -elem-var )* ]  ')'
 fn-var         : '(->)' | '(' type-var:INSTANCE > '->' ( > type-var > '->' )*  > type-var:RETURN ')'
-op-var         : ( '*' | Operation ) fn-var
+op-var         : ( '?' | Operation ) fn-var
 
 % Modularisation
 file           : module | library
@@ -99,32 +95,27 @@ library        : form
 module         : (, -declaration)+ .
 declaration    : val | key | family | process | fn | op | behaviour | fault | notation | data | unit | dimension | ratio | when | comment
 
-fault          : 'fault' & >> Fault > '::', Type, values?
+fault          : 'fault' & >> Fault > '::', simple-type .
 
 ratio          : 'ratio' & >> Ratio > '::', Type, '=', set .
-
 natures        : (Atom >>)*
 
-% Values
+% Constants
 val            : 'val' & >> Constant > '::' > [type >] '=' > expr .
 key            : 'key' & >> Key > '::' > type .
 
-data           : 'data' & >> Data > '::', (record | type), aspects, enumeration?
+% Value Types
+data           : 'data' & >> Data > '::', (record | type), valence*, enumeration?
 record         : '('& , field, (',', field,)* ')'
 field          : type >> Field
-aspects        : [aspect (, aspect)*]
-aspect         : ':'&, ('#'& -pattern '[]'? | '"' -pattern '"' )
-pattern        : '(' ( (type | literal)+','?,)+ ')'
-enumeration    : '=', form
-
-
 dimension      : 'dimension' & >> -primitive, enumeration?
 unit           : 'unit' & >> -primitive
-primitive      : Type & > ['[' UnitSymbol ']'] > '::', natures  [('()'|Type) > values? > (',' > Constant >)*], aspects
+primitive      : Type & > '::', natures  ['()'|simple-type], valence*
+valence        : , ':'& > type
+enumeration    : '=', form
 
-% Somewhat abstract data types
+% ADTs
 notation       : 'notation' & >> Notation > '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
-
 behaviour      : 'behaviour' & >> Behaviour (>> TypeVariable)* > '::', '=' > '{', Operation, (',', Operation,)* '}'
 
 % Functions
@@ -154,8 +145,17 @@ tuple          : '()' | '(', -seq, ')'
 list           : '[]' | '[', -seq, ']'
 set            : '{}' | '{', -seq, '}'
 comment        : '%' .. '%'
-term           : Wildcard | Atom | Key | values | literal | Constant 
+% nota bene (call site literal comments)
+nb             : '\' @+ 
+term           : Wildcard | Atom | Key | literal-comp | constant-comp
                | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
+
+literal-comp   : (literal-set | literal-range | constant-range | literal) nb?
+literal-set    : '{' > literal > (',' > literal > )* '}'
+literal-range  : literal [ > '..' > literal ] | '..' > literal
+
+constant-comp  : constant-range | Constant
+constant-range : Constant [ > '..' > Constant ] | '..' > Constant
 
 % Processes
 process        : 'process' & >> Process > '::', '=', (list | set)
