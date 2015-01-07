@@ -13,9 +13,9 @@
 	fn div [/] :: Int a -> Int b -> Int!		
 		= a
 		
-	unit Digit :: Char{'0':'9'}
+	unit Digit :: Char{'0'..'9'}
 
-	dimension Float :: Number{-2e18:+2e18} %, NaN %
+	dimension Float :: Number{-2e18..+2e18} %, NaN %
 	
 	dimension Bool :: = [ False, True ]
 	
@@ -103,13 +103,13 @@
 	
 	dimension Suit :: = { Spades, Hearts, Diamonds, Clubs }
 	
-	dimension Month :: Int{1|12} = [Januar, Februar, December]
+	dimension Month :: Int{1..12} = [Januar, Februar, December]
 	
 	unit Int :: Number : (Sign?, Digits)
 	unit Float :: Number : (Int '.' Digits)
 
-	dimension Char :: Number{#x0000:#xFFFF}
-	unit Digit :: Char{'0':'9'}
+	dimension Char :: Number{#x0000..#xFFFF}
+	unit Digit :: Char{'0'..'9'}
 
 	data Digits :: Digit[1-*]
 
@@ -186,7 +186,8 @@
 	fn move :: Point p -> Int dx -> Int dy -> Point
 		= (p `x + dx, p `y + dy)
 	
-	val Max :: Point = "2:3"
+	val Min :: Point = "2:3"
+	val Max :: Point = 2:3
 	
 	data String :: [Char]
 	data Octal :: Char[8]
@@ -300,7 +301,7 @@ or even source code like
 	proc assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 	
 	family E :: _
-	fn at :: E[:] s -> Index i -> Int = (`ast `get ?s ?i)
+	fn at :: E[<>] s -> Index i -> Int = (`ast `get ?s ?i)
 	
 	% keys %
 	
@@ -437,8 +438,7 @@ or even source code like
 	data Menu :: Meal[Weekday]
 	
 	when Greet :: Char> out -> ()
-		1. out print "Hello World" [
-		2.0]
+		1. out print "Hello World"
 		.. 	
 		
 	% Behaviours (again) %
@@ -454,7 +454,7 @@ or even source code like
 	family T :: (,)
 	family F :: (->)
 	family A :: _[]
-	family V :: _[:]
+	family V :: _[<>]
 	family L :: [_]
 	family S :: {_}
 	family D :: *
@@ -485,3 +485,9 @@ or even source code like
 	            : (Coordinate[*], Coordinate[*])[*]
 	            
 	unit Minutes :: Time : (Minutes 'min')
+	
+	val Era :: Date = 1970-01-01
+	
+	family S1 :: _[<*>]
+	family S2 :: _[<2>]
+	family S3 :: _[<2-4>]

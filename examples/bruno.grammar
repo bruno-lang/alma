@@ -6,7 +6,6 @@ Identifier     : -Verb {'?' '!'}?
 % Type Variant Symbols
 TypeOf         : '$'
 LazyOf         : '~'
-SliceOf        : ':'
 KeyOf          : '@'
 Optional       : '?'
 Faulty         : '!'
@@ -41,13 +40,13 @@ Operator       : -OperatorSymbol { OperatorSymbol '!' '?' }x0-2
 OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }
 
 % Literals
-LiteralSymbol  : { !_ !'?' !'#' !'"' !'=' !'>' !'<' !'&' !'|' !')' !'}' !']' !':' !'.' !',' !';' !'*'}
+LiteralSymbol  : { !_ !'?' !'#' !'"' !'=' !'>' !'<' !'&' !'|' !')' !'}' !']' !'.' !',' !';' !'*'}
 literal        : conceptual | textual | binary
 conceptual     : ''' $ -LiteralSymbol* | numeric (numeric | -LiteralSymbol)*
 
 textual        : '"""', (..):TEXT (, '"""') | '"' (!'"'*):TEXT '"'
 binary         : '#'& ('b'& 1+ | 'o'& 7+ | 'x'& #+ | 'd'? 9+ ):NUMBER 
-numeric        : ({'+' '-'}?):SIGN (9+ ({'.' ','} 9+)*):DECIMAL  
+numeric        : {'+' '-'}? 9+ ({'.' ','} 9+)*  
 
 % Types
 variant        : { Faulty Optional Transient }
@@ -55,9 +54,10 @@ indirection    : { TypeOf LazyOf KeyOf }
 
 length-type    : 9+ | '*' | Type | TypeVariable
 span-type      : length-type:MIN '-' length-type:MAX
-dimension-type : '[' SliceOf? [span-type|length-type] ']'
+dimension-type : slice-type | '['  [span-type|length-type]  ']'
+slice-type     : '[<' [span-type|length-type] '>]'
 
-range-type     : '{' [literal:MIN] ':'& [literal:MAX] '}' 
+range-type     : '{' [literal:MIN] '..'& [literal:MAX] '}' 
 value-set-type : '{'& literal ('|' literal)* '}'
 
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
