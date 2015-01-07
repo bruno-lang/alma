@@ -287,12 +287,12 @@ or even source code like
 	
 	fn empty? :: E[] array -> Bool = array length == 0
 	
-	val Pi :: Float = (:= pi-gauss-legendre 0.000001\precision )
+	val Pi :: Float = (:= pi-gauss-legendre 0.000001 )
 	
 	fn first :: = at 0
 	
 	fn call-side-inline :: E[1-*] one -> E[1-*] other -> Bool
-		= one~last == other~last
+		= one\last == other\last
 		
 	val Menu :: Food[Weekday] = ["Pasta", "Pizza"]
 	

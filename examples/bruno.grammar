@@ -140,17 +140,15 @@ seq            : expr (, ','?, expr )*
 expr           : form ( > form )*
 form           : eval | tuple | list | set | comment | term
 eval           : '(:=', -seq, ')'
-inline         : '~' Function
+inline         : '\' Function
 tuple          : '()' | '(', -seq, ')'
 list           : '[]' | '[', -seq, ']'
 set            : '{}' | '{', -seq, '}'
 comment        : '%' .. '%'
-% nota bene (call site literal comments)
-nb             : '\' @+ 
 term           : Wildcard | Atom | Key | literal-comp | constant-comp
                | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
 
-literal-comp   : (literal-set | literal-range | constant-range | literal) nb?
+literal-comp   : (literal-set | literal-range | constant-range | literal)
 literal-set    : '{' > literal > (',' > literal > )* '}'
 literal-range  : literal [ > '..' > literal ] | '..' > literal
 
