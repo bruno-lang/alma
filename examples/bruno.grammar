@@ -40,7 +40,7 @@ Operator       : -OperatorSymbol { OperatorSymbol '!' '?' }x0-2
 OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }
 
 % Literals
-LiteralSymbol  : { !_ !'?' !'#' !'"' !'=' !'>' !'<' !'&' !'|' !')' !'}' !']' !'.' !',' !';' !'*'}
+LiteralSymbol  : { !_ !'?' !'#' !'"' !'=' !'>' !'<' !'&' !'|' !')' !'}' !']' !'.' !',' !';' !'*' !'\'}
 literal        : conceptual | textual | binary
 conceptual     : ''' $ -LiteralSymbol* | numeric (numeric | -LiteralSymbol)*
 
@@ -57,8 +57,9 @@ span-type      : length-type:MIN '-' length-type:MAX
 dimension-type : slice-type | '['  [span-type|length-type]  ']'
 slice-type     : '[<' [span-type|length-type] '>]'
 
-range-type     : '{' [literal:MIN] '..'& [literal:MAX] '}' 
-value-set-type : '{'& literal ('|' literal)* '}'
+value-type     : literal | length-type
+range-type     : '{' [value-type:MIN] '..'& [value-type:MAX] '}' 
+value-set-type : '{'& value-type ('|' value-type)* '}'
 
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
 stream-type    : {'<' '>'}
@@ -68,7 +69,7 @@ base-type      : simple-type | list-type | set-type | tuple-type | fn-type | Typ
 simple-type    : Type [range-type | value-set-type]
 list-type      : '['& -type ']'
 set-type       : '{'& -type '}'
-tuple-type     : '(' [ type (('..'|','?' ') type )* ] ')'
+tuple-type     : '(' [ type (('\'|','?' ') type )* ] ')'
 fn-type        : '(' type:INSTANCE > '->'& ( > type > '->' )* > type:RETURN ')'
 op-type        : Operation fn-type
 

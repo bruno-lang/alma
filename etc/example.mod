@@ -180,7 +180,7 @@
 	dimension Y-Coordinate :: Coordinate
 	data Point :: (X-Coordinate x, Y-Coordinate y) 
 				: (X-Coordinate ':' Y-Coordinate)
-				: (X-Coordinate..Y-Coordinate)
+				: (X-Coordinate\Y-Coordinate)
 	data Points :: [Point]
 	
 	fn move :: Point p -> Int dx -> Int dy -> Point
@@ -480,8 +480,8 @@ or even source code like
 		equals-ignore-case +> eq Char	
 		
 	data Point :: (Coordinate x, Coordinate y) 
-	            : (Coordinate..Coordinate)
-	            : ('(' Coordinate ':' Coordinate ')')
+	            : (Coordinate\Coordinate)
+	            : (Coordinate ':' Coordinate)
 	            : (Coordinate[*], Coordinate[*])[*]
 	            
 	unit Minutes :: Time : (Minutes 'min')
@@ -491,3 +491,7 @@ or even source code like
 	family S1 :: _[<*>]
 	family S2 :: _[<2>]
 	family S3 :: _[<2-4>]
+	
+	family O :: *
+	family E :: _
+	fn stretch :: E[<*>] slice -> Int{O..O} length -> E[<O>] = ?
