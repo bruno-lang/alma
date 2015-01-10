@@ -24,7 +24,7 @@ Operation      : -Identifier
 Function       : -Identifier
 
 TypeVariable   : Z 9?
-Behaviour      : -Noun
+Concept        : -Noun
 Data           : -Noun
 System         : -Noun
 Ratio          : -Noun
@@ -69,7 +69,7 @@ base-type      : simple-type | list-type | set-type | tuple-type | fn-type | Typ
 simple-type    : Type [range-type | value-set-type]
 list-type      : '['& -type ']'
 set-type       : '{'& -type '}'
-tuple-type     : '(' [ type (('\'|','?' ') type )* ] ')'
+tuple-type     : '(' [ type ((('\'):AND|','?' ') type )* ] ')'
 fn-type        : '(' type:INSTANCE > '->'& ( > type > '->' )* > type:RETURN ')'
 op-type        : Operation fn-type
 
@@ -77,8 +77,8 @@ op-type        : Operation fn-type
 shape          : '[]' | '{}' | '""' | Atom | Key | conceptual:SHAPE
 
 % Type Families / Variables
-family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-behaviour (>',' as-behaviour)* ] [, 'with' > Operation (> ',' > Operation)*]
-as-behaviour   : > Behaviour (>> TypeVariable)*
+family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-concept (>',' as-concept)* ] [, 'with' > Operation (> ',' > Operation)*]
+as-concept     : > Concept (>> TypeVariable)*
 type-var       : shape | op-var | indirection? -kind-var dimensions? variant?
 kind-var       : Wildcard | simple-type | span-type | length-type | list-var | set-var | tuple-var | fn-var | TypeVariable
 list-var       : '[' -type-var ']'
@@ -94,30 +94,25 @@ library        : form
 
 % Implementation
 module         : (, -declaration)+ .
-declaration    : val | key | family | process | fn | op | behaviour | fault | notation | data | unit | dimension | ratio | when | comment
+declaration    : family | process | fn | op | concept | fault | notation | data | ratio | when | comment
 
 fault          : 'fault' & >> Fault > '::', simple-type .
 
 ratio          : 'ratio' & >> Ratio > '::', Type, '=', set .
+
+% Value Types & Constants
+data           : 'data' & >> (Key | Data) > '::', natures (type|record) valences [,'='& > expr] .
 natures        : (Atom >>)*
-
-% Constants
-val            : 'val' & >> Constant > '::' > [type >] '=' > expr .
-key            : 'key' & >> Key > '::' > type .
-
-% Value Types
-data           : 'data' & >> Data > '::', (record | type), valence*, enumeration?
 record         : '('& , field, (',', field,)* ')'
 field          : type >> Field
-dimension      : 'dimension' & >> -primitive, enumeration?
-unit           : 'unit' & >> -primitive
-primitive      : Type & > '::', natures  ['()'|simple-type], valence*
-valence        : , ':'& > type
-enumeration    : '=', form
+valences       : (, valence )*
+valence        : ':'& > type | '['&, constants, ']' | '{'&, constants, '}'
+constants      : constant (, '|'&, constant )* 
+constant       : Type, valence? ['='& > expr]
 
 % ADTs
 notation       : 'notation' & >> Notation > '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
-behaviour      : 'behaviour' & >> Behaviour (>> TypeVariable)* > '::', '=' > '{', Operation, (',', Operation,)* '}'
+concept        : 'concept' & >> Concept (>> TypeVariable)* > '::', '=' > '{', Operation, (',', Operation,)* '}'
 
 % Functions
 op             : 'op' & >> Operation > ['[' Operator ']'] > '::', Operation?, signature
@@ -135,6 +130,7 @@ variable       : type >> Identifier > (select | '=' > expr .)
 select         : (, '|='& > expr . )+
 specialisation : type > -Specialisation > Type .
 bind           : Function > -Specialisation > Operation (> type)* .
+% TODO: specialisation for a variable that is bound for a concept stating the used functions or the mapping!
 
 % Expressions
 seq            : expr (, ','?, expr )*

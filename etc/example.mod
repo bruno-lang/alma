@@ -13,35 +13,35 @@
 	fn div [/] :: Int a -> Int b -> Int!		
 		= a
 		
-	unit Digit :: Char{'0'..'9'}
+	data Digit :: Char{'0'..'9'}
 
-	dimension Float :: Number{-2e18..+2e18} %, NaN %
+	data Float :: Number{-2e18..+2e18}
 	
-	dimension Bool :: = [ False, True ]
+	data Bool :: () [ False | True ]
 	
-	dimension Bool :: () = [ False, True ]
+	data Bool :: () [ False | True ]
 
-	dimension Bit :: = [ `0 `1 ]
+	data Bit :: () [ Zero = `0 | One = `1 ]
 	
-	dimension Time :: Natural
+	data Time :: Natural
 	
-	unit Seconds :: Time
+	data Seconds :: Time
 
-	val January :: Int = 1
-	val Day :: Hours=24h
+	data January :: Int = 1
+	data Day :: Hours=24h
 	
-	behaviour List :: = { cons, size }	
+	concept List :: = { cons, size }	
 	
 	fault Div-by-zero! :: Int{0}
 	
 	notation JSON :: 
 	
-	unit Year :: Int : (Digit Digit Digit Digit)
+	data Year :: Int : (Digit Digit Digit Digit)
 	
 	data Point :: (X- x, Y- y) : (X- ':' Y-)
 	data Points :: [Point]
 	
-	dimension SI :: ()
+	data SI :: ()
 	
 	ratio Time :: SI = {
 		1h   = 60min,
@@ -101,23 +101,23 @@
 	fn range :: Int low -> Int high -> [Int]
 		= (`ast `range ?low ?high) 
 	
-	dimension Suit :: = { Spades, Hearts, Diamonds, Clubs }
+	data Suit :: () { Spades | Hearts | Diamonds | Clubs }
 	
-	dimension Month :: Int{1..12} = [Januar, Februar, December]
+	data Month :: Int{1..12} [Januar | Februar | December]
 	
-	unit Int :: Number : (Sign?, Digits)
-	unit Float :: Number : (Int '.' Digits)
+	data Int :: Number : (Sign?, Digits)
+	data Float :: Number : (Int '.' Digits)
 
-	dimension Char :: Number{#x0000..#xFFFF}
-	unit Digit :: Char{'0'..'9'}
+	data Char :: Number{#x0000..#xFFFF}
+	data Digit :: Char{'0'..'9'}
 
 	data Digits :: Digit[1-*]
 
-	unit Sign :: Char{'+'|'-'}
+	data Sign :: Char{'+'|'-'}
 	
-	dimension Time :: Int
-	unit Days :: `relative Time 
-	unit DayOfMonth :: `absolute Time
+	data Time :: Int
+	data Days :: `relative Time 
+	data DayOfMonth :: `absolute Time
 	
 	family E :: _
 	family L :: [E]
@@ -132,7 +132,7 @@
 	op at :: L l -> Index i -> E?
 	op slice :: L l -> Index from -> Index to -> L
 	
-	behaviour List :: = {force, cons, append, concat, take, 
+	concept List :: = {force, cons, append, concat, take, 
 	                                    drop, remove, insert, at, slice}
 	                                    
 	                                    
@@ -162,8 +162,8 @@
 	    = () -> (a f p)
         
         
-	val Hour :: Milliseconds = 1h
-	val Xyz :: Seconds = 2h + 42min
+	data Hour :: Milliseconds = 1h
+	data Xyz :: Seconds = 2h + 42min
 	
 	family T :: _
 	fn or-default :: T? v -> T default -> T =
@@ -175,9 +175,9 @@
 	    sample == list at start : e
 	                            : list first sample (start + '1) 
 	    
-	dimension Coordinate :: Int :(Bit[32])
-	dimension X-Coordinate :: Coordinate
-	dimension Y-Coordinate :: Coordinate
+	data Coordinate :: Int :(Bit[32])
+	data X-Coordinate :: Coordinate
+	data Y-Coordinate :: Coordinate
 	data Point :: (X-Coordinate x, Y-Coordinate y) 
 				: (X-Coordinate ':' Y-Coordinate)
 				: (X-Coordinate\Y-Coordinate)
@@ -186,8 +186,8 @@
 	fn move :: Point p -> Int dx -> Int dy -> Point
 		= (p `x + dx, p `y + dy)
 	
-	val Min :: Point = "2:3"
-	val Max :: Point = 2:3
+	data Min :: Point = "2:3"
+	data Max :: Point = 2:3
 	
 	data String :: [Char]
 	data Octal :: Char[8]
@@ -197,7 +197,7 @@
 	fn specialise [+>] :: T value -> $S type -> S 
 		= (`ast `specialise ?value ?type) 
 	
-	val Bla :: String = """
+	data Bla :: String = """
 	
 something very long with "quotes" in it; also having empty double quotes "" 
 or even source code like 
@@ -215,9 +215,9 @@ or even source code like
 	fn map :: [A] l -> (A -> B) fn -> [B] = "XXX"
 	fn singleton :: A v -> {A} = {v}
 	
-	val Setify :: ([A] -> [{A}]) = (_ map singleton)
+	data Setify :: ([A] -> [{A}]) = (_ map singleton)
 	
-	val SomeTHING :: = `some-thing
+	data SomeTHING :: () = `some-thing
 	
 	fn test :: Int i -> Int = Math x
 	
@@ -287,16 +287,16 @@ or even source code like
 	
 	fn empty? :: E[] array -> Bool = array length == 0
 	
-	val Pi :: Float = (:= pi-gauss-legendre 0.000001 )
+	data Pi :: Float = (:= pi-gauss-legendre 0.000001 )
 	
 	fn first :: = at 0
 	
 	fn call-side-inline :: E[1-*] one -> E[1-*] other -> Bool
 		= one\last == other\last
 		
-	val Menu :: Food[Weekday] = ["Pasta", "Pizza"]
+	data Menu :: Food[Weekday] = ["Pasta", "Pizza"]
 	
-	val Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
+	data Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
 	
 	proc assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 	
@@ -413,7 +413,7 @@ or even source code like
 	where
 		Byte b =<< bytes 
 
-	key @process-pool :: @Worker[>][<>]
+	data @process-pool :: @Worker[>][<>]
 	
 	fn numbers! :: Foo f -> Bar
 		= [1/2 1.2/4]
@@ -441,13 +441,13 @@ or even source code like
 		1. out print "Hello World"
 		.. 	
 		
-	% Behaviours (again) %
+	% Concepts (again) %
 	
 	family X :: _ with eq, compare
 	
 	family S :: [E] as Stack E with at
 	
-	behaviour Stack E :: = { push, pop }
+	concept Stack E :: = { push, pop }
 	family S2 :: _ as Stack E, Collection E
 	
 	
@@ -484,9 +484,9 @@ or even source code like
 	            : (Coordinate ':' Coordinate)
 	            : (Coordinate[*], Coordinate[*])[*]
 	            
-	unit Minutes :: Time : (Minutes 'min')
+	data Minutes :: Time : (Minutes 'min')
 	
-	val Era :: Date = 1970-01-01
+	data Era :: Date = 1970-01-01
 	
 	family S1 :: _[<*>]
 	family S2 :: _[<2>]
@@ -495,3 +495,17 @@ or even source code like
 	family O :: *
 	family E :: _
 	fn stretch :: E[<*>] slice -> Int{O..O} length -> E[<O>] = ?
+	
+	data Time :: `dimension Int{0..}
+	data Minutes :: `unit Time : (Minutes 'min')
+	data Seconds :: Time : (Seconds 'sec')
+
+	data Planet :: (Kilograms weight, Meters radius) 
+	{  Mercury = (3.303e+23kg, 2.4397e6m)
+	|  Venus   = (4.869e+24kg, 6.0518e6m)
+	|  Earth   = (5.976e+24kg, 6.37814e6m)
+	|  Mars    = (6.421e+23kg, 3.3972e6m)
+	|  Jupiter = (1.9e+27kg,   7.1492e7m)
+	|  Saturn  = (5.688e+26kg, 6.0268e7m)
+	|  Uranus  = (8.686e+25kg, 2.5559e7m)
+	|  Neptune = (1.024e+26kg, 2.4746e7m) }	
