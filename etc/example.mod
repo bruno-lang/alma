@@ -329,7 +329,10 @@ or even source code like
 	family I3 :: _]<]
 	
 	% processes %
-	process Server :: = { Ready => [ Ready ], _ => [ Ready ] }
+	process Server :: 
+		{ Ready = [ Ready ] 
+		| _ = [ Ready ] }
+		{ Out-Of-Heap-Space! = [] }	
 	
 	% single process %
 	when Ready :: HttpServer server -> HttpServer

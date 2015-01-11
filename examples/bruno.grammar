@@ -28,8 +28,6 @@ Concept        : -Noun
 Data           : -Noun
 System         : -Noun
 Ratio          : -Noun
-Unit           : -Noun
-Dimension      : -Noun
 Notation       : -Noun
 Type           : -Noun
 Process        : -Noun
@@ -108,7 +106,7 @@ field          : type >> Field
 valences       : (, valence )*
 valence        : ':'& > type | '['&, constants, ']' | '{'&, constants, '}'
 constants      : constant (, '|'&, constant )* 
-constant       : Type, valence? ['='& > expr]
+constant       : (Wildcard | Fault | Key | Type), valence? ['='& > expr]
 
 % ADTs
 notation       : 'notation' & >> Notation > '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
@@ -153,7 +151,7 @@ constant-comp  : constant-range | Constant
 constant-range : Constant [ > '..' > Constant ] | '..' > Constant
 
 % Processes
-process        : 'process' & >> Process > '::', '=', (list | set)
+process        : 'process' & >> Process > '::', valences
 when           : 'when' & >> state > '::', signature, effects, -transitions, where?
 state          : Fault | ('_!'):any-fault | Constant
 effects        : (effect .)*
