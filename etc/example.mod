@@ -158,7 +158,7 @@
 	family A :: _
 	family B :: _
 
-	fn lazy :: (A -> P -> B) f -> A v -> P p -> ~B
+	fn lazy :: (A -> P -> B) f -> A v -> P p -> >B
 	    = () -> (a f p)
         
         
@@ -331,7 +331,7 @@ or even source code like
 	% processes %
 	process Server :: 
 		{ Ready = [ Ready ] 
-		| _ = [ Ready ] }
+		| _     = [ Ready ] }
 		{ Out-Of-Heap-Space! = [] }	
 	
 	% single process %
@@ -471,7 +471,7 @@ or even source code like
 	family P :: _*
 	
 	family T :: $_
-	family L :: ~_
+	family L :: >_
 	family K :: @_	
 	
 	family E :: _ as Stack, Collection
@@ -495,13 +495,15 @@ or even source code like
 	family S2 :: _[<2>]
 	family S3 :: _[<2-4>]
 	
-	family O :: *
+	family L :: *
 	family E :: _
-	fn stretch :: E[<*>] slice -> Int{O..O} length -> E[<O>] = ?
+	fn stretch :: E[<*>] slice -> Int{L} length -> E[<L>] = ?
+	fn slice   :: E[L-*] array -> Int{L} length -> E[<L>] = ?
+	fn slice   :: E[L-*] array -> Int{L} length -> Int start -> E[<L>] = ?
 	
 	data Time :: `dimension Int{0..}
-	data Minutes :: `unit Time : (Minutes 'min')
-	data Seconds :: Time : (Seconds 'sec')
+	data Minutes :: `unit Time : (~ 'min')
+	data Seconds :: `unit Time : (~ 'sec')
 
 	data Planet :: (Kilograms weight, Meters radius) 
 	{  Mercury = (3.303e+23kg, 2.4397e6m)
@@ -511,4 +513,6 @@ or even source code like
 	|  Jupiter = (1.9e+27kg,   7.1492e7m)
 	|  Saturn  = (5.688e+26kg, 6.0268e7m)
 	|  Uranus  = (8.686e+25kg, 2.5559e7m)
-	|  Neptune = (1.024e+26kg, 2.4746e7m) }	
+	|  Neptune = (1.024e+26kg, 2.4746e7m) }
+	
+	family T4 :: (E, ~)	

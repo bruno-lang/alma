@@ -5,12 +5,13 @@ Identifier     : -Verb {'?' '!'}?
 
 % Type Variant Symbols
 TypeOf         : '$'
-LazyOf         : '~'
+LazyOf         : '>'
 KeyOf          : '@'
 Optional       : '?'
 Faulty         : '!'
 Transient      : '*'
 Specialisation : '+>'
+Self           : '~'
 
 % Identifiers
 Wildcard       : '_'
@@ -50,9 +51,9 @@ numeric        : {'+' '-'}? 9+ ({'.' ','} 9+)*
 variant        : { Faulty Optional Transient }
 indirection    : { TypeOf LazyOf KeyOf }
 
-length-type    : 9+ | '*' | Type | TypeVariable
+length-type    : 9+ | '*' | TypeVariable
 span-type      : length-type:MIN '-' length-type:MAX
-dimension-type : slice-type | '['  [span-type|length-type]  ']'
+dimension-type : slice-type | '['  [ span-type | length-type | Type ]  ']'
 slice-type     : '[<' [span-type|length-type] '>]'
 
 value-type     : literal | length-type
@@ -62,7 +63,7 @@ value-set-type : '{'& value-type ('|' value-type)* '}'
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
 stream-type    : {'<' '>'}
 dimensions     : stream-type? dimension-type* [channel-type* dimension-type?]
-type           : shape | op-type | indirection? -base-type dimensions? variant?
+type           : Self | shape | op-type | indirection? -base-type dimensions? variant?
 base-type      : simple-type | list-type | set-type | tuple-type | fn-type | TypeVariable
 simple-type    : Type [range-type | value-set-type]
 list-type      : '['& -type ']'
@@ -77,7 +78,7 @@ shape          : '[]' | '{}' | '""' | Atom | Key | conceptual:SHAPE
 % Type Families / Variables
 family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-concept (>',' as-concept)* ] [, 'with' > Operation (> ',' > Operation)*]
 as-concept     : > Concept (>> TypeVariable)*
-type-var       : shape | op-var | indirection? -kind-var dimensions? variant?
+type-var       : Self | shape | op-var | indirection? -kind-var dimensions? variant?
 kind-var       : Wildcard | simple-type | span-type | length-type | list-var | set-var | tuple-var | fn-var | TypeVariable
 list-var       : '[' -type-var ']'
 set-var        : '{' -type-var '}'
