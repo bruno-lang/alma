@@ -97,7 +97,7 @@ declaration    : family | process | fn | op | concept | fault | notation | data 
 
 fault          : 'fault' & >> Fault > '::', simple-type .
 
-ratio          : 'ratio' & >> Ratio > '::', Type, '=', set .
+ratio          : 'ratio' & >> Ratio > '::', literal > '=' > literal .
 
 % Value Types & Constants
 data           : 'data' & >> (Key | Data) > '::', natures (type|record) valences [,'='& > expr] .

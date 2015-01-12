@@ -41,15 +41,10 @@
 	data Point :: (X- x, Y- y) : (X- ':' Y-)
 	data Points :: [Point]
 	
-	data SI :: ()
-	
-	ratio Time :: SI = {
-		1h   = 60min,
-		1min = 60sec,
-		1sec = 1000ms 
-	}
-	ratio XY :: SI = { 2$ = 1€ }
-
+	ratio SI :: 1h = 60min
+	ratio SI :: 1min = 60sec
+	ratio SI :: 1sec = 1000ms 
+	ratio SI :: 2$ = 1€
 
 	fn max :: (Int a -> Int b -> Int) =
 	  a > b : a 	
@@ -516,3 +511,21 @@ or even source code like
 	|  Neptune = (1.024e+26kg, 2.4746e7m) }
 	
 	family T4 :: (E, ~)	
+	
+	data Int :: ~
+	
+	data Bit :: () { @0 : Int{0} | @1 : Int{1..} }	
+	
+	data Byte :: Int : Bit[8]
+	
+	data Bool :: () [ False | True ]
+	
+	data Char :: Int{#0..#xFFFF}
+	
+	data Coefficient :: Int : Bit[56]
+	data Exponent    :: Int : Bit[8]
+	data Dec         :: ~   : (Coefficient\Exponent)
+	
+	data Numerator   :: Int      : Bit[32]
+	data Denominator :: Int{0..} : Bit[32]
+	data Frac        :: ~        : (Numerator\Denominator)	
