@@ -496,9 +496,12 @@ or even source code like
 	fn slice   :: E[L-*] array -> Int{L} length -> E[<L>] = ?
 	fn slice   :: E[L-*] array -> Int{L} length -> Int start -> E[<L>] = ?
 	
+	family P :: *
+	fn bit-at :: Bit<P-0>[P-*] number -> Int{P} pos -> Bit<P> = ?
+	
 	data Time :: `dimension Int{0..}
-	data Minutes :: `unit Time : (~ 'min')
-	data Seconds :: `unit Time : (~ 'sec')
+	data Minutes :: `unit Time : (~ "min")
+	data Seconds :: `unit Time : (~ "sec")
 
 	data Planet :: (Kilograms weight, Meters radius) 
 	{  Mercury = (3.303e+23kg, 2.4397e6m)
@@ -512,18 +515,20 @@ or even source code like
 	
 	family T4 :: (E, ~)	
 	
-	data Int :: ~
+	data Exp :: Int = 2^27 - 1
 	
-	data Bit :: () { @0 : Int{0} | @1 : Int{1..} }	
+	data Bit :: () [ #0 | #1 ]
 	
-	data Byte :: Int : Bit[8]
+	data Byte :: Bit<7-0>[8]
+	
+	data Word :: Bit<x62-0>[1-64]
 	
 	data Bool :: () [ False | True ]
 	
-	data Char :: Int{#0..#xFFFF}
+	data Char :: Int{#x0..#xFFFF}
 	
-	data Coefficient :: Int : Bit[56]
-	data Exponent    :: Int : Bit[8]
+	data Coefficient :: Int : Bit<+54-0>[56]
+	data Exponent    :: Int : Bit<+6-0>[8]
 	data Dec         :: ~   : (Coefficient\Exponent)
 	
 	data Numerator   :: Int      : Bit[32]
