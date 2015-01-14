@@ -496,9 +496,6 @@ or even source code like
 	fn slice   :: E[L-*] array -> Int{L} length -> E[<L>] = ?
 	fn slice   :: E[L-*] array -> Int{L} length -> Int start -> E[<L>] = ?
 	
-	family P :: *
-	fn bit-at :: Bit<P-0>[P-*] number -> Int{P} pos -> Bit<P> = ?
-	
 	data Time :: `dimension Int{0..}
 	data Minutes :: `unit Time : (~ "min")
 	data Seconds :: `unit Time : (~ "sec")
@@ -517,20 +514,29 @@ or even source code like
 	
 	data Exp :: Int = 2^27 - 1
 	
-	data Bit :: () [ #0 | #1 ]
+	data Bit   :: () [ #0 | #1 ]
+	data S-Bit :: Bit [ Positive | Negative ]
+	data M-Bit :: Bit
+
+	data Byte  :: M-Bit[8]
+
+	data Word  :: Bit[1-64]
 	
-	data Byte :: Bit<7-0>[8]
+	data Int :: Word : Bit[1-32]
+
+	data Coefficient :: Int  : Bit[56] : (S-Bit\M-Bit[55])
+	data Exponent    :: Int  : Byte
+	data Dec         :: Word : (Coefficient\Exponent)
+
+	data Numerator   :: Int  : Bit[32] : (S-Bit\M-Bit[31])
+	data Denominator :: Int  : M-Bit[32]
+	data Frac        :: Word : (Numerator\Denominator)
 	
-	data Word :: Bit<x62-0>[1-64]
-	
-	data Bool :: () [ False | True ]
-	
-	data Char :: Int{#x0..#xFFFF}
-	
-	data Coefficient :: Int : Bit<+54-0>[56]
-	data Exponent    :: Int : Bit<+6-0>[8]
-	data Dec         :: ~   : (Coefficient\Exponent)
-	
-	data Numerator   :: Int      : Bit[32]
-	data Denominator :: Int{0..} : Bit[32]
-	data Frac        :: ~        : (Numerator\Denominator)	
+	data Next      :: Byte : (#1\MBit[7])
+	data Null      :: Byte : (#0\MBit[7])
+	data CharCode  :: Byte[1-4] : (Next[0-*]\Null)
+	data String    :: Byte[0-*] : CharCode[0-*]
+
+	data Char      :: Int{0..#xFFFF} : M-Bit[32]
+
+	data Text      :: String	

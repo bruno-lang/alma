@@ -16,7 +16,8 @@ Self           : '~'
 % Identifiers
 Wildcard       : '_'
 Field          : -Verb
-Constant       : '#' 9+ | -Noun
+Constant       : -NumberConstant | -Noun
+NumberConstant : '#' 9+
 Atom           : '`'{ !_ }+
 Key            : -KeyOf{ !Z !_ !',' }{ !_ !',' !'{' !'}' !'(' !')' !'[' !']'}*
 Variable       : '?'{ @ 9 '-' '_' }+
@@ -61,14 +62,12 @@ value-type     : literal | length-type
 range-type     : '{' [value-type:MIN] '..'& [value-type:MAX] '}' 
 value-set-type : '{'& value-type ('|' value-type)* '}'
 
-position-type  : '<' {'x' '+'}? [ -quantity-type ] '>'
-
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
 stream-type    : {'<' '>'}
 dimensions     : stream-type? dimension-type* [channel-type* dimension-type?]
 type           : Self | shape | op-type | indirection? -base-type dimensions? variant?
 base-type      : simple-type | list-type | set-type | tuple-type | fn-type | TypeVariable
-simple-type    : Type [range-type | value-set-type] position-type?
+simple-type    : Type [range-type | value-set-type]
 list-type      : '['& -type ']'
 set-type       : '{'& -type '}'
 tuple-type     : '(' [ type ((('\'):AND|','?' ') type )* ] ')'
@@ -76,7 +75,7 @@ fn-type        : '(' type:INSTANCE > '->'& ( > type > '->' )* > type:RETURN ')'
 op-type        : Operation fn-type
 
 % Shapes
-shape          : '[]' | '{}' | '""' | Atom | Key | literal:SHAPE
+shape          : '[]' | '{}' | '""' | Atom | Key | NumberConstant | literal:SHAPE
 
 % Type Families / Variables
 family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-concept (>',' as-concept)* ] [, 'with' > Operation (> ',' > Operation)*]
