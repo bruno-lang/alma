@@ -8,22 +8,20 @@
 
 	fn foo :: ({([T], E[])} e -> E) = x
 
-	op cons [+] :: ([T] l -> E e -> [T])
+	op cons `+` :: ([T] l -> E e -> [T])
 	
-	fn div [/] :: Int a -> Int b -> Int!		
+	fn div `/` :: Int a -> Int b -> Int!		
 		= a
-		
-	data Digit :: Char{'0'..'9'}
 
 	data Float :: Number{-2e18..+2e18}
-	
-	data Bool :: () [ False | True ]
+		
+	data Time :: Natural
+
+	data Digit :: Char{'0'..'9'}
 	
 	data Bool :: () [ False | True ]
 
 	data Bit :: () [ Zero = `0 | One = `1 ]
-	
-	data Time :: Natural
 	
 	data Seconds :: Time
 
@@ -34,11 +32,11 @@
 	
 	fault Div-by-zero! :: Int{0}
 	
-	notation JSON :: 
+	data Year :: Int & (Digit Digit Digit Digit)
 	
-	data Year :: Int : (Digit Digit Digit Digit)
+	data Point 		:: (x: X-,y: Y-) 
+	with "Point" 	:: Lit & (X- ':' Y-)
 	
-	data Point :: (X- x, Y- y) : (X- ':' Y-)
 	data Points :: [Point]
 	
 	ratio SI :: 1h = 60min
@@ -47,18 +45,18 @@
 	ratio SI :: 2$ = 1€
 
 	fn max :: (Int a -> Int b -> Int) =
-	  a > b : a 	
-	        : b
+	  a > b .{ a 	
+	        .{ b
 		
 		
 	fn quicksort :: [T] list -> [T] =
-		list length <= '1 : list 
-		                  : (less ++ same ++ more)
+		list length <= 1 .{ list 
+		                 .{ (less ++ same ++ more)
 	where
-            T pivot  = list head
-            [T] less = list filter pivot >  | quicksort
-            [T] same = list filter pivot ==
-            [T] more = list filter pivot <  | quicksort
+            pivot = list head
+            less  = list filter pivot >  | quicksort
+            same  = list filter pivot ==
+            more  = list filter pivot <  | quicksort
             
 	fn something :: [T] list -> {(T, T)}
 		= { a => b, 
@@ -69,24 +67,24 @@
 	fn assoc [=>] :: K key -> V value -> (K, V) = (key, value)
 
 	fn switch :: (Weekday d -> String) =
-		Monday  : "Monday"
-		Tuesday : "Tuesday"
+		Monday  .{ "Monday"
+		Tuesday .{ "Tuesday"
 	where
-		?. d == _ :
+		?. d == _ .{
 		
 	fn another :: [Int] n -> Int idx -> Int =
-		a. []  : 0
-		b. [1] : 1
-		c.     : n at idx
+		a. []  .{ 0
+		b. [1] .{ 1
+		c.     .{ n at idx
 	where
-		?. n == _ :
+		?. n == _ .{
 		
 	fn pairs :: Point p -> Int =
-		1 , 2 : 1
-		0 , 4 : 2
-		      : 3
+		1 , 2 .{ 1
+		0 , 4 .{ 2
+		      .{ 3
 	where
-		?. p x == _, p y == _ :
+		?. p x == _, p y == _ .{
 		
 	fn clojure :: [T] e -> (T, T) 
 		= ((a b),
@@ -98,16 +96,8 @@
 	
 	data Suit :: () { Spades | Hearts | Diamonds | Clubs }
 	
-	data Month :: Int{1..12} [Januar | Februar | December]
+	data Month :: Int{1..12} [ Januar | Februar | December ]
 	
-	data Int :: Number : (Sign?, Digits)
-	data Float :: Number : (Int '.' Digits)
-
-	data Char :: Number{#x0000..#xFFFF}
-	data Digit :: Char{'0'..'9'}
-
-	data Digits :: Digit[1-*]
-
 	data Sign :: Char{'+'|'-'}
 	
 	data Time :: Int
@@ -134,20 +124,19 @@
 	family E :: _
 
 	data Elements :: (
-	    Length length,
-	    E[]* elements,
-	    [E] tail
-	)
+	    length: Length,
+	    elements: E[]*,
+	    tail: [E])
 	
 	fn at :: Elements list -> Index i -> E? =
-	    i < list length : list at i
-	                    : list tail at (i - list length)
+	    i < list length .{ list at i
+	                    .{ list tail at (i - list length)
 	
 	fn insert :: Elements list -> Index i -> T e -> [E] =
-	    i == 0 : list prepand e
-	    i == 1 : list take 1 append e ++ (list drop 1)
-	    i >= list length : (list length + '1, elements, tail insert at (i - list length))
-	                     : (list take i) ++ (drop i prepand e)
+	    i == 0 .{ list prepand e
+	    i == 1 .{ list take 1 append e ++ (list drop 1)
+	    i >= list length .{ (list length + '1, elements, tail insert at (i - list length))
+	                     .{ (list take i) ++ (drop i prepand e)
 	    
 	family P :: (,)
 	family A :: _
@@ -162,20 +151,20 @@
 	
 	family T :: _
 	fn or-default :: T? v -> T default -> T =
-	    v exists : v
-	             : default	
+	    v exists .{ v
+	             .{ default	
 	    
 	family T :: _ with eq
 	fn first :: [T] list -> T sample -> Index start -> T =
-	    sample == list at start : e
-	                            : list first sample (start + '1) 
+	    sample == list at start .{ e
+	                            .{ list first sample (start + '1) 
 	    
-	data Coordinate :: Int :(Bit[32])
+	data Coordinate :: Int & Bit[32]
 	data X-Coordinate :: Coordinate
 	data Y-Coordinate :: Coordinate
-	data Point :: (X-Coordinate x, Y-Coordinate y) 
-				: (X-Coordinate ':' Y-Coordinate)
-				: (X-Coordinate\Y-Coordinate)
+	data Point :: (x: X-Coordinate, y:Y-Coordinate) 
+				& (X-Coordinate\Y-Coordinate)
+	with "Point" :: Lit & (X-Coordinate ':' Y-Coordinate)
 	data Points :: [Point]
 	
 	fn move :: Point p -> Int dx -> Int dy -> Point
@@ -189,7 +178,7 @@
 	
 	family T :: _
 	family S :: T
-	fn specialise [+>] :: T value -> $S type -> S 
+	fn specialise `+>` :: T value -> $S type -> S 
 		= (`ast `specialise ?value ?type) 
 	
 	data Bla :: String = """
@@ -216,50 +205,23 @@ or even source code like
 	
 	fn test :: Int i -> Int = Math x
 	
-	
-	
-	notation JSON ::
-
-	fn show :: JSON v -> String 
-		= "?"
-	
-	data Array :: ( [JSON] elements )
-	
-	fn show :: Array a -> String
-		= a elements show?
-	
-	data Object :: ( [Member] members )
-	data Member :: ( Name name, JSON value )
-	
-	fn show :: Object o -> String
-		= o members show
-	
-	fn show :: Member m -> String
-		= m name ++ "," ++ m value show
-		
 	family T :: (Name, ..)
-	notation Tag :: T 
-	
-	fn signum :: Relation v -> Int =
-		v is Less : -1
-		v is More : 1
-		          : 0
 
 	fn real :: Int v -> Real
 		= 100,000.00e-34
 		
 	data Array2D :: Int[2][2]
 	
-	fn plus [+] :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
+	fn plus `+` :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
 	
 	fn partially-ast-impl :: Some a -> Thing =
-		foo bar : (`ast baz)
-		        : (`ast que)
+		foo bar .{ (`ast baz)
+		        .{ (`ast que)
 	
 		
 	family A :: 6-8
 	
-	data Tuple :: (Int[A] one, String[A] other)
+	data Tuple :: (one: Int[A], other: String[A])
 	
 	family M :: *
 	family L :: 0-M
@@ -293,7 +255,7 @@ or even source code like
 	
 	data Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
 	
-	proc assoc [=>] :: K key -> V value -> (K, V) = (key, value)
+	proc assoc `=>` :: K key -> V value -> (K, V) = (key, value)
 	
 	family E :: _
 	fn at :: E[<>] s -> Index i -> Int = (`ast `get ?s ?i)
@@ -339,8 +301,8 @@ or even source code like
 		1. server responds >> response
 		.. Ready: server
 	where
-		Response response = server process request
-		Request request = server requests <<
+		response = server process request
+		request  = server requests <<
 		
 	% parallel with ad-hoc helper processes %
 	when Ready :: HttpServer server -> HttpServer
@@ -355,7 +317,7 @@ or even source code like
 		1. idle-worker-input >> (server requests <<)
 		.. Ready: server
 	where 
-		HttpRequest[>] idle-worker-input = @pool receive-queue <<	
+		idle-worker-input: HttpRequest[>] = @pool receive-queue <<	
 
 	when Idle :: Worker worker -> Worker
 		1. Work: worker responds >> (worker process (worker requests <<))
@@ -373,32 +335,32 @@ or even source code like
 	fn broadcast :: T value -> [T]>]] channels -> ()
 		= foreach (channel >> value)
 	where
-		T]>] channel = each channel	
+		channel: T]>] = each channel	
 		
-	proc send? [>|>] :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
+	proc send? `>|>` :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
 		= res
 		where
-		Int res
+		  res
 			|= value >> channel
 			|= value >> (timeout make-channel) than-return channel
 		
 		
 	fn example :: T[>][3] channels -> T = value
 	where 
-		T value 
+		value 
 			|= channels at 0 <<
 			|= channels at 1 <<
 			|= channels at 2 <<	
 	
 	fn example2 :: Int[>] channel -> Int = res
 	where
-		Int res
+		res
 			|= channel <<
 			|= 7 after 6ms 
 			
 	fn example3 :: Int[>] channel -> Int = res
 	where
-		Int res
+		res
 			|= channel <<
 			|= 2
 		
@@ -409,14 +371,14 @@ or even source code like
 	
 	fn append :: Byte> file -> [Byte] bytes -> Byte> = file ++ b
 	where
-		Byte b =<< bytes 
+		b =<< bytes 
 
 	data @process-pool :: @Worker[>][<>]
 	
 	fn numbers! :: Foo f -> Bar
 		= [1/2 1.2/4]
 		
-	fn force-plus [+!] :: Int! a -> Int b -> Int!
+	fn force-plus `+!` :: Int! a -> Int b -> Int!
 		= (`ast (`add ?a ?b))
 		
 	% Shapes %
@@ -477,12 +439,13 @@ or even source code like
 	where
 		equals-ignore-case +> eq Char	
 		
-	data Point :: (Coordinate x, Coordinate y) 
-	            : (Coordinate\Coordinate)
-	            : (Coordinate ':' Coordinate)
-	            : (Coordinate[*], Coordinate[*])[*]
+	data Point   :: (x: Coordinate, y: Coordinate) 
+	              & (Coordinate\Coordinate)
+	with "Point" :: (Coordinate ':' Coordinate) & Lit
+	with Point[] :: (Coordinate[*], Coordinate[*])
 	            
-	data Minutes :: Time : (Minutes 'min')
+	data Minutes   :: Time 
+	with "Minutes" :: Lit & (Digits 'min')
 	
 	data Era :: Date = 1970-01-01
 	
@@ -497,10 +460,14 @@ or even source code like
 	fn slice   :: E[L-*] array -> Int{L} length -> Int start -> E[<L>] = ?
 	
 	data Time :: `dimension Int{0..}
-	data Minutes :: `unit Time : (~ "min")
-	data Seconds :: `unit Time : (~ "sec")
+	
+	data Minutes   :: `unit Time 
+	with "Minutes" :: Lit & (Digits "min")
+	
+	data Seconds   :: `unit Time 
+	with "Seconds" :: Lit & (Digits "sec")
 
-	data Planet :: (Kilograms weight, Meters radius) 
+	data Planet :: (weight: Kilograms, radius: Meters) 
 	{  Mercury = (3.303e+23kg, 2.4397e6m)
 	|  Venus   = (4.869e+24kg, 6.0518e6m)
 	|  Earth   = (5.976e+24kg, 6.37814e6m)
@@ -522,21 +489,41 @@ or even source code like
 
 	data Word  :: Bit[1-64]
 	
-	data Int :: Word : Bit[1-32]
+	data Int   :: Word & Bit[1-32]
 
-	data Coefficient :: Int  : Bit[56] : (S-Bit\M-Bit[55])
-	data Exponent    :: Int  : Byte
-	data Dec         :: Word : (Coefficient\Exponent)
+	data Coefficient :: Int  & Bit[56] & (S-Bit\M-Bit[55])
+	data Exponent    :: Int  & Byte
+	data Dec         :: Word & (Coefficient\Exponent)
 
-	data Numerator   :: Int  : Bit[32] : (S-Bit\M-Bit[31])
-	data Denominator :: Int  : M-Bit[32]
-	data Frac        :: Word : (Numerator\Denominator)
+	data Numerator   :: Int  & Bit[32] & (S-Bit\M-Bit[31])
+	data Denominator :: Int  & M-Bit[32]
+	data Frac        :: Word & (Numerator\Denominator)
 	
-	data Next      :: Byte : (#1\MBit[7])
-	data Null      :: Byte : (#0\MBit[7])
-	data CharCode  :: Byte[1-4] : (Next[0-*]\Null)
-	data String    :: Byte[0-*] : CharCode[0-*]
+	data Next      :: Byte & (#1\MBit[7])
+	data Null      :: Byte & (#0\MBit[7])
+	data CharCode  :: Byte[1-4] & (Next[0-3]\Null)
+	data String    :: Byte[0-*] & CharCode[0-*]
 
-	data Char      :: Int{0..#xFFFF} : M-Bit[32]
+	data Char      :: Int{0..#xFFFF} & M-Bit[32]
 
 	data Text      :: String	
+	
+	fn signum :: Relation v -> Int =
+		v is Less .{ -1
+		v is More .{ 1
+		_         .{ 0
+		
+	data ADT :: Byte[*] & (Ok, Data)+(Error, Text)
+	data ADT :: Byte[*] & (status:Ok, data:Page)+(status:Error, Text)
+
+	data ADT :: Byte[*] & 
+		+(Ok, Data)
+		+(Error, Text)
+
+	data ADT :: Byte[*] & 
+		+(status:Ok, Data)
+		+(status:Error, Text)
+		
+	def Math :: = (`module `Math )	
+	
+	data Unit  :: ~ with "Unit" :: "()"

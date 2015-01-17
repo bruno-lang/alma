@@ -12,6 +12,7 @@ Faulty         : '!'
 Transient      : '*'
 Specialisation : '+>'
 Self           : '~'
+Then           : '.{'
 
 % Identifiers
 Wildcard       : '_'
@@ -36,7 +37,7 @@ Process        : -Noun
 Fault          : -Noun '!'
 
 % Operators
-Operator       : -OperatorSymbol { OperatorSymbol '!' '?' }x0-2
+Operator       : { OperatorSymbol ':'} { OperatorSymbol '!' '?' }x0-2
 OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }
 
 % Literals
@@ -52,36 +53,36 @@ numeric        : {'+' '-'}? 9+ ({'.' ','} 9+)*
 variant        : { Faulty Optional Transient }
 indirection    : { TypeOf LazyOf KeyOf }
 
-length-type    : 9+ | '*' | TypeVariable
-span-type      : length-type:MIN '-' length-type:MAX
-dimension-type : slice-type | '['  [ -quantity-type ]  ']'
-slice-type     : '[<' [ -quantity-type ] '>]'
-quantity-type  : span-type | length-type | Type
+scalar-type    : 9+ | '*' | TypeVariable
+span-type      : scalar-type:MIN '-' scalar-type:MAX
+length-type    : span-type | scalar-type | Type
+ordinal-type   : '[<' [ -length-type ] '>]' | '['  [ -length-type ]  ']'
 
-value-type     : literal | length-type
-range-type     : '{' [value-type:MIN] '..'& [value-type:MAX] '}' 
-value-set-type : '{'& value-type ('|' value-type)* '}'
+value-type     : literal | scalar-type
+subrange-type  : '{' [value-type:MIN] '..'& [value-type:MAX] '}' 
+subset-type    : '{'& value-type ('|' value-type)* '}'
 
 channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
 stream-type    : {'<' '>'}
-dimensions     : stream-type? dimension-type* [channel-type* dimension-type?]
-type           : Self | shape | op-type | indirection? -base-type dimensions? variant?
-base-type      : simple-type | list-type | set-type | tuple-type | fn-type | TypeVariable
-simple-type    : Type [range-type | value-set-type]
-list-type      : '['& -type ']'
-set-type       : '{'& -type '}'
-tuple-type     : '(' [ type ((('\'):AND|','?' ') type )* ] ')'
+dimensions     : stream-type? ordinal-type* [channel-type* ordinal-type?]
+type           : shape | indirection? -base-type dimensions? variant? sum-type?
+base-type      : sum-type | simple-type | list-type | set-type | tuple-type | fn-type | TypeVariable
+simple-type    : Type [subrange-type | subset-type]
+sum-type       : , '+' > type
+list-type      : '['& type ']'
+set-type       : '{'& type '}'
+tuple-type     : '(' [ label? type ({'\' ',' ' '}:AND > label? type )* ] ')'
+label          : , -Verb ':' >
 fn-type        : '(' type:INSTANCE > '->'& ( > type > '->' )* > type:RETURN ')'
-op-type        : Operation fn-type
 
 % Shapes
-shape          : '[]' | '{}' | '""' | Atom | Key | NumberConstant | literal:SHAPE
+shape          : Self | '[]' | '{}' | '""' | Atom | Key | NumberConstant | literal
 
 % Type Families / Variables
 family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-concept (>',' as-concept)* ] [, 'with' > Operation (> ',' > Operation)*]
 as-concept     : > Concept (>> TypeVariable)*
-type-var       : Self | shape | op-var | indirection? -kind-var dimensions? variant?
-kind-var       : Wildcard | simple-type | span-type | length-type | list-var | set-var | tuple-var | fn-var | TypeVariable
+type-var       : shape | op-var | indirection? -kind-var dimensions? variant?
+kind-var       : Wildcard | simple-type | span-type | scalar-type | list-var | set-var | tuple-var | fn-var | TypeVariable
 list-var       : '[' -type-var ']'
 set-var        : '{' -type-var '}'
 elem-var       : '..' | type-var
@@ -94,40 +95,40 @@ file           : module | library
 library        : form
 
 % Implementation
-module         : (, -declaration)+ .
-declaration    : family | process | fn | op | concept | fault | notation | data | ratio | when | comment
+module         : (, -declaration)+
+declaration    : def | data | when | process | fn | family | op | concept | fault | ratio | comment
 
 fault          : 'fault' & >> Fault > '::', simple-type .
 
 ratio          : 'ratio' & >> Ratio > '::', literal > '=' > literal .
 
-% Value Types & Constants
-data           : 'data' & >> (Key | Data) > '::', attrs (type|record) -valences [,'='& > expr] .
+% Value Types & Constants (incl. enumerations and algebraic data types)
+data           : 'data' & >> (Key | Data) > '::', attrs types ((, with)+ | (, enumeration)* ) init .
 attrs          : (Atom >>)*
-record         : '('& , field, (',', field,)* ')'
-field          : type >> Field
-valences       : (, valence )*
-valence        : ':'& > type | '['&, constants, ']' | '{'&, constants, '}'
+with           : 'with'& >> ('"'Data'"'|Data'[]') > '::', types 
+types          : type (,'&', type)*
+enumeration    : '['&, constants, ']' | '{'&, constants, '}'
 constants      : constant (, '|'&, constant )* 
-constant       : (Wildcard | Fault | Key | Constant), valence? ['='& > expr]
+constant       : name [, ':'& types] init
+name           : Wildcard | Fault | Key | Constant
+init           : [,'='& > expr]
 
-% ADTs
-notation       : 'notation' & >> Notation > '::', type?, [ '=', '{', type, (',', type,) '}' ]:members
+% Abstract Data Types
 concept        : 'concept' & >> Concept (>> TypeVariable)* > '::', '=' > '{', Operation, (',', Operation,)* '}'
 
 % Functions
-op             : 'op' & >> Operation > ['[' Operator ']'] > '::', Operation?, signature
+op             : 'op' & >> Operation > ['`' Operator '`'] > '::', Operation?, signature
 
-fn             : ('fn'|'proc') & >> Function > ['[' Operator ']'] > '::', signature?, implementation, [ where ] 
+fn             : ('fn'|'proc')& >>  Function > ['`' Operator '`'] > '::', signature?, implementation, [ where ] 
 signature      : -descriptor | '('& > -descriptor > ')'
 descriptor     : ( parameter > '->' > )+ type
 parameter      : type >> -Identifier:NAME
-implementation : '='& (((,[z'.'>] -seq > ':' -case)+ [,[z'.'>]':' -case]) | -case | ,'?'. )
+implementation : '='& (((,[z'.'>] -seq > -Then case)+ [,[z'.'>] -Then case]) | -case | ,'?'. )
 case           : , expr .
 where          : 'where' & , -clause > (-clause > )*
 clause         : switch | variable | bind | specialisation
-switch         : '?.'& > seq > ':'.
-variable       : type >> Identifier > (select | '=' > expr .)
+switch         : '?.'& > seq > -Then.
+variable       : Identifier[> ':' > type] > (select | '=' > expr .)
 select         : (, '|='& > expr . )+
 specialisation : type > -Specialisation > Type .
 bind           : Function > -Specialisation > Operation (> type)* .
@@ -147,10 +148,13 @@ term           : Wildcard | Atom | Key | literal
                | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
 
 % Processes
-process        : 'process' & >> Process > '::', valences
+process        : 'process' & >> Process > '::' (, enumeration)+ .
 when           : 'when' & >> state > '::', signature, effects, -transitions, where?
 state          : Fault | ('_!'):any-fault | Constant
 effects        : (effect .)*
 effect         : 9'.' & [>> Constant>':']  >> expr
 transitions    : '..', ( (transition .)* | .)
 transition     : ['\'& > -seq > '\',] > Constant > ':', expr
+
+% Definitions
+def            : 'def' & >> name > '::' > '=', expr .
