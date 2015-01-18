@@ -37,8 +37,8 @@ Process        : -Noun
 Fault          : -Noun '!'
 
 % Operators
-Operator       : { OperatorSymbol ':'} { OperatorSymbol '!' '?' }x0-2
-OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' '|' }
+OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' }
+Operator       : -OperatorSymbol { OperatorSymbol '!' '?' '|' }x0-2 | { OperatorSymbol '|' }x2-3
 
 % Literals
 LiteralSymbol  : { !_ !'?' !'#' !'"' !'=' !'>' !'<' !'&' !'|' !')' !'}' !']' !'.' !',' !';' !'*' !'\'}
@@ -95,7 +95,7 @@ file           : module | library
 library        : form
 
 % Implementation
-module         : (, -declaration)+
+module         : (, -declaration)+ ,
 declaration    : def | data | when | process | fn | family | op | concept | fault | ratio | comment
 
 fault          : 'fault' & >> Fault > '::', simple-type .
@@ -114,21 +114,21 @@ name           : Wildcard | Fault | Key | Constant
 init           : [,'='& > expr]
 
 % Abstract Data Types
+op             : 'op' & >> Operation > ['`' Operator '`'] > '::', Operation?, signature
 concept        : 'concept' & >> Concept (>> TypeVariable)* > '::', '=' > '{', Operation, (',', Operation,)* '}'
 
 % Functions
-op             : 'op' & >> Operation > ['`' Operator '`'] > '::', Operation?, signature
-
-fn             : ('fn'|'proc')& >>  Function > ['`' Operator '`'] > '::', signature?, implementation, [ where ] 
+fn             : ('fn'|'proc')& >>  Function > ['`' Operator '`'] > '::', signature?, implementation
 signature      : -descriptor | '('& > -descriptor > ')'
 descriptor     : ( parameter > '->' > )+ type
 parameter      : type >> -Identifier:NAME
-implementation : '='& (((,[z'.'>] -seq > -Then case)+ [,[z'.'>] -Then case]) | -case | ,'?'. )
-case           : , expr .
+implementation : '='& , ( case | '?' . )
+case           : > where | divider | [> {z '?'}'.'] > (expr condition? | condition) > \n case?
+divider        : > '-'+ > \n case
+condition      : (> '|' > expr)+
 where          : 'where' & , -clause > (-clause > )*
-clause         : switch | variable | bind | specialisation
-switch         : '?.'& > seq > -Then.
-variable       : Identifier[> ':' > type] > (select | '=' > expr .)
+clause         : variable | bind | specialisation
+variable       : Identifier [> ':' > type] > (select | '=' > expr .)
 select         : (, '|='& > expr . )+
 specialisation : type > -Specialisation > Type .
 bind           : Function > -Specialisation > Operation (> type)* .

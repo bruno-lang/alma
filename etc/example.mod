@@ -45,18 +45,18 @@
 	ratio SI :: 2$ = 1€
 
 	fn max :: (Int a -> Int b -> Int) =
-	  a > b .{ a 	
-	        .{ b
+	  a | a > b 	
+	  b
 		
 		
 	fn quicksort :: [T] list -> [T] =
-		list length <= 1 .{ list 
-		                 .{ (less ++ same ++ more)
+		list | list length <= 1  
+		(less ++ same ++ more)
 	where
-            pivot = list head
-            less  = list filter pivot >  | quicksort
-            same  = list filter pivot ==
-            more  = list filter pivot <  | quicksort
+		pivot = list head
+        less  = list filter (pivot >) quicksort    
+        same  = list filter pivot ==
+        more  = list filter (pivot <) quicksort
             
 	fn something :: [T] list -> {(T, T)}
 		= { a => b, 
@@ -64,27 +64,7 @@
 
 	family K :: _
 	family V :: _
-	fn assoc [=>] :: K key -> V value -> (K, V) = (key, value)
-
-	fn switch :: (Weekday d -> String) =
-		Monday  .{ "Monday"
-		Tuesday .{ "Tuesday"
-	where
-		?. d == _ .{
-		
-	fn another :: [Int] n -> Int idx -> Int =
-		a. []  .{ 0
-		b. [1] .{ 1
-		c.     .{ n at idx
-	where
-		?. n == _ .{
-		
-	fn pairs :: Point p -> Int =
-		1 , 2 .{ 1
-		0 , 4 .{ 2
-		      .{ 3
-	where
-		?. p x == _, p y == _ .{
+	fn assoc `=>` :: K key -> V value -> (K, V) = (key, value)
 		
 	fn clojure :: [T] e -> (T, T) 
 		= ((a b),
@@ -129,14 +109,16 @@
 	    tail: [E])
 	
 	fn at :: Elements list -> Index i -> E? =
-	    i < list length .{ list at i
-	                    .{ list tail at (i - list length)
+	    list at i | i < list length 
+		list tail at (i - list length)
 	
 	fn insert :: Elements list -> Index i -> T e -> [E] =
-	    i == 0 .{ list prepand e
-	    i == 1 .{ list take 1 append e ++ (list drop 1)
-	    i >= list length .{ (list length + '1, elements, tail insert at (i - list length))
-	                     .{ (list take i) ++ (drop i prepand e)
+	    list prepand e                        | i == 0 
+	    list take 1 append e ++ (list drop 1) | i == 1 
+	    (list length + 1, elements, newtail)  | i >= list length 
+	    (list take i) ++ (drop i prepand e)
+	where
+		newtail = tail insert at (i - list length)
 	    
 	family P :: (,)
 	family A :: _
@@ -151,13 +133,13 @@
 	
 	family T :: _
 	fn or-default :: T? v -> T default -> T =
-	    v exists .{ v
-	             .{ default	
+	    v | v exists
+        default	
 	    
 	family T :: _ with eq
 	fn first :: [T] list -> T sample -> Index start -> T =
-	    sample == list at start .{ e
-	                            .{ list first sample (start + '1) 
+	    e | sample == list at start 
+		list first sample (start + '1) 
 	    
 	data Coordinate :: Int & Bit[32]
 	data X-Coordinate :: Coordinate
@@ -215,9 +197,8 @@ or even source code like
 	fn plus `+` :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
 	
 	fn partially-ast-impl :: Some a -> Thing =
-		foo bar .{ (`ast baz)
-		        .{ (`ast que)
-	
+		(`ast baz) | case-a
+		(`ast que)
 		
 	family A :: 6-8
 	
@@ -388,9 +369,6 @@ or even source code like
 	fn shapes :: `foo x -> String = "another example"
 	fn shapes :: @foo x -> String = "another example"
 
-	fn show :: True t -> String = "true"
-	fn show :: False f -> String = "false"
-
 	family A :: (`ast , ..)
 
 	% testing some things... %
@@ -509,9 +487,12 @@ or even source code like
 	data Text      :: String	
 	
 	fn signum :: Relation v -> Int =
-		v is Less .{ -1
-		v is More .{ 1
-		_         .{ 0
+		-1 | v is Less
+		1  | v is More
+		0  | _
+	
+	family B :: Bool
+	fn or `||` :: B a -> B b -> B = (`ast `or ?a ?b)
 		
 	data ADT :: Byte[*] & (Ok, Data)+(Error, Text)
 	data ADT :: Byte[*] & (status:Ok, data:Page)+(status:Error, Text)
@@ -527,3 +508,28 @@ or even source code like
 	def Math :: = (`module `Math )	
 	
 	data Unit  :: ~ with "Unit" :: "()"
+	
+	fn show :: True t -> String = "true"
+	fn show :: False f -> String = "false"
+	
+	fn switch :: (Weekday d -> String) 
+		    =     | d == _
+		--------------------
+		"Monday"  | Monday
+		"Tuesday" | Tuesday 
+		
+	fn another :: [Int] n -> Int idx -> Int =
+		       | n == ?1
+		a. []  | 0
+		b. [1] | 1
+		c. _   | n at idx
+		
+	fn pairs :: Point p -> Int 
+		=  | x == _ | y == _
+		--------------------
+		1  |   1    |  2
+		2  |   0    |  4
+		3  |   _    |  _
+	where 
+		x = p x
+		y = p y		
