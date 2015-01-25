@@ -3,6 +3,7 @@ package bruno.lang.grammar;
 import static bruno.lang.grammar.Grammar.Rule.completion;
 import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
+import static bruno.lang.grammar.GrammarBuilder.buildGrammar;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -19,8 +20,8 @@ public class TestParser {
 
 	@Test
 	public void thatBrunoLangCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/bruno.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar bruno = grammar(t);
+		Parsed t = Parsed.parse("examples/bruno.grammar", Alma.GRAMMAR, "grammar");
+		Grammar bruno = buildGrammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
 		System.out.println(bruno);
 		printer.process(Parsed.parse("etc/example.lib", bruno, "library"));
@@ -29,25 +30,25 @@ public class TestParser {
 	
 	@Test
 	public void thatBrunoASTCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/bruno.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar bruno = grammar(t);
+		Parsed t = Parsed.parse("examples/bruno.grammar", Alma.GRAMMAR, "grammar");
+		Grammar bruno = buildGrammar(t);
 		Processor printer = Printer.rulePrinter(System.out);
 		printer.process(Parsed.parse("etc/example.ast", bruno, "expr"));
 	}
 	
 	@Test
-	public void thatLingukitGrammarCanBeParsed() throws IOException {
-		Grammar g0 = Lingukit.GRAMMAR;
-		Parsed t1 = Parsed.parse("examples/lingukit.grammar", g0, "grammar");
-		Grammar g1 = grammar(t1);
-		Parsed t2 = Parsed.parse("examples/lingukit.grammar", g1, "grammar");
+	public void thatAlmaGrammarCanBeParsed() throws IOException {
+		Grammar g0 = Alma.GRAMMAR;
+		Parsed t1 = Parsed.parse("examples/alma.grammar", g0, "grammar");
+		Grammar g1 = buildGrammar(t1);
+		Parsed t2 = Parsed.parse("examples/alma.grammar", g1, "grammar");
 		Printer.rulePrinter(System.out).process(t2);
 	}
 	
 	@Test
 	public void thatLookaheadWorks() throws IOException {
-		Parsed p = Parsed.parse("examples/test.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar test = grammar(p);
+		Parsed p = Parsed.parse("examples/test.grammar", Alma.GRAMMAR, "grammar");
+		Grammar test = buildGrammar(p);
 		Parsed example = Parsed.parse("etc/example.test", test, "start");
 		assertEquals("y", example.tree.rule(1).name);
 		assertEquals("x", example.tree.rule(3).name);
@@ -58,24 +59,24 @@ public class TestParser {
 	
 	@Test
 	public void thatJSONGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/json.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar json = grammar(t);
+		Parsed t = Parsed.parse("examples/json.grammar", Alma.GRAMMAR, "grammar");
+		Grammar json = buildGrammar(t);
 		Parsed jsont = Parsed.parse("etc/example.json", json, "file");
 		Printer.rulePrinter(System.out).process(jsont);
 	}
 	
 	@Test
 	public void thatHugeJSONCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/json.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar json = grammar(t);
+		Parsed t = Parsed.parse("examples/json.grammar", Alma.GRAMMAR, "grammar");
+		Grammar json = buildGrammar(t);
 		Parsed jsont = Parsed.parse("../../../huge.json", json, "file");
 		assertNotNull(jsont);
 	}
 	
 	@Test
 	public void thatXMLGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/xml.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar xml = grammar(t);
+		Parsed t = Parsed.parse("examples/xml.grammar", Alma.GRAMMAR, "grammar");
+		Grammar xml = buildGrammar(t);
 		Parsed xmlt = Parsed.parse("etc/example.xml", xml, "document");
 		Printer.rulePrinter(System.out).process(xmlt);
 	}
@@ -92,8 +93,8 @@ public class TestParser {
 	
 	@Test
 	public void thatJavaGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/java.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar java = grammar(t);
+		Parsed t = Parsed.parse("examples/java.grammar", Alma.GRAMMAR, "grammar");
+		Grammar java = buildGrammar(t);
 		assertParses(java, new File("src/java/main/bruno/lang/grammar/"), ".java");
 		assertParses(java, new File("src/java/test/bruno/lang/grammar/"), ".java");
 	}
@@ -107,10 +108,6 @@ public class TestParser {
 		}
 	}	
 	
-	private static Grammar grammar(Parsed t) {
-		return new Grammar(Linguist.finish(Builder.buildGrammar(t)));		
-	}
-
 	/**
 	 * A minimal grammar for just comments to test completion feature.
 	 */

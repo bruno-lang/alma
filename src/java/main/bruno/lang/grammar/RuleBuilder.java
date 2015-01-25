@@ -12,7 +12,7 @@ import bruno.lang.grammar.Grammar.RuleType;
  *  
  * @author jan
  */
-public final class Builder {
+public final class RuleBuilder {
 
 	/**
 	 * Used to indicate the distinct from index as a {@link Rule} that is
@@ -21,17 +21,17 @@ public final class Builder {
 	 */
 	private static final Rule DISTINCT_FROM = Rule.seq();
 	
-	public static Rule[] buildGrammar(Parsed grammar) {
+	public static Rule[] buildRules(Parsed grammar) {
 		final List<Rule> rules = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int count = tokens.count();
 		int token = 0;
 		while (token < count) {
 			Rule r = tokens.rule(token);
-			if (r == Lingukit.grammar_) {
+			if (r == Alma.grammar_) {
 				token++;
-			} else if (r == Lingukit.member_) {
-				if (tokens.rule(token+1) == Lingukit.rule_) {
+			} else if (r == Alma.member_) {
+				if (tokens.rule(token+1) == Alma.rule_) {
 					Rule rule = buildRule(token+1, grammar);
 					rules.add(rule);
 				}
@@ -42,7 +42,7 @@ public final class Builder {
 	}
 
 	private static Rule buildRule(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.rule_);
+		check(token, grammar, Alma.rule_);
 		String name = grammar.text(token+1);
 		if (name.matches("[zZ179@#_,~.^$+*?]")) {
 			throw new IllegalArgumentException("A rule cannot be named "+name+" as this is a control sequence in lingukit.");
@@ -51,13 +51,13 @@ public final class Builder {
 	}
 
 	private static Rule buildSelection(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.selection_);
+		check(token, grammar, Alma.selection_);
 		final List<Rule> alternatives = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int count = tokens.count();
 		final int end = tokens.end(token)+1;
 		int i = token+1;
-		while (i < count && tokens.rule(i) == Lingukit.sequence_ && tokens.end(i) <= end) {
+		while (i < count && tokens.rule(i) == Alma.sequence_ && tokens.end(i) <= end) {
 			alternatives.add(buildSequence(i, grammar));
 			i = tokens.next(i);
 		}
@@ -68,14 +68,14 @@ public final class Builder {
 	}
 
 	private static Rule buildSequence(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.sequence_);
+		check(token, grammar, Alma.sequence_);
 		final List<Rule> elems = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
 		final int count = tokens.count();
 		final int end = tokens.end(token)+1;
 		int distinctFrom = Rule.UNDECIDED;
 		int i = token+1;
-		while (i < count && tokens.rule(i) == Lingukit.element_ && tokens.end(i) <= end) {
+		while (i < count && tokens.rule(i) == Alma.element_ && tokens.end(i) <= end) {
 			Rule e = buildElement(i, grammar);
 			if (e != DISTINCT_FROM) {
 				elems.add(e);
@@ -91,26 +91,26 @@ public final class Builder {
 	}
 
 	private static Rule buildElement(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.element_);
+		check(token, grammar, Alma.element_);
 		final ParseTree tokens = grammar.tree;
 		Occur occur = buildOccur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
-		if (r == Lingukit.decision_) {
+		if (r == Alma.decision_) {
 			return DISTINCT_FROM;
 		}
-		if (r == Lingukit.completion_) {
+		if (r == Alma.completion_) {
 			return Rule.completion();
 		}
-		if (r == Lingukit.group_) {
+		if (r == Alma.group_) {
 			return buildCapture(tokens.next(token+2), grammar, buildSelection(token+2, grammar)).occurs(occur);
 		}
-		if (r == Lingukit.option_) {
+		if (r == Alma.option_) {
 			return buildCapture(tokens.next(token+2), grammar, buildSelection(token+2, grammar)).occurs(Occur.qmark);
 		}
-		if (r == Lingukit.lookahead_) {
+		if (r == Alma.lookahead_) {
 			return buildLookahead(token+1, grammar);
 		}
-		if (r == Lingukit.terminal_) {
+		if (r == Alma.terminal_) {
 			Rule t = buildTerminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
 			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
@@ -118,18 +118,18 @@ public final class Builder {
 			}
 			return t;
 		}
-		if (r == Lingukit.string_) {
+		if (r == Alma.string_) {
 			String text = grammar.text(token+1);
 			return Rule.string(text.substring(1, text.length()-1)).occurs(occur);
 		}
-		if (r == Lingukit.ref_) {
+		if (r == Alma.ref_) {
 			return buildRef(token+1, grammar).occurs(occur);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule buildLookahead(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.lookahead_);
+		check(token, grammar, Alma.lookahead_);
 		return Rule.lookahead(buildSelection(token+1, grammar));
 	}
 
@@ -138,57 +138,57 @@ public final class Builder {
 	}
 
 	private static Rule buildCapture(int token, Parsed grammar, Rule rule) {
-		if (grammar.tree.rule(token) == Lingukit.capture_) {
+		if (grammar.tree.rule(token) == Alma.capture_) {
 			return rule.as(grammar.text(token+1));
 		}
 		return rule;
 	}
 
 	private static Rule buildTerminal(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.terminal_);
+		check(token, grammar, Alma.terminal_);
 		Rule r = grammar.tree.rule(token+1);
-		if (r == Lingukit.ranges_) {
+		if (r == Alma.ranges_) {
 			return buildRanges(token+1, grammar);
 		}
-		if (r == Lingukit.figures_) {
+		if (r == Alma.figures_) {
 			return buildFigures(token+1, grammar);
 		}
-		if (r == Lingukit.pattern_) {
+		if (r == Alma.pattern_) {
 			return buildPattern(token+1, grammar);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule buildPattern(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.pattern_);
-		boolean not = grammar.tree.rule(token+1) == Lingukit.not_;
+		check(token, grammar, Alma.pattern_);
+		boolean not = grammar.tree.rule(token+1) == Alma.not_;
 		Rule p = patternSelection(token+(not?2:1), grammar);
 		return not ? Rule.pattern(Patterns.not(p.pattern)) : p;
 	}
 
 	private static Rule patternSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
-		if (r == Lingukit.gap_) {
+		if (r == Alma.gap_) {
 			return Rule.pattern(Patterns.GAP);
 		}
-		if (r == Lingukit.pad_) {
+		if (r == Alma.pad_) {
 			return Rule.pattern(Patterns.PAD);
 		}
-		if (r == Lingukit.indent_) {
+		if (r == Alma.indent_) {
 			return Rule.pattern(Patterns.INDENT);
 		}
-		if (r == Lingukit.separator_) {
+		if (r == Alma.separator_) {
 			return Rule.pattern(Patterns.SEPARATOR);
 		}
-		if (r == Lingukit.wrap_) {
+		if (r == Alma.wrap_) {
 			return Rule.pattern(Patterns.WRAP);
 		}
 		throw unexpectedRule(r);
 	}
 
 	private static Rule buildFigures(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.figures_);
-		boolean not = grammar.tree.rule(token+1) == Lingukit.not_;
+		check(token, grammar, Alma.figures_);
+		boolean not = grammar.tree.rule(token+1) == Alma.not_;
 		
 		final ParseTree tokens = grammar.tree;
 		final int count = tokens.count();
@@ -197,12 +197,12 @@ public final class Builder {
 		Terminal terminal = Terminal.EMPTY;
 		int i = token+1;
 		List<String> refs = new ArrayList<>();
-		while (i < count && tokens.end(i) <= end && tokens.rule(i) != Lingukit.capture_) {
+		while (i < count && tokens.end(i) <= end && tokens.rule(i) != Alma.capture_) {
 			Rule figure = tokens.rule(i);
-			if (figure == Lingukit.ranges_) {
+			if (figure == Alma.ranges_) {
 				Rule ranges = buildRanges(i, grammar);
 				terminal = terminal.and(ranges.terminal);
-			} else if (figure == Lingukit.name_) {
+			} else if (figure == Alma.name_) {
 				refs.add(grammar.text(i));
 			}
 			i = tokens.next(i);
@@ -214,50 +214,50 @@ public final class Builder {
 	}
 
 	private static Rule buildRanges(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.ranges_);
+		check(token, grammar, Alma.ranges_);
 		return rangesSelection(token +1, grammar);
 	}
 
 	private static Rule rangesSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
-		if (r == Lingukit.wildcard_) {
+		if (r == Alma.wildcard_) {
 			return Rule.terminal(Terminal.WILDCARD);
 		}
-		if (r == Lingukit.letter_) {
+		if (r == Alma.letter_) {
 			return Rule.terminal(Terminal.LETTERS);
 		}
-		if (r == Lingukit.upper_) {
+		if (r == Alma.upper_) {
 			return Rule.terminal(Terminal.UPPER_LETTERS);
 		}
-		if (r == Lingukit.lower_) {
+		if (r == Alma.lower_) {
 			return Rule.terminal(Terminal.LOWER_LETTERS);
 		}
-		if (r == Lingukit.hex_) {
+		if (r == Alma.hex_) {
 			return Rule.terminal(Terminal.HEX_NUMBER);
 		}
-		if (r == Lingukit.octal_) {
+		if (r == Alma.octal_) {
 			return Rule.terminal(Terminal.OCTAL_NUMBER);
 		}
-		if (r == Lingukit.binary_) {
+		if (r == Alma.binary_) {
 			return Rule.terminal(Terminal.BINARY_NUMBER);
 		}
-		if (r == Lingukit.digit_) {
+		if (r == Alma.digit_) {
 			return Rule.terminal(Terminal.DIGITS);
 		}
-		if (r == Lingukit.category_) {
+		if (r == Alma.category_) {
 			//TODO
 			throw new UnsupportedOperationException("Not available yet");
 		}
-		if (r == Lingukit.range_) {
+		if (r == Alma.range_) {
 			return Rule.terminal(Terminal.range(buildLiteral(token+1, grammar), buildLiteral(token+3, grammar)));
 		}
-		if (r == Lingukit.literal_) {
+		if (r == Alma.literal_) {
 			return Rule.terminal(Terminal.character(buildLiteral(token, grammar)));
 		}
-		if (r == Lingukit.whitespace_) {
+		if (r == Alma.whitespace_) {
 			return Rule.terminal(Terminal.WHITESPACE);
 		}
-		if (r == Lingukit.shortname_) {
+		if (r == Alma.shortname_) {
 			String name = grammar.text(token+1);
 			int c = name.charAt(1);
 			if (c == 't') {
@@ -275,12 +275,12 @@ public final class Builder {
 	}
 
 	private static int buildLiteral(int token, Parsed grammar) {
-		check(token, grammar, Lingukit.literal_);
+		check(token, grammar, Alma.literal_);
 		Rule r = grammar.tree.rule(token+1);
-		if (r == Lingukit.symbol_) {
+		if (r == Alma.symbol_) {
 			return grammar.text(token+1).codePointAt(1);
 		}
-		if (r == Lingukit.code_point_) {
+		if (r == Alma.code_point_) {
 			return Integer.parseInt(grammar.text(token+1).substring(2), 16);
 		}
 		throw unexpectedRule(r);
@@ -288,20 +288,20 @@ public final class Builder {
 
 	private static Occur buildOccur(int token, Parsed grammar, int parent) {
 		// there might not be an occurrence token or it belongs to a outer parent 
-		if (grammar.tree.rule(token) != Lingukit.occurrence_ || grammar.tree.end(parent) < grammar.tree.end(token)) {
+		if (grammar.tree.rule(token) != Alma.occurrence_ || grammar.tree.end(parent) < grammar.tree.end(token)) {
 			return Occur.once;
 		}
 		Rule occur = grammar.tree.rule(token+1);
-		if (occur == Lingukit.plus_) {
+		if (occur == Alma.plus_) {
 			return Occur.plus;
 		}
-		if (occur == Lingukit.star_) {
+		if (occur == Alma.star_) {
 			return Occur.star;
 		}
-		if (occur == Lingukit.qmark_) {
+		if (occur == Alma.qmark_) {
 			return Occur.qmark;
 		}
-		if (occur == Lingukit.quantity_) {
+		if (occur == Alma.quantity_) {
 			int min = Integer.parseInt(grammar.text(token+2));
 			int max = min;
 			if ("to".equals(grammar.tree.rule(token+3).name)) {
@@ -312,7 +312,7 @@ public final class Builder {
 			}
 			return Occur.occur(min, max);
 		}
-		if (occur == Lingukit.element_) {
+		if (occur == Alma.element_) {
 			throw new UnsupportedOperationException(occur.toString());
 		}
 		throw unexpectedRule(occur);

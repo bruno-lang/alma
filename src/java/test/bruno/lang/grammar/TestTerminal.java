@@ -12,7 +12,7 @@ public class TestTerminal {
 
 	@Test
 	public void test() {
-		Parser.parse(ByteBuffer.wrap("foo".getBytes()), Lingukit.name_);
+		Parser.parse(ByteBuffer.wrap("foo".getBytes()), Alma.name_);
 	}
 	
 	@Test

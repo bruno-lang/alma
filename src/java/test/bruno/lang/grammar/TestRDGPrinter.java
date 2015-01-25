@@ -10,12 +10,9 @@ public class TestRDGPrinter {
 
 	@Test
 	public void printingJSON() throws IOException {
-		Parsed t = Parsed.parse("examples/json.grammar", Lingukit.GRAMMAR, "grammar");
-		Grammar json = grammar(t);
+		Parsed t = Parsed.parse("examples/json.grammar", Alma.GRAMMAR, "grammar");
+		Grammar json = GrammarBuilder.buildGrammar(t);
 		new RDGPrinter(System.out).print(json);
 	}
 	
-	private static Grammar grammar(Parsed t) {
-		return new Grammar(Linguist.finish(Builder.buildGrammar(t)));		
-	}
 }

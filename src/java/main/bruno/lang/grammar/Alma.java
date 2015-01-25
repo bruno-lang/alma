@@ -7,8 +7,6 @@ import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.string;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
-import static bruno.lang.grammar.Linguist.finish;
-import static bruno.lang.grammar.Linguist.namedRules;
 import static bruno.lang.grammar.Occur.occur;
 import static bruno.lang.grammar.Patterns.GAP;
 import static bruno.lang.grammar.Patterns.INDENT;
@@ -21,11 +19,11 @@ import static bruno.lang.grammar.Terminal.notCharacter;
 import bruno.lang.grammar.Grammar.Rule;
 
 /**
- * Bootstrap {@link Grammar} of Lingukit.
+ * Bootstrap {@link Grammar} of ALMA.
  * 
  * @author jan
  */
-public final class Lingukit {
+public final class Alma {
 
 	static final Rule
 		g = pattern(GAP),
@@ -96,6 +94,6 @@ public final class Lingukit {
 		grammar_ = seq(member_, seq(g, member_).star()).as("grammar") 
 		;
 	
-	static final Grammar GRAMMAR = new Grammar(finish(namedRules(grammar_)));
+	static final Grammar GRAMMAR = GrammarBuilder.buildGrammar(grammar_);
 
 }

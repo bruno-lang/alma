@@ -14,16 +14,24 @@ import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
 /**
- * The {@link Linguist} is a utility that optimizes and finishes a set of
+ * The {@link GrammarBuilder} is a utility that optimizes and finishes a set of
  * {@link Rule}s used to build a {@link Grammar}.
  * 
- * Such a set is usually created by the {@link Builder} that does not deliver a
+ * Such a set is usually created by the {@link RuleBuilder} that does not deliver a
  * working grammar but the set of rules as objects as given in a grammar file.
  * 
  * @author jan
  */
-public final class Linguist {
+public final class GrammarBuilder {
 
+	public static Grammar buildGrammar(Parsed grammar) {
+		return new Grammar(finish(RuleBuilder.buildRules(grammar)));
+	}
+	
+	public static Grammar buildGrammar(Rule...roots) {
+		return new Grammar(finish(namedRules(roots)));
+	}
+	
 	/**
 	 * Creates a set of named {@link Rule}s reachable from any of the given roots.  
 	 */
