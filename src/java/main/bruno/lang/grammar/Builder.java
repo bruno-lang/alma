@@ -1,7 +1,6 @@
 package bruno.lang.grammar;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -189,40 +188,34 @@ public final class Builder {
 
 	private static Rule buildFigures(int token, Parsed grammar) {
 		check(token, grammar, Lingukit.figures_);
+		boolean not = grammar.tree.rule(token+1) == Lingukit.not_;
+		
 		final ParseTree tokens = grammar.tree;
 		final int count = tokens.count();
 		final int end = tokens.end(token);
-		Terminal terminal = null;
+		if (not) token++;
+		Terminal terminal = Terminal.EMPTY;
 		int i = token+1;
-		List<Rule> refs = new ArrayList<>();
+		List<String> refs = new ArrayList<>();
 		while (i < count && tokens.end(i) <= end && tokens.rule(i) != Lingukit.capture_) {
 			Rule figure = tokens.rule(i);
 			if (figure == Lingukit.ranges_) {
 				Rule ranges = buildRanges(i, grammar);
-				terminal = terminal == null ? ranges.terminal : terminal.and(ranges.terminal);
+				terminal = terminal.and(ranges.terminal);
 			} else if (figure == Lingukit.name_) {
-				String name = grammar.text(i);
-				if (name.charAt(0) != '-') {
-					name = "-"+name; // always do not capture these
-				}
-				refs.add(Rule.ref(name));
+				refs.add(grammar.text(i));
 			}
 			i = tokens.next(i);
 		}
-		Rule r = terminal == null ? Rule.selection(refs.toArray(new Rule[0])) : Rule.terminal(terminal);
-		if (!refs.isEmpty() && terminal != null) {
-			Rule[] a = Arrays.copyOf(refs.toArray(new Rule[0]), refs.size() + 1);
-			a[a.length-1] = r;
-			r = Rule.selection(a);
-		}
-		return buildCapture(i, grammar, r);
+		if (not)
+			terminal = terminal.not();
+		//when there are refs in a charset we create a Rule with an array of elements, first the terminal, than refs to all that should be included. 
+		return buildCapture(i, grammar, Rule.terminal(terminal, refs.toArray(new String[0])));
 	}
 
 	private static Rule buildRanges(int token, Parsed grammar) {
 		check(token, grammar, Lingukit.ranges_);
-		boolean not = grammar.tree.rule(token+1) == Lingukit.not_;
-		Rule ranges = rangesSelection(token +(not ? 2 : 1), grammar);
-		return not ? Rule.terminal(ranges.terminal.not()) : ranges;
+		return rangesSelection(token +1, grammar);
 	}
 
 	private static Rule rangesSelection(int token, Parsed grammar) {
@@ -308,15 +301,21 @@ public final class Builder {
 		if (occur == Lingukit.qmark_) {
 			return Occur.qmark;
 		}
-		int min = Integer.parseInt(grammar.text(token+1));
-		int max = min;
-		if ("to".equals(grammar.tree.rule(token+2).name)) {
-			max = Occur.plus.max;
-			if ("max".equals(grammar.tree.rule(token+3).name)) {
-				max = Integer.parseInt(grammar.text(token+3));
+		if (occur == Lingukit.quantity_) {
+			int min = Integer.parseInt(grammar.text(token+2));
+			int max = min;
+			if ("to".equals(grammar.tree.rule(token+3).name)) {
+				max = Occur.plus.max;
+				if ("max".equals(grammar.tree.rule(token+4).name)) {
+					max = Integer.parseInt(grammar.text(token+4));
+				}
 			}
+			return Occur.occur(min, max);
 		}
-		return Occur.occur(min, max);
+		if (occur == Lingukit.element_) {
+			throw new UnsupportedOperationException(occur.toString());
+		}
+		throw unexpectedRule(occur);
 	}
 	
 	private static RuntimeException unexpectedRule(Rule r) {

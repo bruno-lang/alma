@@ -118,6 +118,16 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 		public static Rule terminal(Terminal t) {
 			return new Rule(RuleType.TERMINAL, "", NO_ELEMENTS, Occur.once, NO_LITERAL, t, null, 0);
 		}
+		
+		public static Rule terminal(Terminal t, String... refs) {
+			if (refs.length == 0)
+				return terminal(t);
+			Rule[] refRules = new Rule[refs.length];
+			for (int i = 0; i < refs.length; i++) {
+				refRules[i] = ref(refs[i]);
+			}
+			return new Rule(RuleType.TERMINAL, "", refRules, Occur.once, NO_LITERAL, t, null, 0);
+		}
 
 		public final RuleType type;
 		public final String name;

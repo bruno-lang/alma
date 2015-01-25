@@ -413,9 +413,7 @@ or even source code like
 	family F :: _ as Stack with plus
 	
 	fn contains :: Char[*] arr -> Char sample -> Bool 
-		= arr index-of (sample, '0) exists?
-	where
-		equals-ignore-case +> eq Char	
+		= arr index-of (sample, 0 \(eq => equals-ignore-case)) exists?
 		
 	data Point   :: (x: Coordinate, y: Coordinate) 
 	              & (Coordinate\Coordinate)
@@ -533,3 +531,16 @@ or even source code like
 	where 
 		x = p x
 		y = p y		
+		
+		
+	data Server :: Process { ..
+		| Ready = [ Ready ] 
+		| _     = [ Ready ]
+		| Out-Of-Heap-Space! = [] }
+		
+
+	% nonsense %
+	data True  :: ()
+	data False :: ()
+	data Bool  :: () = [ False, True ]
+	

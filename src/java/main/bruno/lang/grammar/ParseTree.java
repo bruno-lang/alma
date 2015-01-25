@@ -128,7 +128,7 @@ public final class ParseTree {
 	private void toString(StringBuilder b, String indent, int index) {
 		char[] ind = new char[Math.abs(levels[index])];
 		Arrays.fill(ind, ' ');
-		b.append(ind).append(rules[index].name).append(' ').append(starts[index]).append(':').append(ends[index]).append('\n');
+		b.append(String.format("%4s ", index)).append(ind).append(rules[index].name).append(' ').append(starts[index]).append(':').append(ends[index]).append('\n');
 	}
 	
 	public void print(int position, PrintStream out) {

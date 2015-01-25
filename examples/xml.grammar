@@ -15,7 +15,7 @@ attributes :
 attribute :
 	name '=' '"' ..:value '"'
 text :
-	!'<'*
+	-{'<'}*
 cdata :
 	'<![CDATA[' ..:data ']]>'
 comment :

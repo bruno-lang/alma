@@ -1,17 +1,18 @@
 grammar       : member (, member)*
 member        : comment | rule
-comment       : '%' (!\n+):text
+comment       : '%' (-{\n}+):text
 rule          : name, ('=' | (':' ':'? '='?)), selection .
 selection     : sequence (, '|' > sequence )*
 sequence      : element ( > element )*
 element       : (decision | completion | group | option | lookahead | string | terminal | ref ) occurrence?
-decision      : '&'
+decision      : '!'
 completion    : '..' capture
 group         : '(', selection, ')' capture
 option        : '[', selection, ']' capture
-lookahead     : '~('&, selection, ')'
+lookahead     : '~('!, selection, ')'
 
-occurrence    : 'x'? num:min {'-' '+'}:to? num:max? | qmark | star | plus
+occurrence    : qmark | plus | (('x' | '**') quantity | element) | star
+quantity      : num:min ('..' | {'-' '+'}):to? num:max?
 num           : 9+
 qmark         : '?'
 star          : '*'
@@ -21,20 +22,20 @@ ref           : name capture
 name          : '-'? '\'? {'A'-'Y' 'a'-'y'} {@ 9 '_' '-'}*
 capture       : [':' name:alias ]
 
-string        : ''' !'''x2+ '''
+string        : ''' -{'''}**2+ '''
 
 terminal      : pattern | ranges | figures
-pattern       : not? (gap | pad | indent | separator | wrap)
-figures       : '{', -figure (, -figure )* '}' capture
+pattern       : gap | pad | indent | separator | wrap
+figures       : not? '{', -figure (, -figure )* '}' capture
 figure        : ranges | name
 
 wildcard      : '$'
-symbol        : ''' $ '''
+symbol        : ''' $ ''' | '"' $ '"' 
 code-point    : 'U+' #x4-8
 literal       : code-point | symbol
 range         : literal, '-', literal
 category      : 'U+{' @+ '}'
-ranges        : not? (wildcard | letter | upper | lower | digit | hex | octal | binary | category | range | literal | whitespace | shortname )
+ranges        : wildcard | letter | upper | lower | digit | hex | octal | binary | category | range | literal | whitespace | shortname
 
 letter        : '@'
 upper         : 'Z'
@@ -43,7 +44,7 @@ digit         : '9'
 hex           : '#'
 octal         : '7'
 binary        : '1'
-not           : '!'
+not           : '-'
 whitespace    : '_'
 gap           : ','
 pad           : ';'

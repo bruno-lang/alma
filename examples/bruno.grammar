@@ -1,8 +1,3 @@
-% Fragments
-Verb           : z { z 9 '-' }* { z 9 }?
-Noun           : Z { @ '-' }+ { @  9 }*
-Identifier     : -Verb {'?' '!'}?
-
 % Type Variant Symbols
 TypeOf         : '$'
 LazyOf         : '>'
@@ -10,43 +5,28 @@ KeyOf          : '@'
 Optional       : '?'
 Faulty         : '!'
 Transient      : '*'
-Specialisation : '+>'
 Self           : '~'
-Then           : '.{'
+Wild-card      : '_'
 
 % Identifiers
-Wildcard       : '_'
-Field          : -Verb
-Constant       : -NumberConstant | -Noun
-NumberConstant : '#' 9+
-Atom           : '`'{ !_ }+
-Key            : -KeyOf{ !Z !_ !',' }{ !_ !',' !'{' !'}' !'(' !')' !'[' !']'}*
+Atom           : '`' -{_}+
+Key            : -KeyOf -{ Z _ ',' } -{ _ ',' '{' '}' '(' ')' '[' ']'}*
 Variable       : '?'{ @ 9 '-' '_' }+
-
-Operation      : -Identifier
-Function       : -Identifier
-
 TypeVariable   : Z 9?
-Concept        : -Noun
-Data           : -Noun
-System         : -Noun
-Ratio          : -Noun
-Notation       : -Noun
-Type           : -Noun
-Process        : -Noun
-Fault          : -Noun '!'
+Noun           : ('#' { 9 Z } { @ '-' }* | '#'? Z { @ '-' }+) { @  9 '!' }*
+Verb           : z { z 9 '-' }* { z 9 }? {'?' '!'}?
 
 % Operators
 OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' }
-Operator       : -OperatorSymbol { OperatorSymbol '!' '?' '|' }x0-2 | { OperatorSymbol '|' }x2-3
+Operator       : -OperatorSymbol { OperatorSymbol '!' '?' '|' }**0-2 | { OperatorSymbol '|' }**2-3
 
 % Literals
-LiteralSymbol  : { !_ !'?' !'#' !'"' !'=' !'>' !'<' !'&' !'|' !')' !'}' !']' !'.' !',' !';' !'*' !'\'}
+LiteralSymbol  : -{ _ '?' '#' '"' '=' '>' '<' '&' '|' ')' '}' ']' '.' ',' ';' '*' '\'}
 literal        : conceptual | textual | binary
 conceptual     : ''' $ -LiteralSymbol* | numeric (numeric | -LiteralSymbol)*
 
-textual        : '"""', (..):TEXT (, '"""') | '"' (!'"'*):TEXT '"'
-binary         : '#'& ('b'& 1+ | 'o'& 7+ | 'x'& #+ | 'd'& 9+ ):NUMBER 
+textual        : '"""', (..):TEXT (, '"""') | '"' (-{'"'}*):TEXT '"'
+binary         : '#' ('b'! 1+ | 'o'! 7+ | 'x'! #+ | 'd'! 9+ ):NUMBER 
 numeric        : {'+' '-'}? 9+ ({'.' ','} 9+)*  
 
 % Types
@@ -55,40 +35,40 @@ indirection    : { TypeOf LazyOf KeyOf }
 
 scalar-type    : 9+ | '*' | TypeVariable
 span-type      : scalar-type:MIN '-' scalar-type:MAX
-length-type    : span-type | scalar-type | Type
+length-type    : span-type | scalar-type | Noun
 ordinal-type   : '[<' [ -length-type ] '>]' | '['  [ -length-type ]  ']'
 
 value-type     : literal | scalar-type
-subrange-type  : '{' [value-type:MIN] '..'& [value-type:MAX] '}' 
-subset-type    : '{'& value-type ('|' value-type)* '}'
+subrange-type  : '{' [value-type:MIN] '..'! [value-type:MAX] '}' 
+subset-type    : '{'! value-type ('|' value-type)* '}'
 
-channel-type   : {'[' ']'} {'<' '>'}x1-2 & {'[' ']'}
+channel-type   : {'[' ']'} {'<' '>'}**1..2 ! {'[' ']'}
 stream-type    : {'<' '>'}
 dimensions     : stream-type? ordinal-type* [channel-type* ordinal-type?]
 type           : shape | indirection? -base-type dimensions? variant? sum-type?
-base-type      : sum-type | simple-type | list-type | set-type | tuple-type | fn-type | TypeVariable
-simple-type    : Type [subrange-type | subset-type]
+base-type      : sum-type | list-type | set-type | tuple-type | fn-type | simple-type | TypeVariable
+simple-type    : Noun [subrange-type | subset-type]
 sum-type       : , '+' > type
-list-type      : '['& type ']'
-set-type       : '{'& type '}'
+list-type      : '['! type ']'
+set-type       : '{'! type '}'
 tuple-type     : '(' [ label? type ({'\' ',' ' '}:AND > label? type )* ] ')'
 label          : , -Verb ':' >
-fn-type        : '(' type:INSTANCE > '->'& ( > type > '->' )* > type:RETURN ')'
+fn-type        : '(' type:INSTANCE > '->'! ( > type > '->' )* > type:RETURN ')'
 
 % Shapes
-shape          : Self | '[]' | '{}' | '""' | Atom | Key | NumberConstant | literal
+shape          : Self | '[]' | '{}' | '""' | Atom | Key | literal
 
 % Type Families / Variables
-family         : 'family' & >> TypeVariable > '::', type-var [, 'as' as-concept (>',' as-concept)* ] [, 'with' > Operation (> ',' > Operation)*]
-as-concept     : > Concept (>> TypeVariable)*
+family         : 'family' ! >> TypeVariable > '::', type-var [, 'as' as-concept (>',' as-concept)* ] [, 'with' > Verb (> ',' > Verb)*]
+as-concept     : > Noun (>> TypeVariable)*
 type-var       : shape | op-var | indirection? -kind-var dimensions? variant?
-kind-var       : Wildcard | simple-type | span-type | scalar-type | list-var | set-var | tuple-var | fn-var | TypeVariable
+kind-var       : Wild-card | simple-type | span-type | scalar-type | list-var | set-var | tuple-var | fn-var | TypeVariable
 list-var       : '[' -type-var ']'
 set-var        : '{' -type-var '}'
 elem-var       : '..' | type-var
 tuple-var      : '(,)' | '(' [ -elem-var (> ',' > -elem-var )* ]  ')'
 fn-var         : '(->)' | '(' type-var:INSTANCE > '->' ( > type-var > '->' )*  > type-var:RETURN ')'
-op-var         : ( '?' | Operation ) fn-var
+op-var         : ( '?' | Verb ) fn-var
 
 % Modularisation
 file           : module | library
@@ -98,63 +78,59 @@ library        : form
 module         : (, -declaration)+ ,
 declaration    : def | data | when | process | fn | family | op | concept | fault | ratio | comment
 
-fault          : 'fault' & >> Fault > '::', simple-type .
+fault          : 'fault' ! >> Noun > '::', simple-type .
 
-ratio          : 'ratio' & >> Ratio > '::', literal > '=' > literal .
+ratio          : 'ratio' ! >> Noun > '::', literal > '=' > literal .
 
 % Value Types & Constants (incl. enumerations and algebraic data types)
-data           : 'data' & >> (Key | Data) > '::', attrs types ((, with)+ | (, enumeration)* ) init .
+data           : 'data' ! >> (Key | Noun) > '::', attrs types ((, with)+ | (, enumeration)* ) init .
 attrs          : (Atom >>)*
-with           : 'with'& >> ('"'Data'"'|Data'[]') > '::', types 
+with           : 'with'! >> ('"'Noun'"'|Noun'[]') > '::', types 
 types          : type (,'&', type)*
-enumeration    : '['&, constants, ']' | '{'&, constants, '}'
-constants      : constant (, '|'&, constant )* 
-constant       : name [, ':'& types] init
-name           : Wildcard | Fault | Key | Constant
-init           : [,'='& > expr]
+enumeration    : '['!, constants, ']' | '{'!, constants, '}'
+constants      : constant (, '|'!, constant )* 
+constant       : '..' | name [, ':'! types] init
+name           : Wild-card | Key | Noun
+init           : [,'='! > expr]
 
 % Abstract Data Types
-op             : 'op' & >> Operation > ['`' Operator '`'] > '::', Operation?, signature
-concept        : 'concept' & >> Concept (>> TypeVariable)* > '::', '=' > '{', Operation, (',', Operation,)* '}'
+op             : 'op' ! >> Verb > ['`' Operator '`'] > '::', Verb?, signature
+concept        : 'concept' ! >> Noun (>> TypeVariable)* > '::', '=' > '{', Verb, (',', Verb,)* '}'
 
 % Functions
-fn             : ('fn'|'proc')& >>  Function > ['`' Operator '`'] > '::', signature?, implementation
-signature      : -descriptor | '('& > -descriptor > ')'
+fn             : ('fn'|'proc')! >>  Verb > ['`' Operator '`'] > '::', signature?, implementation
+signature      : -descriptor | '('! > -descriptor > ')'
 descriptor     : ( parameter > '->' > )+ type
-parameter      : type >> -Identifier:NAME
-implementation : '='& , ( case | '?' . )
+parameter      : type >> -Verb:NAME
+implementation : '='! , ( case | '?' . )
 case           : > where | divider | [> {z '?'}'.'] > (expr condition? | condition) > \n case?
 divider        : > '-'+ > \n case
 condition      : (> '|' > expr)+
-where          : 'where' & , -clause > (-clause > )*
-clause         : variable | bind | specialisation
-variable       : Identifier [> ':' > type] > (select | '=' > expr .)
-select         : (, '|='& > expr . )+
-specialisation : type > -Specialisation > Type .
-bind           : Function > -Specialisation > Operation (> type)* .
-% TODO: specialisation for a variable that is bound for a concept stating the used functions or the mapping!
+where          : 'where' ! , variable > (variable > )*
+variable       : Verb [> ':' > type] > (select | '=' > expr .)
+select         : (, '|='! > expr . )+
 
 % Expressions
 seq            : expr (, ','?, expr )*
 expr           : form ( > form )*
-form           : eval | tuple | list | set | comment | term
+form           : eval | tuple | list | set | comment | implicit | inline | term
 eval           : '(:=', -seq, ')'
-inline         : '\' Function
+inline         : '\' Verb
+implicit       : '\(' > expr > ')'
 tuple          : '()' | '(', -seq, ')'
 list           : '[]' | '[', -seq, ']'
 set            : '{}' | '{', -seq, '}'
 comment        : '%' .. '%'
-term           : Wildcard | Atom | Key | literal
-               | Operator | Identifier | inline | Type | Fault | Variable | TypeVariable
+term           : Wild-card | Atom | Key | literal | Variable | Operator | Verb | Noun | TypeVariable
 
 % Processes
-process        : 'process' & >> Process > '::' (, enumeration)+ .
-when           : 'when' & >> state > '::', signature, effects, -transitions, where?
-state          : Fault | ('_!'):any-fault | Constant
+process        : 'process' ! >> Noun > '::' (, enumeration)+ .
+when           : 'when' ! >> state > '::', signature, effects, -transitions, where?
+state          : ('_!'):any-fault | Noun
 effects        : (effect .)*
-effect         : 9'.' & [>> Constant>':']  >> expr
+effect         : 9'.' ! [>> Noun>':']  >> expr
 transitions    : '..', ( (transition .)* | .)
-transition     : ['\'& > -seq > '\',] > Constant > ':', expr
+transition     : ['\'! > -seq > '\',] > Noun > ':', expr
 
 % Definitions
-def            : 'def' & >> name > '::' > '=', expr .
+def            : 'def' ! >> name > '::' > '=', expr .

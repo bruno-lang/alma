@@ -66,12 +66,12 @@ public final class Occur {
 			return "?";
 		}
 		if (min == max) {
-			return "x"+min;
+			return "**"+min;
 		}
 		if (max == plus.max) {
-			return "x"+min+"+";
+			return "**"+min+"+";
 		}
-		return "x"+min+"-"+max+"";
+		return "**"+min+".."+max+"";
 	}
 
 }

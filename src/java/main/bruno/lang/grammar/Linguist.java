@@ -204,6 +204,21 @@ public final class Linguist {
 			r = dereference(r, namedRules, followed);
 			return noCapture ? r.elements[0] : r;
 		} else if (rule.elements.length > 0) {
+			if (rule.type == RuleType.TERMINAL) {
+				Terminal t = rule.terminal;
+				for (Rule ref : rule.elements) {
+					Rule t2 = namedRules.get(ref.name);
+					if (t2.type == RuleType.CAPTURE)
+						t2 = t2.elements[0];
+					if (t2.type == RuleType.LITERAL) {
+						t2 = Rule.terminal(Terminal.character(UTF8.codePoint(t2.literal)));
+					}
+					if (t2.type != RuleType.TERMINAL)
+						throw new IllegalArgumentException("Cannot merge rule of type "+t2.type+" with a terminal: "+t2);
+					t = t.and(t2.terminal);
+				}
+				return Rule.terminal(t);
+			}
 			for (int i = 0; i < rule.elements.length; i++) {
 				rule.elements[i] = dereference(rule.elements[i], namedRules, followed);
 				if (rule.type == RuleType.CAPTURE && rule.elements[i].type == RuleType.CAPTURE) {

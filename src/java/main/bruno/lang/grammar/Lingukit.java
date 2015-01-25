@@ -50,7 +50,7 @@ public final class Lingukit {
 		hex_ = symbol('#').as("hex"),
 		octal_ = symbol('7').as("octal"),
 		binary_ = symbol('1').as("binary"),
-		not_ = symbol('!').as("not"),
+		not_ = symbol('-').as("not"),
 		whitespace_ = symbol('_').as("whitespace"),
 		gap_ = symbol(',').as("gap"),
 		pad_ = symbol(';').as("pad"),
@@ -64,11 +64,11 @@ public final class Lingukit {
 		shortname_ = selection(tab_, lf_, cr_).as("shortname"),
 
 		category_ = seq(string("U+{"), terminal(LETTERS).plus(), symbol('}')).as("category"),
-		ranges_ = seq(not_.qmark(), selection(wildcard_, letter_, upper_, lower_, digit_, hex_, octal_, binary_, category_, range_, literal_, whitespace_, shortname_)).as("ranges"),
+		ranges_ = selection(wildcard_, letter_, upper_, lower_, digit_, hex_, octal_, binary_, category_, range_, literal_, whitespace_, shortname_).as("ranges"),
 
 		figure_ = selection(ranges_, name_).as("-figure"),
-		figures_ = seq(symbol('{'), g, seq(figure_, seq(g, figure_).star()) , g, symbol('}'), capture_).as("figures"),
-		pattern_ = seq(not_.qmark(), selection(gap_, pad_, indent_, separator_, wrap_)).as("pattern"),
+		figures_ = seq(not_.qmark(), symbol('{'), g, seq(figure_, seq(g, figure_).star()) , g, symbol('}'), capture_).as("figures"),
+		pattern_ = selection(gap_, pad_, indent_, separator_, wrap_).as("pattern"),
 		terminal_ = selection(pattern_, ranges_, figures_).as("terminal"),
 
 		string_ = seq(a, terminal(notCharacter('\'')).occurs(occur(2, Occur.plus.max)), a).as("string"),
@@ -77,12 +77,13 @@ public final class Lingukit {
 		star_ = symbol('*').as("star"),
 		plus_ = symbol('+').as("plus"),
 		qmark_ = symbol('?').as("qmark"),
-		occurrence_ = selection(seq(symbol('x').qmark(), num_.as("min"), terminal(character('-').and(character('+'))).as("to").qmark(), num_.as("max").qmark()), qmark_, star_, plus_).as("occurrence"),
+		quantity_ = seq(num_.as("min"), selection(string(".."), terminal(character('-').and(character('+')))).as("to").qmark(), num_.as("max").qmark()).as("quantity"),
+		occurrence_ = selection(qmark_, plus_, seq(selection(symbol('x'), string("**")), selection(quantity_, ref("element"))), star_).as("occurrence"),
 
 		option_ = seq(symbol('['), g, ref("selection"), g, symbol(']'), capture_).as("option"),
 		group_ = seq(symbol('('), g, ref("selection"), g, symbol(')'), capture_).as("group"),
 		completion_ = seq(string(".."), capture_).as("completion"),
-		decision_ = symbol('&').as("decision"),
+		decision_ = symbol('!').as("decision"),
 		lookahead_ = seq(string("~("),g, ref("selection"), g, symbol(')')).as("lookahead"),
 		element_ = seq(selection(decision_, completion_, group_, option_, lookahead_, string_, terminal_, ref_), occurrence_.qmark()).as("element"),
 

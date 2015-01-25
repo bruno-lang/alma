@@ -25,6 +25,8 @@ public final class Terminal {
 	 */
 	public static final Terminal WHITESPACE = range(9, 13).and(character(32));
 	
+	public static final Terminal EMPTY = new Terminal(new int[0]);
+	
 	public static final Terminal
 		DIGITS = range('0', '9'),
 		HEX_NUMBER = DIGITS.and(range('A', 'F')),
@@ -61,6 +63,8 @@ public final class Terminal {
 	}
 	
 	private int[] asciis(int[] ranges) {
+		if (ranges.length == 0)
+			return ranges;
 		int[] ascii = new int[4];
 		if (ranges[0] < 0) {
 			ascii[0] = -1;
@@ -97,6 +101,8 @@ public final class Terminal {
 	}
 	
 	public Terminal not() {
+		if (this == EMPTY)
+			return this;
 		int[] not = ranges.clone();
 		for (int i = 0; i < not.length; i++) {
 			not[i] = -not[i];
@@ -105,6 +111,10 @@ public final class Terminal {
 	}
 	
 	public Terminal and(Terminal other) {
+		if (this == EMPTY)
+			return other;
+		if (other == EMPTY)
+			return this;
 		int[] merged = new int[ranges.length+other.ranges.length];
 		int ex = excluding();
 		if (ex > 0) {
@@ -182,7 +192,7 @@ public final class Terminal {
 				b.append(" ");
 			}
 			if (ranges[i] < 0) {
-				b.append('!');
+				b.append("-{");
 			}
 			if (ranges[i] == ranges[i+1]) {
 				b.append(UTF8.toLiteral(ranges[i]));
@@ -190,6 +200,9 @@ public final class Terminal {
 				b.append(UTF8.toLiteral(ranges[i]));
 				b.append('-');
 				b.append(UTF8.toLiteral(ranges[i+1]));
+			}
+			if (ranges[i] < 0) {
+				b.append("}");
 			}
 		}
 		if (!isSingleCharacter()) {

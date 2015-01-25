@@ -5,21 +5,21 @@ multiline = '/*' .. '*/'
 inline = '//' .. .
 package = , comment*, 'package', -identifiers, ';'
 imports = (, import)*
-import = comment*, 'import', & 'static'?, type, ';' 
+import = comment*, 'import', ! 'static'?, type, ';' 
 members = member (, member)*
 member = -annotations? (comment | class | interface | enum | ainterface | constructor | method | field)
 
 modifiers = (, -modifier)*
 modifier = ('public'):public | 'protected' | ('private'):private | ('static'):static | ('final'):final | 'abstract' | 'transient' | 'synchronized' | 'volatile'
 
-class = modifiers?, 'class' ; & identifier:name, [generics,] extends?, implements?, '{', members?, '}'
-interface = modifiers?, 'interface'; & identifier, extends?, '{', members?, '}'
-enum = modifiers?, 'enum' ; & identifier, implements?, '{', enumeration, members?, '}'
-ainterface = modifiers?, '@interface' ; & identifier:name, '{', (amethod,)* '}'
-extends = 'extends', & generic-type
-implements = 'implements', & generic-type
+class = modifiers?, 'class' ; ! identifier:name, [generics,] extends?, implements?, '{', members?, '}'
+interface = modifiers?, 'interface'; ! identifier, extends?, '{', members?, '}'
+enum = modifiers?, 'enum' ; ! identifier, implements?, '{', enumeration, members?, '}'
+ainterface = modifiers?, '@interface' ; ! identifier:name, '{', (amethod,)* '}'
+extends = 'extends', ! generic-type
+implements = 'implements', ! generic-type
 
-eos = !';'+ ';'
+eos = -{';'}+ ';'
 enumeration = [( identifier, ['(', args, ')',] ','?,)* ';']
 
 primitive = 'int' | 'char' | 'float' | 'boolean' | 'double' | 'long' | 'void' | 'byte' | 'short'
@@ -33,52 +33,52 @@ variance = ('?' | identifier), ('extends'|'super'), generic-type
 wildcard = '?'
 
 annotations = annotation (, annotation)*
-annotation = '@'type & [,'(' & , avalues?, ')']
+annotation = '@'type ! [,'(' ! , avalues?, ')']
 
 constructor = modifier?, identifier, '(', -params, ')', block
 params = [ param (,',', param)* ]
 param = [modifier ;] generic-type, identifier:name
 
-method = annotations?, modifiers?, generics?, generic-type, identifier:name, '(' & , -params, ')', [throws,] (';' | '{', statements?, '}')
+method = annotations?, modifiers?, generics?, generic-type, identifier:name, '(' ! , -params, ')', [throws,] (';' | '{', statements?, '}')
 field = modifiers?, generic-type, identifier, ['=', (array | args), ] ';' 
 amethod = annotations?, modifiers?, type, identifier:name, '(', -params, ')', ['default', literal,] ';'
 
-throws = 'throws', & type (,',', type)*
+throws = 'throws', ! type (,',', type)*
 
 statements = -statement (, -statement)* 
 statement = comment | if | for | while | try-catch | return | switch | do | throw | break | continue | label | assign, ';' | expression, ';'
-if = 'if', & '(', expression, ')', block [, 'else', & block ]
-while = 'while', & '(', expression, ')', block
-do = 'do', & -block, 'while', '(', expression, ')'
-for = 'for', & '(', (counter | each) , ')', block
+if = 'if', ! '(', expression, ')', block [, 'else', ! block ]
+while = 'while', ! '(', expression, ')', block
+do = 'do', ! -block, 'while', '(', expression, ')'
+for = 'for', ! '(', (counter | each) , ')', block
 counter = assign, ';', expression, ';', expression
 each = generic-type ; identifier, ':', expression
-try-catch = 'try', & -block (, 'catch', '(', type ; identifier:name,')', -block)* [, 'finally', -block]
-switch = 'switch', & '(', expression, ')', '{', (case ,)* '}'
-case = 'case' ; & identifier,':', -block | 'default', ':', & -block
-break = 'break'[; identifier],&';'
-continue = 'continue'[; identifier],&';'
+try-catch = 'try', ! -block (, 'catch', '(', type ; identifier:name,')', -block)* [, 'finally', -block]
+switch = 'switch', ! '(', expression, ')', '{', (case ,)* '}'
+case = 'case' ; ! identifier,':', -block | 'default', ':'!, statements?
+break = 'break'[; identifier],!';'
+continue = 'continue'[; identifier],!';'
 label = identifier,':'
-throw = 'throw' ; & expression, ';'
+throw = 'throw' ; ! expression, ';'
 block = '{', statements?, '}' | statement
-return = 'return' ; & expression, ';'
-assign = annotations?, [modifier ;] [generic-type ; ] var, '=' & , (array | expression)
-invoke = (ref, '.', [generics,])* identifier:name, '(' & , args, ')',
-new = 'new' ; & generic-type, ( '(', args, ')' | (('[', [expression,] ']')+ ):array | '{', args ,'}' )
+return = 'return'! (';' | ; expression, ';')
+assign = annotations?, [modifier ;] [generic-type ; ] var, '=' ! , (array | expression)
+invoke = (ref, '.', [generics,])* identifier:name, '(' ! , args, ')',
+new = 'new' ; ! generic-type, ( '(', args, ')' | (('[', [expression,] ']')+ ):array | '{', args ,'}' )
 var = (('this' | 'super' | ref) '.', )* ref  
 ref = identifier ( '[', expression?, ']' )*
 instanceof = var, 'instanceof', generic-type
 
 args = [ expression (,',', expression)* ]
 expression = -expr (, (operator | '.'), -expr )* [, conditional]
-conditional = '?' & , expression:then, ':', expression:else
+conditional = '?' ! , expression:then, ':', expression:else
 expr = cast? prefix?, (new | literal | instanceof | invoke | var | group) postfix? [, comment]
 group = '(', expression, ')'
 cast = '(',generic-type,')'
 array = '{', args, '}'
 
 literal = string | char | -number
-string = '"' ({ !'"' !'\' }+ | '\' $ )* '"'
+string = '"' (-{ '"' '\' }+ | '\' $ )* '"'
 char = ''' '\'? $ '''
 number = hex | binary | long | float | double | int
 int = sign 9+
@@ -90,10 +90,10 @@ binary = '0b' 1+
 sign = { '-' '+' }?
 operator = {'=' '>' '<' '!' '*' '-' '+' '/' '&' '|' '%'}x1-3
 prefix = '-'x1-2 | '+'x1-2 | '!' | '~'
-postfix = '-'x2 | '+'x2
+postfix = '--' | '++'
 
 identifier = { @ '_' '$' } { @ 9 '_' '$' }*
 identifiers = identifier ('.' identifier)*
 
 avalues = avalue, (',', avalue)*
-avalue = '{'&, avalues, '}' | literal | identifier:key, '=', avalue | var 
+avalue = '{'!, avalues, '}' | literal | identifier:key, '=', avalue | var 
