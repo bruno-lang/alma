@@ -6,7 +6,7 @@
 	family T :: _
 	family E :: _
 
-	fn foo :: ({([T], E[])} e -> E) = x
+	fn foo :: ({([T], E[*])} e -> E) = x
 
 	op cons `+` :: ([T] l -> E e -> [T])
 	
@@ -74,7 +74,7 @@
 	fn range :: Int low -> Int high -> [Int]
 		= (`ast `range ?low ?high) 
 	
-	data Suit :: () { Spades | Hearts | Diamonds | Clubs }
+	data Suit :: () [ Spades | Hearts | Diamonds | Clubs ]
 	
 	data Month :: Int{1..12} [ Januar | Februar | December ]
 	
@@ -105,7 +105,7 @@
 
 	data Elements :: (
 	    length: Length,
-	    elements: E[]*,
+	    elements: E[*]*,
 	    tail: [E])
 	
 	fn at :: Elements list -> Index i -> E? =
@@ -223,7 +223,7 @@ or even source code like
 	family F3 :: (_ -> _ -> _)
 	family O1 :: ?(->)
 	
-	fn empty? :: E[] array -> Bool = array length == 0
+	fn empty? :: E[*] array -> Bool = array length == 0
 	
 	data Pi :: Float = (:= pi-gauss-legendre 0.000001 )
 	
@@ -232,14 +232,10 @@ or even source code like
 	fn call-side-inline :: E[1-*] one -> E[1-*] other -> Bool
 		= one\last == other\last
 		
-	data Menu :: Food[Weekday] = ["Pasta", "Pizza"]
-	
-	data Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
-	
 	proc assoc `=>` :: K key -> V value -> (K, V) = (key, value)
 	
 	family E :: _
-	fn at :: E[<>] s -> Index i -> Int = (`ast `get ?s ?i)
+	fn at :: E[<*>] s -> Index i -> Int = (`ast `get ?s ?i)
 	
 	% keys %
 	
@@ -267,10 +263,10 @@ or even source code like
 	family I3 :: _]<]
 	
 	% processes %
-	process Server :: 
-		{ Ready = [ Ready ] 
-		| _     = [ Ready ] }
-		{ Out-Of-Heap-Space! = [] }	
+	data Server :: Process 
+		[ Ready              = [ Ready ] 
+		| Out-Of-Heap-Space! = []
+		]	
 	
 	% single process %
 	when Ready :: HttpServer server -> HttpServer
@@ -345,17 +341,6 @@ or even source code like
 			|= channel <<
 			|= 2
 		
-	% Streams %
-	
-	family O :: _>
-	family I :: _<
-	
-	fn append :: Byte> file -> [Byte] bytes -> Byte> = file ++ b
-	where
-		b =<< bytes 
-
-	data @process-pool :: @Worker[>][<>]
-	
 	fn numbers! :: Foo f -> Bar
 		= [1/2 1.2/4]
 		
@@ -373,9 +358,7 @@ or even source code like
 
 	% testing some things... %
 	
-	data Menu :: Meal[Weekday]
-	
-	when Greet :: Char> out -> ()
+	when Greet :: Char[>] out -> ()
 		1. out print "Hello World"
 		.. 	
 		
@@ -391,8 +374,8 @@ or even source code like
 	
 	family T :: (,)
 	family F :: (->)
-	family A :: _[]
-	family V :: _[<>]
+	family A :: _[*]
+	family V :: _[<*>]
 	family L :: [_]
 	family S :: {_}
 	family D :: *
@@ -444,14 +427,15 @@ or even source code like
 	with "Seconds" :: Lit & (Digits "sec")
 
 	data Planet :: (weight: Kilograms, radius: Meters) 
-	{  Mercury = (3.303e+23kg, 2.4397e6m)
-	|  Venus   = (4.869e+24kg, 6.0518e6m)
-	|  Earth   = (5.976e+24kg, 6.37814e6m)
-	|  Mars    = (6.421e+23kg, 3.3972e6m)
-	|  Jupiter = (1.9e+27kg,   7.1492e7m)
-	|  Saturn  = (5.688e+26kg, 6.0268e7m)
-	|  Uranus  = (8.686e+25kg, 2.5559e7m)
-	|  Neptune = (1.024e+26kg, 2.4746e7m) }
+		[  Mercury = (3.303e+23kg, 2.4397e6m)
+		|  Venus   = (4.869e+24kg, 6.0518e6m)
+		|  Earth   = (5.976e+24kg, 6.37814e6m)
+		|  Mars    = (6.421e+23kg, 3.3972e6m)
+		|  Jupiter = (1.9e+27kg,   7.1492e7m)
+		|  Saturn  = (5.688e+26kg, 6.0268e7m)
+		|  Uranus  = (8.686e+25kg, 2.5559e7m)
+		|  Neptune = (1.024e+26kg, 2.4746e7m) 
+		]
 	
 	family T4 :: (E, ~)	
 	
@@ -533,14 +517,16 @@ or even source code like
 		y = p y		
 		
 		
-	data Server :: Process { ..
-		| Ready = [ Ready ] 
-		| _     = [ Ready ]
-		| Out-Of-Heap-Space! = [] }
-		
+	data Server :: Process 
+		[ Ready = [ Ready ] 
+		| Out-Of-Heap-Space! = [] ]
 
 	% nonsense %
 	data True  :: ()
 	data False :: ()
-	data Bool  :: () = [ False, True ]
+	data Bool  :: () = { False , True }
+	
+	data Menu :: Meal[Weekday]
+	data Menu :: Food[Weekday] = [ "Pasta", "Pizza" ]
+	data Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
 	

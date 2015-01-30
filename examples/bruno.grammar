@@ -35,23 +35,25 @@ indirection    : { TypeOf LazyOf KeyOf }
 
 scalar-type    : 9+ | '*' | TypeVariable
 span-type      : scalar-type:MIN '-' scalar-type:MAX
-length-type    : span-type | scalar-type | Noun
-ordinal-type   : '[<' [ -length-type ] '>]' | '['  [ -length-type ]  ']'
+length-type    : span-type | scalar-type
+ordinal-type   : '[' Noun ']' | '['! -length-type ']'
+channel-type   : {'[' ']'} {'<' '>'}**1..2 ! {'[' ']'}
+slice-type     : '[<' -length-type ! '>]'
 
 value-type     : literal | scalar-type
 subrange-type  : '{' [value-type:MIN] '..'! [value-type:MAX] '}' 
 subset-type    : '{'! value-type ('|' value-type)* '}'
 
-channel-type   : {'[' ']'} {'<' '>'}**1..2 ! {'[' ']'}
 stream-type    : {'<' '>'}
-dimensions     : stream-type? ordinal-type* [channel-type* ordinal-type?]
-type           : shape | indirection? -base-type dimensions? variant? sum-type?
-base-type      : sum-type | list-type | set-type | tuple-type | fn-type | simple-type | TypeVariable
+dimension      : slice-type | channel-type | ordinal-type
+type           : sum-type (, '&', sum-type)*
+base-type      : shape | indirection? -kind dimension* variant?
+kind           : list-type | set-type | tuple-type | fn-type | simple-type | TypeVariable
 simple-type    : Noun [subrange-type | subset-type]
-sum-type       : , '+' > type
+sum-type       : [,'+' >] -base-type (,'+' > -base-type)*
 list-type      : '['! type ']'
 set-type       : '{'! type '}'
-tuple-type     : '(' [ label? type ({'\' ',' ' '}:AND > label? type )* ] ')'
+tuple-type     : '(' [ label? type ({'\' ',' ' '}:X > label? type )* ] ')'
 label          : , -Verb ':' >
 fn-type        : '(' type:INSTANCE > '->'! ( > type > '->' )* > type:RETURN ')'
 
@@ -61,7 +63,7 @@ shape          : Self | '[]' | '{}' | '""' | Atom | Key | literal
 % Type Families / Variables
 family         : 'family' ! >> TypeVariable > '::', type-var [, 'as' as-concept (>',' as-concept)* ] [, 'with' > Verb (> ',' > Verb)*]
 as-concept     : > Noun (>> TypeVariable)*
-type-var       : shape | op-var | indirection? -kind-var dimensions? variant?
+type-var       : shape | op-var | indirection? -kind-var dimension* variant?
 kind-var       : Wild-card | simple-type | span-type | scalar-type | list-var | set-var | tuple-var | fn-var | TypeVariable
 list-var       : '[' -type-var ']'
 set-var        : '{' -type-var '}'
@@ -83,15 +85,14 @@ fault          : 'fault' ! >> Noun > '::', simple-type .
 ratio          : 'ratio' ! >> Noun > '::', literal > '=' > literal .
 
 % Value Types & Constants (incl. enumerations and algebraic data types)
-data           : 'data' ! >> (Key | Noun) > '::', attrs types ((, with)+ | (, enumeration)* ) init .
+data           : 'data' ! >> (Key | Noun) > '::', attrs type enumeration? with* init? .
 attrs          : (Atom >>)*
-with           : 'with'! >> ('"'Noun'"'|Noun'[]') > '::', types 
-types          : type (,'&', type)*
-enumeration    : '['!, constants, ']' | '{'!, constants, '}'
+with           : , 'with'! >> ('"'Noun'"'|Noun'[]') > '::', type
+enumeration    : , '['!, constants, ']'
 constants      : constant (, '|'!, constant )* 
-constant       : '..' | name [, ':'! types] init
+constant       : name [, ':'! type] init?
 name           : Wild-card | Key | Noun
-init           : [,'='! > expr]
+init           : ,'='! > expr
 
 % Abstract Data Types
 op             : 'op' ! >> Verb > ['`' Operator '`'] > '::', Verb?, signature
