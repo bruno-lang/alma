@@ -145,7 +145,7 @@
 	data X-Coordinate :: Coordinate
 	data Y-Coordinate :: Coordinate
 	data Point :: (x: X-Coordinate, y:Y-Coordinate) 
-				& (X-Coordinate\Y-Coordinate)
+				& (X-Coordinate; Y-Coordinate)
 	with "Point" :: Lit & (X-Coordinate ':' Y-Coordinate)
 	data Points :: [Point]
 	
@@ -221,7 +221,6 @@ or even source code like
 	family F1 :: (->)
 	family F2 :: (_ -> _)
 	family F3 :: (_ -> _ -> _)
-	family O1 :: ?(->)
 	
 	fn empty? :: E[*] array -> Bool = array length == 0
 	
@@ -380,7 +379,6 @@ or even source code like
 	family S :: {_}
 	family D :: *
 	
-	family O :: ?(->)
 	family R :: _[<]
 	family W :: _[>]
 	
@@ -392,6 +390,8 @@ or even source code like
 	family L :: >_
 	family K :: @_	
 	
+	family I :: #_
+	
 	family E :: _ as Stack, Collection
 	family F :: _ as Stack with plus
 	
@@ -399,7 +399,7 @@ or even source code like
 		= arr index-of (sample, 0 \(eq => equals-ignore-case)) exists?
 		
 	data Point   :: (x: Coordinate, y: Coordinate) 
-	              & (Coordinate\Coordinate)
+	              & (Coordinate; Coordinate)
 	with "Point" :: (Coordinate ':' Coordinate) & Lit
 	with Point[] :: (Coordinate[*], Coordinate[*])
 	            
@@ -441,7 +441,7 @@ or even source code like
 	
 	data Exp :: Int = 2^27 - 1
 	
-	data Bit   :: () [ #0 | #1 ]
+	data Bit   :: () [ ^0 | ^1 ]
 	data S-Bit :: Bit [ Positive | Negative ]
 	data M-Bit :: Bit
 
@@ -451,20 +451,20 @@ or even source code like
 	
 	data Int   :: Word & Bit[1-32]
 
-	data Coefficient :: Int  & Bit[56] & (S-Bit\M-Bit[55])
+	data Coefficient :: Int  & Bit[56] & (S-Bit;M-Bit[55])
 	data Exponent    :: Int  & Byte
-	data Dec         :: Word & (Coefficient\Exponent)
+	data Dec         :: Word & (Coefficient Exponent)
 
-	data Numerator   :: Int  & Bit[32] & (S-Bit\M-Bit[31])
+	data Numerator   :: Int  & Bit[32] & (S-Bit; M-Bit[31])
 	data Denominator :: Int  & M-Bit[32]
-	data Frac        :: Word & (Numerator\Denominator)
+	data Frac        :: Word & (Numerator Denominator)
 	
-	data Next      :: Byte & (#1\MBit[7])
-	data Null      :: Byte & (#0\MBit[7])
-	data CharCode  :: Byte[1-4] & (Next[0-3]\Null)
+	data Next      :: Byte & (^1 MBit[7])
+	data Null      :: Byte & (^0 MBit[7])
+	data CharCode  :: Byte[1-4] & (Next[0-3] Null)
 	data String    :: Byte[0-*] & CharCode[0-*]
 
-	data Char      :: Int{0..#xFFFF} & M-Bit[32]
+	data Char      :: Int{0..0xFFFF} & M-Bit[32]
 
 	data Text      :: String	
 	
@@ -530,3 +530,63 @@ or even source code like
 	data Menu :: Food[Weekday] = [ "Pasta", "Pizza" ]
 	data Menu :: Food[Weekday] = { Monday => "Pasta", Tuesday => "Pizza" }
 	
+	data ASCII :: Int{0..127} & Byte & (^0 Bit[7]) &
+		+ControlCodes
+		+Digits
+		+UpperLetters
+		+LowerLetters
+		+Symbols
+
+	data ControlCodes :: Int{0..31|127}
+	data Digits       :: Int{48..57}
+	data UpperLetters :: Int{65..90}
+	data LowerLetters :: Int{97..122}
+	data Symbols      :: Int{32..47|58..64|91..96|123..125}	
+	
+	data ASCII :: Int{0..127} & Byte & (^0 Bit[7])
+		[ ControlCodes : Int{0..31|127}
+		| Digits       : Int{48..57}
+		| UpperLetters : Int{65..90}
+		| LowerLetters : Int{97..122}
+		| Symbols      : Int{32..47|58..64|91..96|123..125}
+		]
+		
+	data ASCII :: Int{0..127} & Byte & (^0 Bit[7]) [ 
+		ControlCodes : Int{0..31|127} | 
+		Digits       : Int{48..57}    | 
+		UpperLetters : Int{65..90}    | 
+		LowerLetters : Int{97..122}   | 
+		Symbols      : Int{32..47|58..64|91..96|123..125}
+	]
+	
+	data Const :: Int = 1,000,000.000
+	
+	data Process :: #[~]
+		[ Out-Of-Data-Space! = ?
+		| Out-Of-Code-Space! = ?
+		| Out-Of-Disk-Space! = ?
+		| Out-Of-Flow-Space! = ?
+		| Out-Of-Type-Range! = ?
+		]	
+		
+	data Server :: Process
+		[ Out-Of-Data-Space! = []
+		| Ready              = [ Ready ]
+		]
+		
+	data XProcess :: Process
+		[ Out-Of-Data-Space! = [ Cleanup! ]
+		| Out-Of-Code-Space! = [ Cleanup! ]
+		| Out-Of-Disk-Space! = [ Cleanup! ]
+		| Out-Of-Flow-Space! = [ Cleanup! ]
+		| Out-Of-Type-Range! = [ Cleanup! ]
+		| Cleanup!           = ?
+		]
+		
+	data Deamon :: Process
+		[ Out-Of-Data-Space! = []
+		| Out-Of-Code-Space! = []
+		| Out-Of-Disk-Space! = []
+		| Out-Of-Flow-Space! = []
+		| Out-Of-Type-Range! = []
+		]
