@@ -283,9 +283,6 @@ or even source code like
 		2. Register: @pool send-queue >> (worker requests key)
 		.. Idle: worker
 		
-	when _! :: Worker worker -> Worker
-		.. Init: worker 	
-		
 	when Out-Of-Memory! :: Worker worker -> Worker?
 		..		
 		
@@ -559,7 +556,8 @@ or even source code like
 		}
 		
 	data XProcess :: Process
-		{ Out-Of-Data-Space! = [ Cleanup! ]
+		{ ..
+		| Out-Of-Data-Space! = [ Cleanup! ]
 		| Out-Of-Code-Space! = [ Cleanup! ]
 		| Out-Of-Disk-Space! = [ Cleanup! ]
 		| Out-Of-Flow-Space! = [ Cleanup! ]
@@ -602,5 +600,5 @@ or even source code like
 	                                    drop, remove, insert, at, slice}
 	                                    
 	on Alarm :: Machine m -> Machine
-		1. notify master-control
+		1. notify master-control || something else
 		.. Recover : m

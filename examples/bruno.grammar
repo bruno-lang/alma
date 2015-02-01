@@ -16,6 +16,7 @@ Variable       : '?'{ @ 9 '-' '_' }+
 TypeVariable   : Z 9?
 Noun           : Z { @ '-' }+ { @  9 '!' }* | '^' 9+
 Verb           : z { z 9 '-' }* { z 9 }? {'?' '!'}?
+name           : Key | Noun
 
 % Operators
 OperatorSymbol : { '+' '-' '/' '*' '=' '>' '<' '&' }
@@ -61,7 +62,7 @@ label          : , -Verb ':' >
 
 shape          : Self | '[]' | '{}' | '()' | '""' | Atom | Key | literal
 
-% ==============================================================================
+% /////////////////////////////////////////////////////////////////////////////
 
 % Modularisation
 file           : module | library
@@ -75,23 +76,22 @@ fault          : 'fault' ! >> Noun > '::', named-type .
 
 % Data
 ratio          : 'ratio' ! >> Noun > '::', literal > '=' > literal .
-data           : 'data' ! >> (Key | Noun) > '::', attrs type enumeration? with* init? .
+data           : 'data' ! >> -name > '::', attrs type enumeration? with* init? .
 with           : , 'with'! >> ('"'Noun'"'|Noun'[]') > '::', type
 enumeration    : , '{'!, constants, '}'
 constants      : constant (, '|'!, constant )* 
-constant       : '..' | name [, ':'! > type] init?
-name           : Wild-card | Key | Noun
+constant       : '..' | -name [, ':'! > type] init?
 init           : ,'='! > (Open | expr )
 
 
 % Functions
-fn             : ('fn'|'proc')! >>  Verb > ['`' Operator '`'] > '::', signature?, implementation
-signature      : -descriptor | '('! > -descriptor > ')'
+fn             : ('fn'|'proc')! >>  Verb > ['`' Operator '`'] > '::', in-out?, implementation
+in-out         : -descriptor | '('! > -descriptor > ')'
 descriptor     : ( parameter > '->' > )+ type
 parameter      : type >> [-Verb:NAME]
 implementation : '='! , ( case | Open . )
-case           : > where | divider | [> {z '?'}'.'] > (expr condition? | condition) > \n case?
-divider        : > '-'**4+ -{\n}* \n case
+case           : > where | hline | [> {z '?'}'.'] > (expr condition? | condition) > \n case?
+hline          : > '-'**4+ -{\n}* \n case
 condition      : (> '|' > expr)+
 where          : 'where' ! , variable > (variable > )*
 variable       : Verb [> ':' > type] > (select | '=' > expr .)
@@ -102,18 +102,18 @@ select         : (, '|='! > expr . )+
 seq            : expr (, ','?, expr )*
 expr           : form ( > form )*
 form           : expand | tuple | list | set | comment | implicit | inline | term
-expand         : '(:=', -seq, ')'
+expand         : '(:='!, -seq, ')'
 inline         : '\' Verb
-implicit       : '\(' > expr > ')'
-tuple          : '()' | '(', -seq, ')'
-list           : '[]' | '[', -seq, ']'
-set            : '{}' | '{', -seq, '}'
+implicit       : '\('! > expr > ')'
+tuple          : '()' | '('!, -seq, ')'
+list           : '[]' | '['!, -seq, ']'
+set            : '{}' | '{'!, -seq, '}'
 comment        : '%' .. '%'
 term           : Wild-card | Atom | Key | literal | Variable | Operator | Verb | Noun | TypeVariable
 
 
 % Abstract Data Types
-op             : 'op' ! >> Verb > ['`' Operator '`'] > '::', Verb?, signature
+op             : 'op' ! >> Verb > ['`' Operator '`'] > '::', Verb?, in-out
 concept        : 'concept' ! >> Noun (>> TypeVariable)* > '::', '=' > '{', Verb, (',', Verb,)* '}'
 family         : 'family' ! >> TypeVariable > attrs '::', type family-as?  family-with?
 family-as      : , 'as' as-concept (>',' as-concept)*
@@ -122,11 +122,9 @@ family-with    : , 'with' > Verb (> ',' > Verb)*
 
 
 % Processes
-when           : ('when' | 'on') ! >> state > '::', signature, effects, -transitions, where?
-state          : ('_!'):any-fault | Noun
-effects        : (effect .)*
+when           : ('when' | 'on') ! >> Noun > '::', in-out, (effect .)*, then, where?
 effect         : 9'.' ! [>> Noun>':']  >> expr
-transitions    : '..', ( (transition .)* | .)
+then           : '..', ( (transition .)* | .)
 transition     : > Noun > ':', expr condition?
 
 % Definitions
