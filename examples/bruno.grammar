@@ -54,12 +54,14 @@ named-type     : Noun subrange?
 ordinal-type   : '#'! -complex-type
 list-type      : '['! type ']'
 set-type       : '{'! type '}'
-fn-type        : '(' [type:INSTANCE >] '->'! ( > type > '->' )* [> type:RETURN] ')'
-tuple-type     : '(' ({'\' ';' ',' ' '}:X? > label? ['..' | type] )+ ')'
+fn-type        : '(->)' | '(' type:INSTANCE > '->'! ( > type > '->' )* > type:RETURN ')'
+tuple-type     : '()' | '(,)' | '(' field ({'\' ';' ','}:X? > field )* ')'
+field          : label? ('..' | type) >
 label          : , -Verb ':' >
 
 shape          : Self | '[]' | '{}' | '()' | '""' | Atom | Key | literal
 
+% ==============================================================================
 
 % Modularisation
 file           : module | library
@@ -86,7 +88,7 @@ init           : ,'='! > (Open | expr )
 fn             : ('fn'|'proc')! >>  Verb > ['`' Operator '`'] > '::', signature?, implementation
 signature      : -descriptor | '('! > -descriptor > ')'
 descriptor     : ( parameter > '->' > )+ type
-parameter      : type >> -Verb:NAME
+parameter      : type >> [-Verb:NAME]
 implementation : '='! , ( case | Open . )
 case           : > where | divider | [> {z '?'}'.'] > (expr condition? | condition) > \n case?
 divider        : > '-'**4+ -{\n}* \n case

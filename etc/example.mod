@@ -85,23 +85,6 @@
 	data DayOfMonth :: `absolute Time
 	
 	family E :: _
-	family L :: [E]
-	
-	op cons :: L l -> E e -> L
-	op append :: L l -> E e -> L
-	op concat :: L l -> L other -> L
-	op take :: L l -> Count c -> L
-	op drop :: L l -> Count c -> L
-	op remove :: L l -> Index i -> L
-	op insert :: L l -> Index i -> L
-	op at :: L l -> Index i -> E?
-	op slice :: L l -> Index from -> Index to -> L
-	
-	concept List :: = {force, cons, append, concat, take, 
-	                                    drop, remove, insert, at, slice}
-	                                    
-	                                    
-	family E :: _
 
 	data Elements :: (
 	    length: Length,
@@ -600,3 +583,19 @@ or even source code like
 	with "Atom" :: ('`' Text)
 	
 	family L`ist :: [E]
+	
+	family E :: _
+	family L :: [E]
+	
+	op cons :: L -> E -> L
+	op append :: L l -> E e -> L
+	op concat :: L l -> L other -> L
+	op take :: L l -> Count c -> L
+	op drop :: L l -> Count c -> L
+	op remove :: L l -> Index i -> L
+	op insert :: L l -> Index i -> L
+	op at :: L l -> Index i -> E?
+	op slice :: L l -> Index from -> Index to -> L
+	
+	concept List :: = {force, cons, append, concat, take, 
+	                                    drop, remove, insert, at, slice}	
