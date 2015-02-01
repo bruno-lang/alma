@@ -568,7 +568,8 @@ or even source code like
 		}
 		
 	data Deamon :: Process
-		{ Out-Of-Data-Space! = []
+		{ ..
+		| Out-Of-Data-Space! = []
 		| Out-Of-Code-Space! = []
 		| Out-Of-Disk-Space! = []
 		| Out-Of-Flow-Space! = []
@@ -598,4 +599,8 @@ or even source code like
 	op slice :: L l -> Index from -> Index to -> L
 	
 	concept List :: = {force, cons, append, concat, take, 
-	                                    drop, remove, insert, at, slice}	
+	                                    drop, remove, insert, at, slice}
+	                                    
+	on Alarm :: Machine m -> Machine
+		1. notify master-control
+		.. Recover : m

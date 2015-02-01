@@ -79,7 +79,7 @@ data           : 'data' ! >> (Key | Noun) > '::', attrs type enumeration? with* 
 with           : , 'with'! >> ('"'Noun'"'|Noun'[]') > '::', type
 enumeration    : , '{'!, constants, '}'
 constants      : constant (, '|'!, constant )* 
-constant       : name [, ':'! > type] init?
+constant       : '..' | name [, ':'! > type] init?
 name           : Wild-card | Key | Noun
 init           : ,'='! > (Open | expr )
 
@@ -122,7 +122,7 @@ family-with    : , 'with' > Verb (> ',' > Verb)*
 
 
 % Processes
-when           : 'when' ! >> state > '::', signature, effects, -transitions, where?
+when           : ('when' | 'on') ! >> state > '::', signature, effects, -transitions, where?
 state          : ('_!'):any-fault | Noun
 effects        : (effect .)*
 effect         : 9'.' ! [>> Noun>':']  >> expr
