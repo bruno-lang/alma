@@ -7,6 +7,7 @@ Faulty         : '!'
 Transient      : '*'
 Self           : '~'
 Wild-card      : '_'
+Open           : '?'
 
 % Identifiers
 Atom           : '`' -{_}+
@@ -26,6 +27,7 @@ literal        : quoted | unquoted
 quoted         : '"""'!, (..):TEXT (, '"""') | '"'! (-{'"'}*):TEXT '"'
 unquoted       : ''' $ -LiteralSymbol* | numeric (numeric | -LiteralSymbol)*
 numeric        : {'+' '-'}? 9+ ({'.' ','} 9+)*  
+
 
 % Types
 variant        : { Faulty Optional Transient }
@@ -56,53 +58,43 @@ fn-type        : '(' [type:INSTANCE >] '->'! ( > type > '->' )* [> type:RETURN] 
 tuple-type     : '(' ({'\' ';' ',' ' '}:X? > label? ['..' | type] )+ ')'
 label          : , -Verb ':' >
 
-% Shapes
 shape          : Self | '[]' | '{}' | '()' | '""' | Atom | Key | literal
 
-% Type Families / Variables
-family         : 'family' ! >> TypeVariable > '::', type family-as?  family-with?
-family-as      : , 'as' as-concept (>',' as-concept)*
-as-concept     : > Noun (>> TypeVariable)*
-family-with    : , 'with' > Verb (> ',' > Verb)*
 
 % Modularisation
 file           : module | library
 library        : form
-
-% Implementation
 module         : (, -declaration)+ ,
 declaration    : def | data | when | fn | family | op | concept | fault | ratio | comment
+attrs          : (Atom >>)*
 
 fault          : 'fault' ! >> Noun > '::', named-type .
 
-ratio          : 'ratio' ! >> Noun > '::', literal > '=' > literal .
 
-% Value Types & Constants (incl. enumerations and algebraic data types)
+% Data
+ratio          : 'ratio' ! >> Noun > '::', literal > '=' > literal .
 data           : 'data' ! >> (Key | Noun) > '::', attrs type enumeration? with* init? .
-attrs          : (Atom >>)*
 with           : , 'with'! >> ('"'Noun'"'|Noun'[]') > '::', type
-enumeration    : , '['!, constants, ']'
+enumeration    : , '{'!, constants, '}'
 constants      : constant (, '|'!, constant )* 
 constant       : name [, ':'! > type] init?
 name           : Wild-card | Key | Noun
-init           : ,'='! > (('?'):OPEN | expr )
+init           : ,'='! > (Open | expr )
 
-% Abstract Data Types
-op             : 'op' ! >> Verb > ['`' Operator '`'] > '::', Verb?, signature
-concept        : 'concept' ! >> Noun (>> TypeVariable)* > '::', '=' > '{', Verb, (',', Verb,)* '}'
 
 % Functions
 fn             : ('fn'|'proc')! >>  Verb > ['`' Operator '`'] > '::', signature?, implementation
 signature      : -descriptor | '('! > -descriptor > ')'
 descriptor     : ( parameter > '->' > )+ type
 parameter      : type >> -Verb:NAME
-implementation : '='! , ( case | '?' . )
+implementation : '='! , ( case | Open . )
 case           : > where | divider | [> {z '?'}'.'] > (expr condition? | condition) > \n case?
-divider        : > '-'+ > \n case
+divider        : > '-'**4+ -{\n}* \n case
 condition      : (> '|' > expr)+
 where          : 'where' ! , variable > (variable > )*
 variable       : Verb [> ':' > type] > (select | '=' > expr .)
 select         : (, '|='! > expr . )+
+
 
 % Expressions
 seq            : expr (, ','?, expr )*
@@ -116,6 +108,16 @@ list           : '[]' | '[', -seq, ']'
 set            : '{}' | '{', -seq, '}'
 comment        : '%' .. '%'
 term           : Wild-card | Atom | Key | literal | Variable | Operator | Verb | Noun | TypeVariable
+
+
+% Abstract Data Types
+op             : 'op' ! >> Verb > ['`' Operator '`'] > '::', Verb?, signature
+concept        : 'concept' ! >> Noun (>> TypeVariable)* > '::', '=' > '{', Verb, (',', Verb,)* '}'
+family         : 'family' ! >> TypeVariable > attrs '::', type family-as?  family-with?
+family-as      : , 'as' as-concept (>',' as-concept)*
+as-concept     : > Noun (>> TypeVariable)*
+family-with    : , 'with' > Verb (> ',' > Verb)*
+
 
 % Processes
 when           : 'when' ! >> state > '::', signature, effects, -transitions, where?

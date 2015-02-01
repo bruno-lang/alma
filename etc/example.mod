@@ -19,9 +19,9 @@
 
 	data Digit :: Char{'0'..'9'}
 	
-	data Bool :: () [ False | True ]
+	data Bool :: () { False | True }
 
-	data Bit :: () [ Zero = `0 | One = `1 ]
+	data Bit :: () { Zero = `0 | One = `1 }
 	
 	data Seconds :: Time
 
@@ -74,9 +74,9 @@
 	fn range :: Int low -> Int high -> [Int]
 		= (`ast `range ?low ?high) 
 	
-	data Suit :: () [ Spades | Hearts | Diamonds | Clubs ]
+	data Suit :: () { Spades | Hearts | Diamonds | Clubs }
 	
-	data Month :: Int{1..12} [ Januar | Februar | December ]
+	data Month :: Int{1..12} { Januar | Februar | December }
 	
 	data Sign :: Char{'+'|'-'}
 	
@@ -263,9 +263,9 @@ or even source code like
 	
 	% processes %
 	data Server :: Process 
-		[ Ready              = [ Ready ] 
+		{ Ready              = [ Ready ] 
 		| Out-Of-Heap-Space! = []
-		]	
+		}	
 	
 	% single process %
 	when Ready :: HttpServer server -> HttpServer
@@ -427,7 +427,7 @@ or even source code like
 	with "Seconds" :: Lit & (Digits "sec")
 
 	data Planet :: (weight: Kilograms, radius: Meters) 
-		[  Mercury = (3.303e+23kg, 2.4397e6m)
+		{  Mercury = (3.303e+23kg, 2.4397e6m)
 		|  Venus   = (4.869e+24kg, 6.0518e6m)
 		|  Earth   = (5.976e+24kg, 6.37814e6m)
 		|  Mars    = (6.421e+23kg, 3.3972e6m)
@@ -435,14 +435,14 @@ or even source code like
 		|  Saturn  = (5.688e+26kg, 6.0268e7m)
 		|  Uranus  = (8.686e+25kg, 2.5559e7m)
 		|  Neptune = (1.024e+26kg, 2.4746e7m) 
-		]
+		}
 	
 	family T4 :: (E, ~)	
 	
 	data Exp :: Int = 2^27 - 1
 	
-	data Bit   :: () [ ^0 | ^1 ]
-	data S-Bit :: Bit [ Positive | Negative ]
+	data Bit   :: () { ^0 | ^1 }
+	data S-Bit :: Bit { Positive | Negative }
 	data M-Bit :: Bit
 
 	data Byte  :: M-Bit[8]
@@ -508,8 +508,9 @@ or even source code like
 		
 	fn pairs :: Point p -> Int 
 		=  | x == _ | y == _
-		--------------------
+		------[sample 1]-----
 		1  |   1    |  2
+		------[sample 2]-----
 		2  |   0    |  4
 		3  |   _    |  _
 	where 
@@ -518,8 +519,8 @@ or even source code like
 		
 		
 	data Server :: Process 
-		[ Ready = [ Ready ] 
-		| Out-Of-Heap-Space! = [] ]
+		{ Ready = [ Ready ] 
+		| Out-Of-Heap-Space! = [] }
 
 	% nonsense %
 	data True  :: ()
@@ -544,49 +545,58 @@ or even source code like
 	data Symbols      :: Int{32..47|58..64|91..96|123..125}	
 	
 	data ASCII :: Int{0..127} & Byte & (^0 Bit[7])
-		[ ControlCodes : Int{0..31|127}
+		{ ControlCodes : Int{0..31|127}
 		| Digits       : Int{48..57}
 		| UpperLetters : Int{65..90}
 		| LowerLetters : Int{97..122}
 		| Symbols      : Int{32..47|58..64|91..96|123..125}
-		]
+		}
 		
-	data ASCII :: Int{0..127} & Byte & (^0 Bit[7]) [ 
+	data ASCII :: Int{0..127} & Byte & (^0 Bit[7]) { 
 		ControlCodes : Int{0..31|127} | 
 		Digits       : Int{48..57}    | 
 		UpperLetters : Int{65..90}    | 
 		LowerLetters : Int{97..122}   | 
 		Symbols      : Int{32..47|58..64|91..96|123..125}
-	]
+	}
 	
 	data Const :: Int = 1,000,000.000
 	
 	data Process :: #[~]
-		[ Out-Of-Data-Space! = ?
+		{ Out-Of-Data-Space! = ?
 		| Out-Of-Code-Space! = ?
 		| Out-Of-Disk-Space! = ?
 		| Out-Of-Flow-Space! = ?
 		| Out-Of-Type-Range! = ?
-		]	
+		}	
 		
 	data Server :: Process
-		[ Out-Of-Data-Space! = []
+		{ Out-Of-Data-Space! = []
 		| Ready              = [ Ready ]
-		]
+		}
 		
 	data XProcess :: Process
-		[ Out-Of-Data-Space! = [ Cleanup! ]
+		{ Out-Of-Data-Space! = [ Cleanup! ]
 		| Out-Of-Code-Space! = [ Cleanup! ]
 		| Out-Of-Disk-Space! = [ Cleanup! ]
 		| Out-Of-Flow-Space! = [ Cleanup! ]
 		| Out-Of-Type-Range! = [ Cleanup! ]
 		| Cleanup!           = ?
-		]
+		}
 		
 	data Deamon :: Process
-		[ Out-Of-Data-Space! = []
+		{ Out-Of-Data-Space! = []
 		| Out-Of-Code-Space! = []
 		| Out-Of-Disk-Space! = []
 		| Out-Of-Flow-Space! = []
 		| Out-Of-Type-Range! = []
-		]
+		}
+		
+	data I-Do-Not-Know :: Int = ?
+	
+	data Bool :: #() { True | False }
+	
+	data Atom :: #Text
+	with "Atom" :: ('`' Text)
+	
+	family L`ist :: [E]
