@@ -1,0 +1,13 @@
+file    = -json . _
+json    = -object | -array | -bool | -null | -string | -number _
+object  = '{'< . \members? . '}' _
+members = -member ( . ',' . -member)* _
+member  = -name . ':' . -json _
+array   = '['< . \elements? . ']' _
+elements= -json ( . ',' . -json)* _
+string  = '"' ~ '"' _
+number  = ['-+']? \9* ('.' \9*)? _
+bool    = 'true' | 'false' _
+null    = 'null' _
+name    = '"' \text '"' _
+text    = [zZ9 '_-']+ _

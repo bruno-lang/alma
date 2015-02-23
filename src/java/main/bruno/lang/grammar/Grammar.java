@@ -48,7 +48,7 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 		for (Rule r : rules) {
 			if (r != null && !r.name.isEmpty()) {
 			int l = 15;
-			b.append(String.format("%-"+l+"s: ", r.name));
+			b.append(String.format("%-"+l+"s= ", r.name));
 			for (Rule elem : r.elements) {
 				String s = elem.toString();
 				RuleType type = elem.type;
@@ -107,6 +107,10 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 			return string(new String(UTF8.bytes(codePoint)));
 		}
 
+		public static Rule literal(byte[] l) {
+			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, l, null, null, 0);
+		}
+		
 		public static Rule string(String l) {
 			return new Rule(RuleType.LITERAL, "", NO_ELEMENTS, Occur.once, UTF8.bytes(l), null, null, 0);
 		}

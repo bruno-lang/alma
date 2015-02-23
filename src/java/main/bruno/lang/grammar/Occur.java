@@ -1,6 +1,9 @@
 package bruno.lang.grammar;
 
 public final class Occur {
+	
+	public static final int MAX_OCCURANCE = 1000;
+
 	/**
 	 * <pre>
 	 * { min, max }
@@ -29,14 +32,14 @@ public final class Occur {
 	 * *
 	 * </pre>
 	 */
-	public static final Occur star = occur(0 , 1000);
+	public static final Occur star = occur(0 , MAX_OCCURANCE);
 	
 	/**
 	 * <pre>
 	 * +
 	 * </pre>
 	 */
-	public static final Occur plus = occur(1 , 1000);
+	public static final Occur plus = occur(1 , MAX_OCCURANCE);
 	
 	/**
 	 * <pre>
@@ -68,7 +71,7 @@ public final class Occur {
 		if (min == max) {
 			return "**"+min;
 		}
-		if (max == plus.max) {
+		if (max == MAX_OCCURANCE) {
 			return "**"+min+"+";
 		}
 		return "**"+min+".."+max+"";

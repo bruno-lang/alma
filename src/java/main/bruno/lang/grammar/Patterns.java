@@ -5,23 +5,23 @@ import java.nio.ByteBuffer;
 public final class Patterns {
 
 	/**
-	 * <code>,</code>
+	 * May be whitespace. <code>,</code>
 	 */
 	public static final Pattern GAP = new Gap();
 	/**
-	 * <code>;</code>
+	 * Must be whitespace. <code>;</code>
 	 */
 	public static final Pattern PAD = new Pad();
 	/**
-	 * <code>></code>
+	 * May be indent. <code>></code>
 	 */
 	public static final Pattern INDENT = new Indent();
 	/**
-	 * <code>>></code>
+	 * Must be indent. <code>>></code>
 	 */
 	public static final Pattern SEPARATOR = new Separator();
 	/**
-	 * <code>.</code>
+	 * Must be line-wrap. <code>.</code>
 	 */
 	public static final Pattern WRAP = new Wrap();
 
