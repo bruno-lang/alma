@@ -125,21 +125,26 @@ public final class Parser {
 	private static int parseSequence(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		final int elems = rule.elements.length;
 		int end = position;
+		int decisionIndex = elems+1;
 		for (int i = 0; i < elems; i++) {
 			Rule r = rule.elements[i];
-			int endPosition = parseRule(r, input, end, tree);
-			if (endPosition < 0) {
-				if (rule.decisionIndex <= i) {
-					tree.erase(end);
-					throw new ParseException(end, endPosition);
+			if (r == Rule.DECISION) {
+				decisionIndex = i;
+			} else {
+				int endPosition = parseRule(r, input, end, tree);
+				if (endPosition < 0) {
+					if (decisionIndex <= i) {
+						tree.erase(end);
+						throw new ParseException(end, endPosition);
+					}
+					tree.erase(position);
+					return endPosition;
 				}
-				tree.erase(position);
-				return endPosition;
+				if (r.type == RuleType.LOOKAHEAD) { // we know it is the last rule
+					return end; // the end of the previous rule is the result
+				}
+				end = endPosition;
 			}
-			if (r.type == RuleType.LOOKAHEAD) { // we know it is the last rule
-				return end; // the end of the previous rule is the result
-			}
-			end = endPosition;
 		}
 		return end;
 	}

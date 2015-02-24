@@ -5,25 +5,26 @@ import java.nio.ByteBuffer;
 public final class Patterns {
 
 	/**
-	 * May be whitespace. <code>,</code>
+	 * May be whitespace. <code>.</code>
 	 */
-	public static final Pattern GAP = new Gap();
+	public static final Pattern MAY_BE_WS = new MayBeWhitespace();
 	/**
-	 * Must be whitespace. <code>;</code>
+	 * Must be whitespace. <code>:</code>
 	 */
-	public static final Pattern PAD = new Pad();
+	public static final Pattern MUST_BE_WS = new MustBeWhitespace();
+	
 	/**
-	 * May be indent. <code>></code>
+	 * May be indent. <code>,</code>
 	 */
-	public static final Pattern INDENT = new Indent();
+	public static final Pattern MAY_BE_INDENT = new MayBeIndent();
 	/**
-	 * Must be indent. <code>>></code>
+	 * Must be indent. <code>;</code>
 	 */
-	public static final Pattern SEPARATOR = new Separator();
+	public static final Pattern MUST_BE_INDENT = new MustBeIndent();
 	/**
-	 * Must be line-wrap. <code>.</code>
+	 * Must be line-wrap. <code>!</code>
 	 */
-	public static final Pattern WRAP = new Wrap();
+	public static final Pattern MUST_BE_WRAP = new MustBeLineWrap();
 
 	
 	public static Pattern not( Pattern excluded ) {
@@ -38,7 +39,7 @@ public final class Patterns {
 		return new Or(a, b);
 	}
 	
-	static final class Wrap implements Pattern {
+	static final class MustBeLineWrap implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -63,12 +64,12 @@ public final class Patterns {
 
 		@Override
 		public String toString() {
-			return ".";
+			return "!";
 		}
 		
 	}
 	
-	static final class Separator implements Pattern {
+	static final class MustBeIndent implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -80,7 +81,7 @@ public final class Patterns {
 		
 		@Override
 		public String toString() {
-			return ">>";
+			return ";";
 		}
 
 	}
@@ -89,7 +90,7 @@ public final class Patterns {
 		return b == ' ' || b == '\t';
 	}
 	
-	static final class Indent implements Pattern {
+	static final class MayBeIndent implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -101,12 +102,12 @@ public final class Patterns {
 		
 		@Override
 		public String toString() {
-			return ">";
+			return ",";
 		}
 
 	}
 	
-	static final class Pad implements Pattern {
+	static final class MustBeWhitespace implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -118,12 +119,12 @@ public final class Patterns {
 		
 		@Override
 		public String toString() {
-			return ";";
+			return ":";
 		}
 
 	}
 	
-	static final class Gap implements Pattern {
+	static final class MayBeWhitespace implements Pattern {
 
 		@Override
 		public int length(ByteBuffer input, int position) {
@@ -135,7 +136,7 @@ public final class Patterns {
 		
 		@Override
 		public String toString() {
-			return ",";
+			return ".";
 		}
 	}
 	

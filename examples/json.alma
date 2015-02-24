@@ -1,13 +1,14 @@
-file    = -json . _
-json    = -object | -array | -bool | -null | -string | -number _
-object  = '{'< . \members? . '}' _
-members = -member ( . ',' . -member)* _
-member  = -name . ':' . -json _
-array   = '['< . \elements? . ']' _
-elements= -json ( . ',' . -json)* _
-string  = '"' ~ '"' _
-number  = ['-+']? \9* ('.' \9*)? _
-bool    = 'true' | 'false' _
-null    = 'null' _
-name    = '"' \text '"' _
-text    = [zZ9 '_-']+ _
+-file    = json .
+-json    = object | array | bool | null | string | number
+-object  = '{'< . \members? . '}'
+-members = member ( . ',' . member)*
+-member  = name . ':' . json
+-array   = '['< . \elements? . ']'
+-elements= json ( . ',' . json)*
+-string  = '"' ~ '"'
+-number  = ['-+']? \9* ('.' \9*)?
+-bool    = 'true' | 'false'
+-null    = 'null'
+-name    = '"' \text '"'
+-text    = [zZ9 '_-']+
+-

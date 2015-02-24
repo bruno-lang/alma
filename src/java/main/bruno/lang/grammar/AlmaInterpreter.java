@@ -2,6 +2,11 @@ package bruno.lang.grammar;
 
 import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
+import static bruno.lang.grammar.Patterns.MAY_BE_INDENT;
+import static bruno.lang.grammar.Patterns.MAY_BE_WS;
+import static bruno.lang.grammar.Patterns.MUST_BE_INDENT;
+import static bruno.lang.grammar.Patterns.MUST_BE_WRAP;
+import static bruno.lang.grammar.Patterns.MUST_BE_WS;
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.copyOfRange;
 
@@ -56,7 +61,6 @@ final class AlmaInterpreter {
 	public static int codeMode(byte[] code, int pos, Registers reg) {
 		while (pos < code.length) {
 			byte opcode = code[pos];
-			System.out.println(String.format("%s %d", Character.valueOf((char) opcode), pos));
 			switch (opcode) {
 			// no-ops:
 			case ' '  : break;
@@ -65,38 +69,38 @@ final class AlmaInterpreter {
 			case '\t' : break;
 			// modes:
 			case '%' : pos = commentMode(code, pos+1); break; 
-			case '[' : pos = charsetMode(code, pos+1, reg); pushToSeq(makeCharset(reg), reg); break;
 			case '\'': pos = literalMode(code, pos+1, reg); pushToSeq(makeLiteral(reg), reg); break;
-			case '\\': pos = textMode(code, pos+1, reg); pushToSeq(lookup(reg, true), reg); unpack(reg); break;
-			case '-' : pos = textMode(code, pos+1, reg); pushToSeq(lookup(reg, true), reg); break;
-			case '@' : pos = textMode(code, pos+1, reg); rename(reg); break;
+			case '[' : pos = charsetMode(code, pos+1, reg); pushToSeq(makeCharset(reg), reg); break;
 			case '{' : pos = rangeMode(code, pos+1, reg); occur(reg.low, reg.high, reg); resetNumeric(reg); break;
+			case '\\': pos = textMode(code, pos+1, reg); pushToSeq(lookup(reg, true), reg); unpack(reg); break;
+			case '@' : pos = textMode(code, pos+1, reg); rename(reg); break;
+			case '-' : pushToIdx(reg); pos = textMode(code, pos+1, reg); break;
 			// repetition:
 			case '?' : occur(0, 1, reg); break;
 			case '*' : occur(0, Occur.MAX_OCCURANCE, reg); break;
 			case '+' : occur(1, Occur.MAX_OCCURANCE, reg); break;
 			// whitespace:
-			case ',' : pushToSeq(pattern(Patterns.INDENT), reg); break;
-			case '.' : pushToSeq(pattern(Patterns.GAP), reg); break;
-			case ';' : pushToSeq(pattern(Patterns.SEPARATOR), reg); break;
-			case ':' : pushToSeq(pattern(Patterns.PAD), reg); break;
-			case '!' : pushToSeq(pattern(Patterns.WRAP), reg); break;
+			case ',' : pushToSeq(pattern(MAY_BE_INDENT),  reg); break;
+			case '.' : pushToSeq(pattern(MAY_BE_WS),      reg); break;
+			case ';' : pushToSeq(pattern(MUST_BE_INDENT), reg); break;
+			case ':' : pushToSeq(pattern(MUST_BE_WS),     reg); break;
+			case '!' : pushToSeq(pattern(MUST_BE_WRAP),   reg); break;
 			// groups:
 			case '(' : pos = group(code, pos+1, reg); break;
 			case ')' : return pos; // done with this sub-group call
 			// functions:
 			case '~' : pushToSeq(Rule.completion(), reg); break;
+			case '<' : pushToSeq(Rule.DECISION, reg); break;
 			case '|' : pushToAlt(reg); break;
-			case '_' : pushToIdx(reg); break;
 			case '=' : move(reg); break;
-			case '<' : decision(reg); break;
 			case '>' : lookahead(reg); break;
 			case '^' : excludeCharset(reg); break;
 			case '&' : reg.charset = reg.rule.terminal; break;
 			// illegal:
 			default  : 
 				if (isAlphanumeric(opcode)) {
-					reg.str[reg.str_len++] = opcode;
+					pos = textMode(code, pos, reg);
+					pushToSeq(lookup(reg, true), reg);
 				} else {
 					illegalOp(pos, opcode);
 				}
@@ -155,11 +159,22 @@ final class AlmaInterpreter {
 			case '\r' : break;
 			case '\t' : break;
 			// modes:
-			case '}': return pos;
-			case '#': pos = numericMode(code, pos+1, reg); break;
+			case '}'  : return pos;
+			case '\'' : pos = literalMode(code, pos+1, reg); toNumber(reg); break;
+			case '#'  : pos = hexMode(code, pos+1, reg); break;
+			case '0'  :
+			case '1'  :
+			case '2'  :
+			case '3'  :
+			case '4'  :
+			case '5'  :
+			case '6'  :
+			case '7'  :
+			case '8'  :
+			case '9'  : pos = numericMode(code, pos, reg); break;
 			// functions:
 			case '-': reg.isHigh = !reg.isHigh; break;
-			default : reg.numeric(opcode);
+			default : illegalOp(pos, opcode);
 			}
 			pos++;
 		}
@@ -193,6 +208,16 @@ final class AlmaInterpreter {
 	/**
 	 * <pre># ... </pre> 
 	 */
+	public static int hexMode(byte[] code, int pos, Registers reg) {
+		while (pos < code.length && isHex(code[pos])) {
+			reg.numeric(reg.numeric() * 16 + Integer.parseInt(new String(new byte[] { code[pos++] }), 16)); 
+		}
+		return pos-1;
+	}
+	
+	/**
+	 * <pre>0 ... </pre> 
+	 */
 	public static int numericMode(byte[] code, int pos, Registers reg) {
 		while (pos < code.length && isNumeric(code[pos])) {
 			reg.numeric(reg.numeric() * 10 + (code[pos++] - '0')); 
@@ -216,6 +241,10 @@ final class AlmaInterpreter {
 	
 	private static boolean isNumeric(byte b) {
 		return b >= '0' && b <= '9';
+	}
+	
+	private static boolean isHex(byte b) {
+		return isNumeric(b) || b >= 'A' && b <= 'F'; 
 	}
 	
 	
@@ -256,6 +285,8 @@ final class AlmaInterpreter {
 	}
 
 	private static void pushToIdx(Registers reg) {
+		if (reg.key_len == 0)
+			return;
 		pushToAlt(reg);
 		Rule r = Rule.selection(copyOf(reg.alt, reg.alt_len));
 		if (r.elements.length == 1) { // unfold alternative of length 1
@@ -264,7 +295,8 @@ final class AlmaInterpreter {
 		if (r.elements.length == 1) { // unfold sequence of length 1
 			r = r.elements[0];
 		}
-		reg.idx[reg.idx_len++] = r.as(new String(reg.key, 0, reg.key_len));
+		String name = new String(reg.key, 0, reg.key_len);
+		reg.idx[reg.idx_len++] = r.as(name);
 		reg.key_len = 0;
 		reg.seq_len = 0;
 		reg.alt_len = 0;
@@ -279,10 +311,6 @@ final class AlmaInterpreter {
 	private static void lookahead(Registers reg) {
 		reg.rule = Rule.lookahead(reg.rule);
 	}
-
-	private static void decision(Registers reg) {
-		reg.rule = reg.rule.decisionAt(reg.seq_len);
-	}	
 	
 	private static void resetNumeric(Registers reg) {
 		reg.low = 0;
@@ -372,7 +400,7 @@ final class AlmaInterpreter {
 		if (referenceIfUnknown) {
 			return Rule.ref(name);
 		}
-		throw new NoSuchElementException(name);
+		throw new NoSuchElementException("`"+name+"`");
 	}
 	
 	private static void excludeCharset(Registers reg) {
@@ -386,6 +414,11 @@ final class AlmaInterpreter {
 
 	private static void and(Terminal other, Registers reg) {
 		reg.charset = reg.charset.and(other);
+	}
+	
+	private static void toNumber(Registers reg) {
+		reg.numeric(reg.str[0]); 
+		reg.str_len = 0;
 	}
 	
 }

@@ -162,52 +162,51 @@ public final class Terminal {
 	
 	@Override
 	public String toString() {
-		if (ranges.length == 2 && ranges[0] == 0 && ranges[1] == UTF8.MAX_CODE_POINT) {
-			return "$";
-		}
-		if (this == WHITESPACE) {
-			return "_";
-		}
-		if (this == LETTERS) {
-			return "@";
-		}
-		if (this == LOWER_LETTERS) {
-			return "z";
-		}
-		if (this == UPPER_LETTERS) {
-			return "Z";
-		}
-		if (this == DIGITS) {
-			return "9";
-		}
-		if (this == HEX_NUMBER) {
-			return "#";
+		if (isSingleCharacter()) {
+			return "[{#"+ranges[0]+"}]";
 		}
 		StringBuilder b = new StringBuilder();
-		if (!isSingleCharacter()) {
-			b.append("{ ");
-		}
+		b.append("[");
+		boolean lastWasSingleASCII = false;
+		boolean lastWasExcluding = false;
 		for (int i = 0; i < ranges.length; i+=2) {
-			if (i > 0) {
-				b.append(" ");
+			if (lastWasExcluding && ranges[i] >= 0) {
+				b.append("]^ [");
 			}
-			if (ranges[i] < 0) {
-				b.append("-{");
-			}
+			String boundary = toBoundary(ranges[i]);
 			if (ranges[i] == ranges[i+1]) {
-				b.append(UTF8.toLiteral(ranges[i]));
+				boolean isSingleASCII = boundary.startsWith("'");
+				if (lastWasSingleASCII && isSingleASCII) {
+					b.setLength(b.length()-1);
+					b.append(boundary.substring(1));
+				} else if (isSingleASCII) {
+					b.append(boundary);
+				} else {
+					b.append('{');
+					b.append(boundary);
+					b.append('}');
+				}
+				lastWasSingleASCII = isSingleASCII;
 			} else {
-				b.append(UTF8.toLiteral(ranges[i]));
+				b.append('{');
+				b.append(boundary);
 				b.append('-');
-				b.append(UTF8.toLiteral(ranges[i+1]));
-			}
-			if (ranges[i] < 0) {
+				b.append(toBoundary(ranges[i+1]));
 				b.append("}");
 			}
+			lastWasExcluding = ranges[i] < 0;
 		}
-		if (!isSingleCharacter()) {
-			b.append(" }");
+		b.append("]");
+		if (lastWasExcluding) {
+			b.append("^");
 		}
 		return b.toString();
+	}
+	
+	private static String toBoundary(int codePoint) {
+		if (codePoint < 128) {
+			return "'"+Character.valueOf((char) codePoint)+"'";
+		}
+		return "#"+Integer.toHexString(codePoint);
 	}
 }

@@ -73,21 +73,16 @@ public final class RuleBuilder {
 		final ParseTree tokens = grammar.tree;
 		final int count = tokens.count();
 		final int end = tokens.end(token)+1;
-		int distinctFrom = Rule.UNDECIDED;
 		int i = token+1;
 		while (i < count && tokens.rule(i) == Alma.element_ && tokens.end(i) <= end) {
 			Rule e = buildElement(i, grammar);
-			if (e != DISTINCT_FROM) {
-				elems.add(e);
-			} else {
-				distinctFrom = elems.size();
-			}
+			elems.add(e);
 			i = tokens.next(i);
 		}
 		if (elems.size() == 1) {
 			return elems.get(0);
 		}
-		return Rule.seq(elems.toArray(new Rule[0])).decisionAt(distinctFrom);
+		return Rule.seq(elems.toArray(new Rule[0]));
 	}
 
 	private static Rule buildElement(int token, Parsed grammar) {
@@ -96,7 +91,7 @@ public final class RuleBuilder {
 		Occur occur = buildOccur(tokens.next(token+1), grammar, token);
 		Rule r = tokens.rule(token+1);
 		if (r == Alma.decision_) {
-			return DISTINCT_FROM;
+			return Rule.DECISION;
 		}
 		if (r == Alma.completion_) {
 			return Rule.completion();
@@ -169,19 +164,19 @@ public final class RuleBuilder {
 	private static Rule patternSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
 		if (r == Alma.gap_) {
-			return Rule.pattern(Patterns.GAP);
+			return Rule.pattern(Patterns.MAY_BE_WS);
 		}
 		if (r == Alma.pad_) {
-			return Rule.pattern(Patterns.PAD);
+			return Rule.pattern(Patterns.MUST_BE_WS);
 		}
 		if (r == Alma.indent_) {
-			return Rule.pattern(Patterns.INDENT);
+			return Rule.pattern(Patterns.MAY_BE_INDENT);
 		}
 		if (r == Alma.separator_) {
-			return Rule.pattern(Patterns.SEPARATOR);
+			return Rule.pattern(Patterns.MUST_BE_INDENT);
 		}
 		if (r == Alma.wrap_) {
-			return Rule.pattern(Patterns.WRAP);
+			return Rule.pattern(Patterns.MUST_BE_WRAP);
 		}
 		throw unexpectedRule(r);
 	}

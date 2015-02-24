@@ -8,9 +8,9 @@ import static bruno.lang.grammar.Grammar.Rule.string;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.Grammar.Rule.terminal;
 import static bruno.lang.grammar.Occur.occur;
-import static bruno.lang.grammar.Patterns.GAP;
-import static bruno.lang.grammar.Patterns.INDENT;
-import static bruno.lang.grammar.Patterns.WRAP;
+import static bruno.lang.grammar.Patterns.MAY_BE_WS;
+import static bruno.lang.grammar.Patterns.MAY_BE_INDENT;
+import static bruno.lang.grammar.Patterns.MUST_BE_WRAP;
 import static bruno.lang.grammar.Terminal.DIGITS;
 import static bruno.lang.grammar.Terminal.HEX_NUMBER;
 import static bruno.lang.grammar.Terminal.LETTERS;
@@ -26,9 +26,9 @@ import bruno.lang.grammar.Grammar.Rule;
 public final class Alma {
 
 	static final Rule
-		g = pattern(GAP),
-		i = pattern(INDENT),
-		w = pattern(WRAP),
+		g = pattern(MAY_BE_WS),
+		i = pattern(MAY_BE_INDENT),
+		w = pattern(MUST_BE_WRAP),
 		a = symbol('\'');
 
 	static final Rule
