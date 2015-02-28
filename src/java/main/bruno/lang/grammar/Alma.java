@@ -151,17 +151,6 @@ final class Alma {
 		}
 		return pos;
 	}
-	
-	private static CharacterSet charsetOf(Rule rule) {
-		if (rule.elements[0].type == RuleType.LITERAL) {
-			CharacterSet set = CharacterSet.EMPTY;
-			for (byte c : rule.elements[0].literal) {
-				set = set.and(CharacterSet.character(c));
-			}
-			return set;
-		}
-		return rule.elements[0].charset;
-	}
 
 	/**
 	 * <pre>{ ... }</pre> 
@@ -271,6 +260,17 @@ final class Alma {
 	private static void illegalOp(int pos, byte opcode) {
 		throw new IllegalArgumentException("`"+((char)opcode)+"` is not a valid op-code at position: "+pos);
 	}
+	
+	private static CharacterSet charsetOf(Rule rule) {
+		if (rule.elements[0].type == RuleType.LITERAL) {
+			CharacterSet set = CharacterSet.EMPTY;
+			for (byte c : rule.elements[0].literal) {
+				set = set.and(CharacterSet.character(c));
+			}
+			return set;
+		}
+		return rule.elements[0].charset;
+	}	
 
 	/**
 	 * @return the position after the group
