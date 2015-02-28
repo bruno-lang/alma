@@ -1,7 +1,7 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Grammar.Rule.charset;
+import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static bruno.lang.grammar.Patterns.MAY_BE_INDENT;
 import static bruno.lang.grammar.Patterns.MAY_BE_WS;
 import static bruno.lang.grammar.Patterns.MUST_BE_INDENT;
@@ -35,17 +35,6 @@ final class AlmaInterpreter {
 		Rule[] alt = new Rule[256]; int alt_len = 0;
 		Rule[] idx = new Rule[512]; int idx_len = 0;
 		
-		public void numeric(int i) {
-			if (isHigh) { high = i; } else { low = i; }
-		}
-		
-		public int numeric() {
-			return isHigh ? high : low;
-		}
-		
-		public int high() {
-			return Math.max(low, high);
-		}
 	}
 
 	public static Grammar make(byte[]... codes) {
@@ -169,7 +158,7 @@ final class AlmaInterpreter {
 			case '}'  : return pos;
 			case '\'' : pos = literalMode(code, pos+1, reg); toNumber(reg); break;
 			case '#'  : pos = hexMode(code, pos+1, reg); break;
-			case '*'  : reg.numeric(reg.isHigh ? Occur.MAX_OCCURANCE : 0); break;
+			case '*'  : setValue(reg.isHigh ? Occur.MAX_OCCURANCE : 0, reg); break;
 			case '0'  :
 			case '1'  :
 			case '2'  :
@@ -218,7 +207,7 @@ final class AlmaInterpreter {
 	 */
 	public static int hexMode(byte[] code, int pos, Registers reg) {
 		while (pos < code.length && isHex(code[pos])) {
-			reg.numeric(reg.numeric() * 16 + Integer.parseInt(new String(new byte[] { code[pos++] }), 16)); 
+			setValue(value(reg) * 16 + Integer.parseInt(new String(new byte[] { code[pos++] }), 16), reg); 
 		}
 		return pos-1;
 	}
@@ -228,7 +217,7 @@ final class AlmaInterpreter {
 	 */
 	public static int numericMode(byte[] code, int pos, Registers reg) {
 		while (pos < code.length && isNumeric(code[pos])) {
-			reg.numeric(reg.numeric() * 10 + (code[pos++] - '0')); 
+			setValue(value(reg) * 10 + (code[pos++] - '0'), reg); 
 		}
 		return pos-1;
 	}
@@ -340,7 +329,7 @@ final class AlmaInterpreter {
 	
 	private static void unpack(Registers reg) {
 		if (reg.rule.type == RuleType.INCLUDE) {
-			reg.rule = reg.rule.is("-"+reg.rule.name);
+			reg.rule = reg.rule.subst();
 		} else {
 			reg.rule = reg.rule.elements[0];
 		}
@@ -399,14 +388,14 @@ final class AlmaInterpreter {
 		return lookup(name, reg, referenceIfUnknown);
 	}
 
-	private static Rule lookup(String name, Registers reg, boolean referenceIfUnknown) {
+	private static Rule lookup(String name, Registers reg, boolean include) {
 		for (int i = 0; i < reg.idx_len; i++) {
 			Rule r = reg.idx[i];
 			if (name.equals(r.name)) {
 				return r;
 			}
 		}
-		if (referenceIfUnknown) {
+		if (include) {
 			return Rule.include(name);
 		}
 		throw new NoSuchElementException("`"+name+"`");
@@ -426,8 +415,16 @@ final class AlmaInterpreter {
 	}
 	
 	private static void toNumber(Registers reg) {
-		reg.numeric(reg.str[0]); 
+		setValue(reg.str[0], reg); 
 		reg.str_len = 0;
+	}
+	
+	private static void setValue(int i, Registers reg) {
+		if (reg.isHigh) { reg.high = i; } else { reg.low = i; }
+	}
+	
+	private static int value(Registers reg) {
+		return reg.isHigh ? reg.high : reg.low;
 	}
 	
 }

@@ -31,16 +31,9 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 	}
 
 	public Rule rule(String name) {
-		char n0 = name.charAt(0);
-		boolean noCapture = n0 == '-' || n0 == '\\';
 		for (Rule r : rules) {
-			if (r != null) {
-				if (r.name.equals(name)) {
+			if (r != null && r.name.equals(name)) {
 					return r;
-				}
-				if ( name.equals("-"+r.name)) {
-					return noCapture && r.type == RuleType.CAPTURE ? r.elements[0].as(name) : r;
-				}
 			}
 		}
 		throw new NoSuchElementException("Missing rule: "+name);
@@ -139,7 +132,7 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 		public final CharacterSet charset;
 		public final Pattern pattern;
 
-		private Rule(RuleType type, boolean substitute, String name, Rule[] elements, Occur occur, byte[] literal, CharacterSet terminal, Pattern pattern) {
+		private Rule(RuleType type, boolean substitute, String name, Rule[] elements, Occur occur, byte[] literal, CharacterSet charset, Pattern pattern) {
 			super();
 			this.type = type;
 			this.substitute = substitute;
@@ -147,7 +140,7 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 			this.elements = elements;
 			this.occur = occur;
 			this.literal = literal;
-			this.charset = terminal;
+			this.charset = charset;
 			this.pattern = pattern;
 		}
 
@@ -162,6 +155,10 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 		public Rule named(String name, boolean unique) {
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
 			return new Rule(RuleType.CAPTURE, unique, name, elems, Occur.once, NO_LITERAL, null, null);
+		}
+		
+		public Rule subst() {
+			return new Rule(type, true, name, elements, occur, literal, charset, pattern);
 		}
 
 		public Rule plus() {
@@ -204,8 +201,12 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 		public String toString(Rule root, Rule[] rules) {
 			switch (type) {
 			case CAPTURE:
-				if (substitute) {
-					// also try to resolve the original rule
+				if (substitute) { //also show the original rule
+					for (Rule r : rules) {
+						if (r.elements[0] == elements[0]) {
+							return r.name+"@"+name;
+						}
+					}
 					return elements[0].toString(root, rules)+"@"+name;
 				}
 				return name;
@@ -235,7 +236,11 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 			case ALTERNATIVES: {
 				StringBuilder b = new StringBuilder();
 				for (int i = 0; i<  elements.length; i++) {
-					b.append(" | ").append(elements[i].toString(root, rules));
+					String alt = elements[i].toString(root, rules);
+					if (alt.startsWith("(") && alt.endsWith(")")) {
+						alt = alt.substring(1, alt.length()-1);
+					}
+					b.append(" | ").append(alt);
 				}
 				return "("+b.substring(3)+")";
 			}

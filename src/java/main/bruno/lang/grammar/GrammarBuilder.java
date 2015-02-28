@@ -38,7 +38,7 @@ public final class GrammarBuilder {
 	public static Rule[] namedRules(Rule...roots) {
 		LinkedHashMap<String, Rule> namedRules = new LinkedHashMap<>();
 		Set<Rule> followed = new HashSet<>();
-		namedRules(roots, namedRules, followed);
+		extractNamedRules(roots, namedRules, followed);
 		for (String name : new HashSet<>(namedRules.keySet())) {
 			if (name.startsWith("-") && namedRules.containsKey(name.substring(1))) {
 				namedRules.remove(name);
@@ -47,14 +47,14 @@ public final class GrammarBuilder {
 		return namedRules.values().toArray(new Rule[0]);
 	}
 	
-	private static void namedRules(Rule[] elements, Map<String, Rule> namedRules, Set<Rule> followed) {
+	private static void extractNamedRules(Rule[] elements, Map<String, Rule> namedRules, Set<Rule> followed) {
 		for (Rule e : elements) {
 			if (!followed.contains(e)) {
 				followed.add(e);
 				if (!e.name.isEmpty() && e.type == RuleType.CAPTURE && !namedRules.containsKey(e.name)) {
 					namedRules.put(e.name, e);
 				} 
-				namedRules(e.elements, namedRules, followed);
+				extractNamedRules(e.elements, namedRules, followed);
 			}
 		}
 	}
@@ -65,26 +65,59 @@ public final class GrammarBuilder {
 			rules.put(r.name, r);
 		}
 		Map<String, Rule> literals = new HashMap<>();
-		Set<Rule> followedContract = new HashSet<>();
-		Set<Rule> followedDereference = new HashSet<>();
-		Set<Rule> followedUnpack = new HashSet<>();
-		Set<Rule> followedDeduplicate = new HashSet<>();
+		Set<Rule> followed = new HashSet<>();
 		for (int i = 0; i < namedRules.length; i++) {
-			Rule r = namedRules[i];
-			r = deduplicate(r, literals, followedDeduplicate);
-			r = dereference(r, rules, followedDereference);
-			r = unpack(r, followedUnpack);
-			r = compact(r, followedContract);
-			namedRules[i] = r;
+			Rule rule = namedRules[i];
+			rule = deduplicateLiterals(rule, literals, followed); followed.clear();
+			rule = resolveIncludes(rule, rules, followed); followed.clear();
+			rule = unwrapSingleElements(rule, followed); followed.clear();
+			rule = flattenNestedSequences(rule, followed); followed.clear();
+			rule = compactCharsets(rule, followed);
+			namedRules[i] = rule;
 		}		
 		return namedRules;
 	}
 	
 	/**
-	 * Strips out unnecessary single element sequences and selections as well as
-	 * non capturing captures.
+	 * If a sequence has an element that itself is a sequence the elements or
+	 * that sequence can be inserted for that element. 
 	 */
-	public static Rule unpack(Rule rule, Set<Rule> followed) {
+	private static Rule flattenNestedSequences(Rule rule, Set<Rule> followed) {
+		if (followed.contains(rule)) {
+			return rule;
+		}
+		followed.add(rule);
+		if (rule.type == RuleType.SEQUENCE) {
+			ArrayList<Rule> elems = new ArrayList<>(rule.elements.length);
+			for (Rule e : rule.elements) {
+				if (e.type == RuleType.FILL || e.type == RuleType.CAPTURE && e.elements[0].type == RuleType.FILL) {
+					return rule; // this gets messy otherwise
+				} else if (e.type != RuleType.SEQUENCE || e.isDecisionMaking()) {
+					elems.add(e);
+				} else {
+					elems.addAll(Arrays.asList(e.elements)); // FIXME this is just 1 level not recursive
+				}
+			}
+			if (elems.size() == rule.elements.length) { // nothing changed
+				return rule;
+			}
+			// flattened some...
+			Rule seq = Rule.seq(elems.toArray(new Rule[elems.size()]));
+			return seq;
+		}
+		if (rule.elements.length > 0) {
+			for (int i = 0; i < rule.elements.length; i++) {
+				rule.elements[i] = flattenNestedSequences(rule.elements[i], followed);
+			}
+		}
+		return rule;
+	}
+
+	/**
+	 * Strips out unnecessary single element sequences and alternatives as well
+	 * as non capturing captures.
+	 */
+	public static Rule unwrapSingleElements(Rule rule, Set<Rule> followed) {
 		if (followed.contains(rule)) {
 			// TODO return the unpacked version of the rule 
 			return rule;
@@ -97,7 +130,7 @@ public final class GrammarBuilder {
 			if (!rule.isDecisionMaking() && hasSequenceElement(rule)) {
 				List<Rule> elems = new ArrayList<>();
 				for (Rule e : rule.elements) {
-					Rule u = unpack(e, followed);
+					Rule u = unwrapSingleElements(e, followed);
 					if (u.type == RuleType.SEQUENCE && !u.isDecisionMaking()) {
 						elems.addAll(Arrays.asList(u.elements));
 					} else {
@@ -107,7 +140,7 @@ public final class GrammarBuilder {
 				return Rule.seq(elems.toArray(new Rule[0]));
 			}
 		}
-		if (rule.type == RuleType.CAPTURE && rule.name.startsWith("-")) {
+		if (rule.type == RuleType.CAPTURE && rule.substitute) {
 			return rule.elements[0];
 		}
 		//TODO recursion? unpacked rules also have to be collected so they are replaced everywhere referenced
@@ -129,7 +162,7 @@ public final class GrammarBuilder {
 	 * to a single {@link CharacterSet}. A selection of just literal characters will
 	 * also be contracted to a single terminal.
 	 */
-	public static Rule compact(Rule rule, Set<Rule> followed) {
+	public static Rule compactCharsets(Rule rule, Set<Rule> followed) {
 		if (followed.contains(rule)) {
 			return rule;
 		}
@@ -156,7 +189,7 @@ public final class GrammarBuilder {
 		} 
 		if (rule.elements.length > 0) {
 			for (int i = 0; i < rule.elements.length; i++) {
-				rule.elements[i] = compact(rule.elements[i], followed);
+				rule.elements[i] = compactCharsets(rule.elements[i], followed);
 			}
 		}
 		return rule;
@@ -170,7 +203,7 @@ public final class GrammarBuilder {
 	 * Reuses same instance of a {@link RuleType#LITERAL} {@link Rule} for equal
 	 * {@link String} literals.
 	 */
-	public static Rule deduplicate(Rule rule, Map<String, Rule> literals, Set<Rule> followed) {
+	public static Rule deduplicateLiterals(Rule rule, Map<String, Rule> literals, Set<Rule> followed) {
 		if (followed.contains(rule)) {
 			return rule;
 		}
@@ -184,7 +217,7 @@ public final class GrammarBuilder {
 			literals.put(l, rule);
 		} else if (rule.elements.length > 0) {
 			for (int i = 0; i < rule.elements.length; i++) {
-				rule.elements[i] = deduplicate(rule.elements[i], literals, followed);
+				rule.elements[i] = deduplicateLiterals(rule.elements[i], literals, followed);
 			}
 		}
 		return rule;
@@ -194,23 +227,18 @@ public final class GrammarBuilder {
 	/**
 	 * Substitutes {@link RuleType#INCLUDE} {@link Rule}s with the actual rule.
 	 */
-	public static Rule dereference(Rule rule, Map<String,Rule> namedRules, Set<Rule> followed) {
+	public static Rule resolveIncludes(Rule rule, Map<String,Rule> namedRules, Set<Rule> followed) {
 		if (followed.contains(rule)) {
 			return rule;
 		}
 		followed.add(rule);
 		if (rule.type == RuleType.INCLUDE) {
-			boolean noCapture = rule.name.charAt(0) == '-';
 			Rule r = namedRules.get(rule.name);
-			if (r == null) {
-				String name = rule.name.substring(noCapture ? 1:0);
-				r = namedRules.get(name);
-			}
 			if (r == null) {
 				throw new NoSuchElementException("No such rule: `"+rule.name+"`\nKnown rules are: "+namedRules.keySet());
 			}
-			r = dereference(r, namedRules, followed);
-			return noCapture ? r.elements[0] : r;
+			r = resolveIncludes(r, namedRules, followed);
+			return rule.substitute ? r.elements[0] : r;
 		} else if (rule.elements.length > 0) {
 			if (rule.type == RuleType.CHARACTER_SET) {
 				CharacterSet t = rule.charset;
@@ -228,7 +256,7 @@ public final class GrammarBuilder {
 				return Rule.charset(t);
 			}
 			for (int i = 0; i < rule.elements.length; i++) {
-				rule.elements[i] = dereference(rule.elements[i], namedRules, followed);
+				rule.elements[i] = resolveIncludes(rule.elements[i], namedRules, followed);
 				if (rule.type == RuleType.CAPTURE && rule.elements[i].type == RuleType.CAPTURE) {
 					rule.elements[i] = rule.elements[i].elements[0]; // unpack double capture
 				}
