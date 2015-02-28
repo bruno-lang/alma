@@ -1,0 +1,138 @@
+% bruno (alma version) %
+
+% Type Variant Symbols %
+-TypeOf       = '$'
+-LazyOf       = '>'
+-KeyOf        = '@'
+-Optional     = '?'
+-Faulty       = '!'
+-Transient    = '*'
+-Self         = '~'
+-Wildcard     = '_'
+-Open         = '?'
+
+% Identifiers %
+-Atom         = '`' \s^+
+-Key          = \KeyOf [Zs ',']^ [s ',{}()[]']^*
+-Variable     = '?' [zZ9 '-_' ]+
+-TypeVariable = \Z \9?
+-Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' \9+
+-Verb         = \z [z9 '-']* [z9]? ['?!']?
+-name         = Key | Noun
+
+% Operators %
+-Op           = ['+/*=><&-']
+-Operator     = \Op [\Op '!?|']{0-2} | [\Op '|']{2-3}
+
+% Literals %
+-Literal      = [s'?#"=><&|)].,;*\}']^
+-numeric      = ['+-']? \9+ (['.,'] \9+)*
+-quoted       = '"""' < .  ~@TEXT (. '"""') | '"' < ['"']^*@TEXT '"'
+-unquoted     = \apostrophe \_ \Literal* | numeric (numeric | Literal)*
+-literal      = quoted | unquoted
+
+
+% Types %
+-variant      = [\Faulty \Optional \Transient]
+-indirection  = [\TypeOf \LazyOf \KeyOf]
+
+-dimension    = slicetype | channeltype | arraytype
+-slicetype    = '[<' \lengthtype < '>]'
+-channeltype  = ['[]'] ['<>']{1-2} < ['[]']
+-arraytype    = '[' Noun ']' | '[' < \lengthtype ']'
+-lengthtype   = spantype | scalartype
+-spantype     = scalartype@MIN '-' scalartype@MAX
+-scalartype   = \9+ | '*' | TypeVariable
+
+-subrange     = '{' < subrangetype ('|' subrangetype)* '}'
+-subrangetype = (valuetype@MIN)? ('..' (valuetype@MAX)?)?
+-valuetype    = literal | scalartype
+
+-type         = shape | \complextype
+-complextype  = sumtype ( . '&' . sumtype)*
+-sumtype      = (. '+' ,)? fulltype (. '+' , fulltype)*
+-fulltype     = indirection? \kind dimension* variant?
+-kind         = Wildcard  | ordinaltype | listtype   | settype | fntype
+              | tupletype | namedtype   | lengthtype | TypeVariable
+-namedtype    = Noun subrange?
+-ordinaltype  = '#' < \complextype
+-listtype     = '[' < type ']'
+-settype      = '{' < type '}'
+-fntype       = '(->)'
+              | '(' type@INSTANCE , '->' < ( , type , '->' )* , type@RETURN ')'
+-tupletype    = '()' | '(,)' | '(' field (['\;,']@X? , field )* ')'
+-field        = label? ('..' | type) ,
+-label        = . Verb ':' ,
+
+-shape        = Self | '[]' | '{}' | '()' | '""' | Atom | Key | literal
+
+% /////////////////////////////////////////////////////////////////////////////%
+
+% Modularisation %
+-file         = module | library
+-library      = form
+-module       = ( . \declaration)+ .
+-declaration  = def | data    | when  | fn    | family
+              | op  | concept | fault | ratio | comment
+-attrs        = (Atom ; )* 
+
+-fault        = 'fault' < ; Noun , '::' . namedtype !
+
+
+% Data %
+-ratio        = 'ratio' < ; Noun , '::' . literal , '=' , literal !
+-data         = 'data' < ; \name , '::' . attrs type enumeration? with* init? !
+-with         = . 'with' < ; ('"' Noun '"' | Noun '[]' ) , '::' . type
+-enumeration  = . '{' < . constants . '}'
+-constants    = constant ( . '|' < . constant )*
+-constant     = '..' | \name ( . ':' < , type)? init?
+-init         = . '=' < . (Open | expr)
+
+
+% Functions %
+-fn           = ('fn' | 'proc' )< ;  \operational , '::' . inout? . '=' . impl
+-inout        = \descriptor | '(' < , \descriptor , ')'
+-descriptor   = ( param , '->' , )+ type
+-param        = type ; Verb@NAME?
+-impl         = case | Open !
+-case         = , where | hline | (, [z '?']'.')? , (expr condition? | condition) ! case?
+-hline        = , '-' {4-*} ! case
+-condition    = ( , '|' , expr)+
+-where        = 'where' < . variable , (variable , )*
+-variable     = Verb@NAME (, ':' , type)? , (select | '=' , expr !)
+-select       = ( . '|=' < , expr ! )+
+
+
+% Expressions %
+-seq          = . expr ( . ',' ? . expr )* .
+-expr         = form ( , form )*
+-form         = expand | tuple | list | set | comment | implicit | inline | \term
+-inline       = '\' Verb@FUNCTION
+-expand       =      '(:=' < \seq ')'
+-implicit     =       '\(' < \seq ')'
+-tuple        = '()' | '(' < \seq ')'
+-list         = '[]' | '[' < \seq ']'
+-set          = '{}' | '{' < \seq '}'
+-comment      = '%' ~ '%'
+-term         = Wildcard | Atom     | Key  | literal 
+              | Variable | Operator | Verb | Noun | TypeVariable
+
+
+% Abstract Data Types %
+-op           = 'op'      < ; \operational ,  '::' . Verb? . inout
+-concept      = 'concept' < ; \parametrised , '::' . '=' , '{' . Verb . (',' . Verb .)* '}'
+-family       = 'family'  < ; TypeVariable , attrs '::' . type as? with_ops?
+-as           = . 'as' , \parametrised ( , ',' , \parametrised)*
+-with_ops     = . 'with' , Verb@OP ( , ',' , Verb@OP)*
+-parametrised = Noun (; TypeVariable)*
+-operational  = Verb , ('`' Operator '`')?
+
+% Processes %
+-when         = ('when' | 'on') < ; Noun , '::' . inout . (effect !)* . then . where?
+-effect       = \9'.' < (; Noun , ':')? ; expr
+-then         = '..' . ((transition !)* | !)
+-transition   = , Noun , ':' . expr condition?
+
+% Definitions %
+-def          = 'def' < ; name , '::' , '=' . expr !
+-

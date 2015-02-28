@@ -12,22 +12,22 @@ import java.nio.ByteBuffer;
  *  
  * @author jan
  */
-public final class Terminal {
+public final class CharacterSet {
 	
 	/**
 	 * Simply all unicodes are contained in the range of the terminal.
 	 */
-	public static final Terminal WILDCARD = range(0, UTF8.MAX_CODE_POINT);
+	public static final CharacterSet WILDCARD = range(0, UTF8.MAX_CODE_POINT);
 	
 	/**
 	 * Should follow the Unicode 5.0 standard,
 	 * see https://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ
 	 */
-	public static final Terminal WHITESPACE = range(9, 13).and(character(32));
+	public static final CharacterSet WHITESPACE = range(9, 13).and(character(32));
 	
-	public static final Terminal EMPTY = new Terminal(new int[0]);
+	public static final CharacterSet EMPTY = new CharacterSet(new int[0]);
 	
-	public static final Terminal
+	public static final CharacterSet
 		DIGITS = range('0', '9'),
 		HEX_NUMBER = DIGITS.and(range('A', 'F')),
 		OCTAL_NUMBER = range('0', '7'),
@@ -37,26 +37,26 @@ public final class Terminal {
 		LETTERS = UPPER_LETTERS.and(LOWER_LETTERS)
 		;
 	
-	public static Terminal notRange(int minCodePoint, int maxCodePoint) {
-		return new Terminal(new int[] { -minCodePoint, -maxCodePoint }); 
+	public static CharacterSet notRange(int minCodePoint, int maxCodePoint) {
+		return new CharacterSet(new int[] { -minCodePoint, -maxCodePoint }); 
 	}
 	
-	public static Terminal range(int minCodePoint, int maxCodePoint) {
-		return new Terminal(new int[] { minCodePoint, maxCodePoint });
+	public static CharacterSet range(int minCodePoint, int maxCodePoint) {
+		return new CharacterSet(new int[] { minCodePoint, maxCodePoint });
 	}
 	
-	public static Terminal character(int codePoint) {
+	public static CharacterSet character(int codePoint) {
 		return range(codePoint, codePoint);
 	}
 	
-	public static Terminal notCharacter(int codePoint) {
+	public static CharacterSet notCharacter(int codePoint) {
 		return notRange(codePoint, codePoint);
 	}
 	
 	public final int[] asciis;
 	public final int[] ranges; // 2 int's give min CP and max CP (negative when excluding)
 	
-	public Terminal(int[] ranges) {
+	public CharacterSet(int[] ranges) {
 		super();
 		this.asciis = asciis(ranges);
 		this.ranges = ranges;
@@ -100,17 +100,17 @@ public final class Terminal {
 		return i;
 	}
 	
-	public Terminal not() {
+	public CharacterSet not() {
 		if (this == EMPTY)
 			return this;
 		int[] not = ranges.clone();
 		for (int i = 0; i < not.length; i++) {
 			not[i] = -not[i];
 		}
-		return new Terminal(not);
+		return new CharacterSet(not);
 	}
 	
-	public Terminal and(Terminal other) {
+	public CharacterSet and(CharacterSet other) {
 		if (this == EMPTY)
 			return other;
 		if (other == EMPTY)
@@ -130,7 +130,7 @@ public final class Terminal {
 		if (oex < other.ranges.length) {
 			System.arraycopy(other.ranges, oex, merged, ranges.length+oex, other.ranges.length-oex);
 		}
-		return new Terminal(merged);
+		return new CharacterSet(merged);
 	}
 	
 	public boolean contains(ByteBuffer input, int position) {
@@ -163,7 +163,7 @@ public final class Terminal {
 	@Override
 	public String toString() {
 		if (isSingleCharacter()) {
-			return "[{#"+ranges[0]+"}]";
+			return "[{"+toBoundary(ranges[0])+"}]"+(ranges[0] < 0 ? "^" : "");
 		}
 		StringBuilder b = new StringBuilder();
 		b.append("[");
@@ -204,9 +204,13 @@ public final class Terminal {
 	}
 	
 	private static String toBoundary(int codePoint) {
-		if (codePoint < 128) {
+		codePoint = Math.abs(codePoint);
+		if (codePoint <=32 || codePoint == 127) {
+			return String.valueOf(codePoint);
+		}
+		if (codePoint < 127) {
 			return "'"+Character.valueOf((char) codePoint)+"'";
 		}
-		return "#"+Integer.toHexString(codePoint);
+		return "#"+Integer.toHexString(codePoint).toUpperCase();
 	}
 }

@@ -1,14 +1,14 @@
 package bruno.lang.grammar;
 
 import static bruno.lang.grammar.Grammar.Rule.pattern;
-import static bruno.lang.grammar.Grammar.Rule.terminal;
+import static bruno.lang.grammar.Grammar.Rule.charset;
 import static bruno.lang.grammar.Patterns.MAY_BE_INDENT;
 import static bruno.lang.grammar.Patterns.MAY_BE_WS;
 import static bruno.lang.grammar.Patterns.MUST_BE_INDENT;
 import static bruno.lang.grammar.Patterns.MUST_BE_WRAP;
 import static bruno.lang.grammar.Patterns.MUST_BE_WS;
+import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
-import static java.util.Arrays.copyOfRange;
 
 import java.util.NoSuchElementException;
 
@@ -29,7 +29,7 @@ final class AlmaInterpreter {
 		byte[] key = new byte[256]; int key_len = 0;
 
 		// composition state
-		Terminal charset = Terminal.EMPTY;
+		CharacterSet charset = CharacterSet.EMPTY;
 		Rule rule;
 		Rule[] seq = new Rule[256]; int seq_len = 0;
 		Rule[] alt = new Rule[256]; int alt_len = 0;
@@ -48,7 +48,7 @@ final class AlmaInterpreter {
 		}
 	}
 
-	public static Grammar interpret(byte[]... codes) {
+	public static Grammar make(byte[]... codes) {
 		Registers reg = new Registers();
 		for (byte[] code : codes) {
 			codeMode(code, 0, reg);
@@ -89,13 +89,13 @@ final class AlmaInterpreter {
 			case '(' : pos = group(code, pos+1, reg); break;
 			case ')' : return pos; // done with this sub-group call
 			// functions:
-			case '~' : pushToSeq(Rule.completion(), reg); break;
+			case '~' : pushToSeq(Rule.fill(), reg); break;
 			case '<' : pushToSeq(Rule.DECISION, reg); break;
 			case '|' : pushToAlt(reg); break;
 			case '=' : move(reg); break;
 			case '>' : lookahead(reg); break;
 			case '^' : excludeCharset(reg); break;
-			case '&' : reg.charset = reg.rule.terminal; break;
+			case '&' : reg.charset = reg.rule.charset; break;
 			// illegal:
 			default  : 
 				if (isAlphanumeric(opcode)) {
@@ -142,8 +142,15 @@ final class AlmaInterpreter {
 		return pos;
 	}
 	
-	private static Terminal charsetOf(Rule rule) {
-		return rule.elements[0].terminal;
+	private static CharacterSet charsetOf(Rule rule) {
+		if (rule.elements[0].type == RuleType.LITERAL) {
+			CharacterSet set = CharacterSet.EMPTY;
+			for (byte c : rule.elements[0].literal) {
+				set = set.and(CharacterSet.character(c));
+			}
+			return set;
+		}
+		return rule.elements[0].charset;
 	}
 
 	/**
@@ -162,6 +169,7 @@ final class AlmaInterpreter {
 			case '}'  : return pos;
 			case '\'' : pos = literalMode(code, pos+1, reg); toNumber(reg); break;
 			case '#'  : pos = hexMode(code, pos+1, reg); break;
+			case '*'  : reg.numeric(reg.isHigh ? Occur.MAX_OCCURANCE : 0); break;
 			case '0'  :
 			case '1'  :
 			case '2'  :
@@ -182,7 +190,7 @@ final class AlmaInterpreter {
 	}
 	
 	/**
-	 * <pre>{ ... }</pre> 
+	 * <pre>' ... '</pre> 
 	 */
 	public static int literalMode(byte[] code, int pos, Registers reg) {
 		while (pos < code.length && code[pos] != '\'') {
@@ -236,7 +244,7 @@ final class AlmaInterpreter {
 	}
 	
 	private static boolean isAlphanumeric(byte b) {
-		return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || isNumeric(b);
+		return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || isNumeric(b) || b == '_';
 	}
 	
 	private static boolean isNumeric(byte b) {
@@ -259,28 +267,29 @@ final class AlmaInterpreter {
 	 */
 	private static int group(byte[] code, int pos, Registers reg) {
 		pushToSeq(null, reg);
-		int seq_len = reg.seq_len;
-		int alt_len = reg.alt_len;
+		Rule[] seq = copyOf(reg.seq, reg.seq_len);
+		Rule[] alt = copyOf(reg.alt, reg.alt_len);
+		reg.alt_len = 0;
+		reg.seq_len = 0;
 		pos = codeMode(code, pos, reg);
 		// pack and restore:
 		// 1. push rule to seq, push seq to alt (if needed)
 		pushToSeq(null, reg);
-		if (reg.alt_len == alt_len) { // just a sequence
-			if (reg.seq_len == seq_len) {
-				return pos; // nothing added - fine
-			}
-			Rule seq = Rule.seq(copyOfRange(reg.seq, seq_len, reg.seq_len));
-			reg.rule = seq;
-			reg.seq_len = seq_len;
-			return pos;
-		} 
-		// multiple alternatives in the group
-		Rule seq = Rule.seq(copyOfRange(reg.seq, seq_len, reg.seq_len));
-		reg.alt[reg.alt_len++] = seq;
-		Rule alt = Rule.selection(copyOfRange(reg.alt, alt_len, reg.alt_len));
-		reg.rule = alt;
-		reg.seq_len = seq_len;
-		reg.alt_len = alt_len;
+		if (reg.alt_len == 0 && reg.seq_len == 0) {
+			return pos; // nothing added - fine
+		}
+		Rule groupSeq = reg.seq_len == 1 ? reg.seq[0] : Rule.seq(copyOf(reg.seq, reg.seq_len));
+		arraycopy(seq, 0, reg.seq, 0, seq.length); // restore seq
+		reg.seq_len = seq.length;
+		if (reg.alt_len == 0) { // just a sequence
+			reg.rule = groupSeq;
+		} else { // multiple alternatives in the group 
+			reg.alt[reg.alt_len++] = groupSeq;
+			Rule groupAlt = Rule.alt(copyOf(reg.alt, reg.alt_len));
+			reg.rule = groupAlt;
+		}
+		arraycopy(alt, 0, reg.alt, 0, alt.length); // restore alt
+		reg.alt_len = alt.length;
 		return pos;
 	}
 
@@ -288,15 +297,15 @@ final class AlmaInterpreter {
 		if (reg.key_len == 0)
 			return;
 		pushToAlt(reg);
-		Rule r = Rule.selection(copyOf(reg.alt, reg.alt_len));
-		if (r.elements.length == 1) { // unfold alternative of length 1
+		Rule r = Rule.alt(copyOf(reg.alt, reg.alt_len));
+		if (r.elements.length == 1 && r.type == RuleType.ALTERNATIVES) { // unfold alternative of length 1
 			r = r.elements[0];
 		}
-		if (r.elements.length == 1) { // unfold sequence of length 1
+		if (r.elements.length == 1 && r.type == RuleType.SEQUENCE) { // unfold sequence of length 1
 			r = r.elements[0];
 		}
 		String name = new String(reg.key, 0, reg.key_len);
-		reg.idx[reg.idx_len++] = r.as(name);
+		reg.idx[reg.idx_len++] = r.is(name);
 		reg.key_len = 0;
 		reg.seq_len = 0;
 		reg.alt_len = 0;
@@ -330,8 +339,8 @@ final class AlmaInterpreter {
 	}
 	
 	private static void unpack(Registers reg) {
-		if (reg.rule.type == RuleType.REFERENCE) {
-			reg.rule = reg.rule.as("-"+reg.rule.name);
+		if (reg.rule.type == RuleType.INCLUDE) {
+			reg.rule = reg.rule.is("-"+reg.rule.name);
 		} else {
 			reg.rule = reg.rule.elements[0];
 		}
@@ -344,26 +353,26 @@ final class AlmaInterpreter {
 	}
 	
 	private static Rule makeCharset(Registers reg) {
-		Rule r = terminal(reg.charset); 
-		reg.charset = Terminal.EMPTY;
+		Rule r = charset(reg.charset); 
+		reg.charset = CharacterSet.EMPTY;
 		return r;
 	}
 	
-	private static Terminal makeRange(Registers reg) {
+	private static CharacterSet makeRange(Registers reg) {
 		int low = reg.low;
 		int high = reg.high;
 		if (high < low) {
 			high = low;
 		}
-		Terminal range = Terminal.range(low, high);
+		CharacterSet range = CharacterSet.range(low, high);
 		resetNumeric(reg);
 		return range;
 	}
 
-	private static Terminal makeSet(Registers reg) {
-		Terminal t = Terminal.EMPTY;
+	private static CharacterSet makeSet(Registers reg) {
+		CharacterSet t = CharacterSet.EMPTY;
 		for (int i = 0; i < reg.str_len; i++) {
-			t = t.and(Terminal.character(reg.str[i]));
+			t = t.and(CharacterSet.character(reg.str[i]));
 		}
 		reg.str_len = 0;
 		return t;
@@ -398,21 +407,21 @@ final class AlmaInterpreter {
 			}
 		}
 		if (referenceIfUnknown) {
-			return Rule.ref(name);
+			return Rule.include(name);
 		}
 		throw new NoSuchElementException("`"+name+"`");
 	}
 	
 	private static void excludeCharset(Registers reg) {
 		Rule r = reg.rule;
-		if (r.type == RuleType.TERMINAL) {
-			reg.rule = Rule.terminal(r.terminal.not());
+		if (r.type == RuleType.CHARACTER_SET) {
+			reg.rule = Rule.charset(r.charset.not());
 		} else if (r.type == RuleType.PATTERN) {
 			reg.rule = Rule.pattern(Patterns.not(r.pattern));
 		}
 	}
 
-	private static void and(Terminal other, Registers reg) {
+	private static void and(CharacterSet other, Registers reg) {
 		reg.charset = reg.charset.and(other);
 	}
 	

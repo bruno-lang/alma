@@ -45,17 +45,17 @@ public final class Parser {
 		switch (rule.type) {
 		case LITERAL:
 			return parseLiteral(rule, input, position);
-		case TERMINAL:
+		case CHARACTER_SET:
 			return parseTerminal(rule, input, position);
 		case PATTERN:
 			return parsePattern(rule, input, position);
-		case ITERATION:
+		case REPETITION:
 			return parseIteration(rule, input, position, tree);
 		case SEQUENCE:
 			return parseSequence(rule, input, position, tree);
-		case SELECTION:
+		case ALTERNATIVES:
 			return parseSelection(rule, input, position, tree);
-		case COMPLETION:
+		case FILL:
 			return parseCompletion(rule, input, position, tree);
 		case LOOKAHEAD:
 			return parseRule(rule.elements[0], input, position, tree);
@@ -171,7 +171,7 @@ public final class Parser {
 	private static int parseTerminal(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return mismatch(position);
-		if (rule.terminal.contains(input, position)) {
+		if (rule.charset.contains(input, position)) {
 			return position + UTF8.byteCount(input, position);
 		}
 		return mismatch(position);

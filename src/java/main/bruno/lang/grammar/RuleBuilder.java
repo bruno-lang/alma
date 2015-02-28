@@ -14,13 +14,6 @@ import bruno.lang.grammar.Grammar.RuleType;
  */
 public final class RuleBuilder {
 
-	/**
-	 * Used to indicate the distinct from index as a {@link Rule} that is
-	 * detected by its identity. It has just this workaround helper
-	 * functionality within the builder.
-	 */
-	private static final Rule DISTINCT_FROM = Rule.seq();
-	
 	public static Rule[] buildRules(Parsed grammar) {
 		final List<Rule> rules = new ArrayList<>();
 		final ParseTree tokens = grammar.tree;
@@ -47,7 +40,7 @@ public final class RuleBuilder {
 		if (name.matches("[zZ179@#_,~.^$+*?]")) {
 			throw new IllegalArgumentException("A rule cannot be named "+name+" as this is a control sequence in lingukit.");
 		}
-		return buildSelection(token+2, grammar).as(name);
+		return buildSelection(token+2, grammar).is(name);
 	}
 
 	private static Rule buildSelection(int token, Parsed grammar) {
@@ -64,7 +57,7 @@ public final class RuleBuilder {
 		if (alternatives.size() == 1) {
 			return alternatives.get(0);
 		}
-		return Rule.selection(alternatives.toArray(new Rule[0]));
+		return Rule.alt(alternatives.toArray(new Rule[0]));
 	}
 
 	private static Rule buildSequence(int token, Parsed grammar) {
@@ -94,7 +87,7 @@ public final class RuleBuilder {
 			return Rule.DECISION;
 		}
 		if (r == Alma.completion_) {
-			return Rule.completion();
+			return Rule.fill();
 		}
 		if (r == Alma.group_) {
 			return buildCapture(tokens.next(token+2), grammar, buildSelection(token+2, grammar)).occurs(occur);
@@ -108,8 +101,8 @@ public final class RuleBuilder {
 		if (r == Alma.terminal_) {
 			Rule t = buildTerminal(token+1, grammar).occurs(occur);
 			// a terminal of a single character -> use literal instead
-			if (t.type == RuleType.TERMINAL && t.terminal.isSingleCharacter() && t.terminal.ranges[0] >= 0) { 
-				return Rule.string(new String(UTF8.bytes(t.terminal.ranges[0]))).occurs(occur);
+			if (t.type == RuleType.CHARACTER_SET && t.charset.isSingleCharacter() && t.charset.ranges[0] >= 0) { 
+				return Rule.string(new String(UTF8.bytes(t.charset.ranges[0]))).occurs(occur);
 			}
 			return t;
 		}
@@ -129,7 +122,7 @@ public final class RuleBuilder {
 	}
 
 	private static Rule buildRef(int token, Parsed grammar) {
-		return buildCapture(token+2, grammar, Rule.ref(grammar.text(token+1)));
+		return buildCapture(token+2, grammar, Rule.include(grammar.text(token+1)));
 	}
 
 	private static Rule buildCapture(int token, Parsed grammar, Rule rule) {
@@ -189,14 +182,14 @@ public final class RuleBuilder {
 		final int count = tokens.count();
 		final int end = tokens.end(token);
 		if (not) token++;
-		Terminal terminal = Terminal.EMPTY;
+		CharacterSet terminal = CharacterSet.EMPTY;
 		int i = token+1;
 		List<String> refs = new ArrayList<>();
 		while (i < count && tokens.end(i) <= end && tokens.rule(i) != Alma.capture_) {
 			Rule figure = tokens.rule(i);
 			if (figure == Alma.ranges_) {
 				Rule ranges = buildRanges(i, grammar);
-				terminal = terminal.and(ranges.terminal);
+				terminal = terminal.and(ranges.charset);
 			} else if (figure == Alma.name_) {
 				refs.add(grammar.text(i));
 			}
@@ -205,7 +198,7 @@ public final class RuleBuilder {
 		if (not)
 			terminal = terminal.not();
 		//when there are refs in a charset we create a Rule with an array of elements, first the terminal, than refs to all that should be included. 
-		return buildCapture(i, grammar, Rule.terminal(terminal, refs.toArray(new String[0])));
+		return buildCapture(i, grammar, Rule.charset(terminal, refs.toArray(new String[0])));
 	}
 
 	private static Rule buildRanges(int token, Parsed grammar) {
@@ -216,53 +209,53 @@ public final class RuleBuilder {
 	private static Rule rangesSelection(int token, Parsed grammar) {
 		Rule r = grammar.tree.rule(token);
 		if (r == Alma.wildcard_) {
-			return Rule.terminal(Terminal.WILDCARD);
+			return Rule.charset(CharacterSet.WILDCARD);
 		}
 		if (r == Alma.letter_) {
-			return Rule.terminal(Terminal.LETTERS);
+			return Rule.charset(CharacterSet.LETTERS);
 		}
 		if (r == Alma.upper_) {
-			return Rule.terminal(Terminal.UPPER_LETTERS);
+			return Rule.charset(CharacterSet.UPPER_LETTERS);
 		}
 		if (r == Alma.lower_) {
-			return Rule.terminal(Terminal.LOWER_LETTERS);
+			return Rule.charset(CharacterSet.LOWER_LETTERS);
 		}
 		if (r == Alma.hex_) {
-			return Rule.terminal(Terminal.HEX_NUMBER);
+			return Rule.charset(CharacterSet.HEX_NUMBER);
 		}
 		if (r == Alma.octal_) {
-			return Rule.terminal(Terminal.OCTAL_NUMBER);
+			return Rule.charset(CharacterSet.OCTAL_NUMBER);
 		}
 		if (r == Alma.binary_) {
-			return Rule.terminal(Terminal.BINARY_NUMBER);
+			return Rule.charset(CharacterSet.BINARY_NUMBER);
 		}
 		if (r == Alma.digit_) {
-			return Rule.terminal(Terminal.DIGITS);
+			return Rule.charset(CharacterSet.DIGITS);
 		}
 		if (r == Alma.category_) {
 			//TODO
 			throw new UnsupportedOperationException("Not available yet");
 		}
 		if (r == Alma.range_) {
-			return Rule.terminal(Terminal.range(buildLiteral(token+1, grammar), buildLiteral(token+3, grammar)));
+			return Rule.charset(CharacterSet.range(buildLiteral(token+1, grammar), buildLiteral(token+3, grammar)));
 		}
 		if (r == Alma.literal_) {
-			return Rule.terminal(Terminal.character(buildLiteral(token, grammar)));
+			return Rule.charset(CharacterSet.character(buildLiteral(token, grammar)));
 		}
 		if (r == Alma.whitespace_) {
-			return Rule.terminal(Terminal.WHITESPACE);
+			return Rule.charset(CharacterSet.WHITESPACE);
 		}
 		if (r == Alma.shortname_) {
 			String name = grammar.text(token+1);
 			int c = name.charAt(1);
 			if (c == 't') {
-				return Rule.terminal(Terminal.character('\t'));
+				return Rule.charset(CharacterSet.character('\t'));
 			}
 			if (c == 'n') {
-				return Rule.terminal(Terminal.character('\n'));
+				return Rule.charset(CharacterSet.character('\n'));
 			}
 			if (c == 'r') {
-				return Rule.terminal(Terminal.character('\r'));
+				return Rule.charset(CharacterSet.character('\r'));
 			}
 			throw new NoSuchElementException(name);
 		}

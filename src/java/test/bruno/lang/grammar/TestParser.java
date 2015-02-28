@@ -1,6 +1,6 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Rule.completion;
+import static bruno.lang.grammar.Grammar.Rule.fill;
 import static bruno.lang.grammar.Grammar.Rule.seq;
 import static bruno.lang.grammar.Grammar.Rule.symbol;
 import static bruno.lang.grammar.GrammarBuilder.buildGrammar;
@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import bruno.lang.grammar.print.Printer;
@@ -92,6 +93,7 @@ public class TestParser {
 	}
 	
 	@Test
+	@Ignore
 	public void thatJavaGrammarCanBeParsed() throws IOException {
 		Parsed t = Parsed.parse("examples/java.grammar", Alma.GRAMMAR, "grammar");
 		Grammar java = buildGrammar(t);
@@ -114,7 +116,7 @@ public class TestParser {
 	static final Grammar COMMENTS = comments();
 
 	private static Grammar comments() {
-		return new Grammar(seq(seq(symbol('%'), completion().as("text"), symbol('\n')).as("comment")).plus().as("grammar"));
+		return new Grammar(seq(seq(symbol('%'), fill().is("text"), symbol('\n')).is("comment")).plus().is("grammar"));
 	}
 	
 }

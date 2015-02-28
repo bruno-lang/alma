@@ -69,12 +69,12 @@ public final class Occur {
 			return "?";
 		}
 		if (min == max) {
-			return "**"+min;
+			return "{"+min+"}";
 		}
 		if (max == MAX_OCCURANCE) {
-			return "**"+min+"+";
+			return "{"+min+"-*}";
 		}
-		return "**"+min+".."+max+"";
+		return "{"+min+"-"+max+"}";
 	}
 
 }

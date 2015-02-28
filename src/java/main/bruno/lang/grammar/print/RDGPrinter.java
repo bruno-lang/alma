@@ -28,14 +28,14 @@ public class RDGPrinter {
 		case LITERAL:
 			out.print(rule.toString());
 			return;
-		case TERMINAL: 
+		case CHARACTER_SET: 
 			out.print("[A-Z]"); //TODO print real terminal
 			return;
 		case CAPTURE:
 			// TODO how to visualize the capture name? use name "ws" and add named rules for , and so on
 			out.print(rule.name);
 			return;
-		case ITERATION:
+		case REPETITION:
 			out.print('(');
 			print(rule.elements[0]);
 			out.append(')').append(rule.occur.toString());
@@ -48,7 +48,7 @@ public class RDGPrinter {
 			}
 			out.print(')');
 			return;
-		case SELECTION:
+		case ALTERNATIVES:
 			out.print('(');
 			for (int i = 0; i < rule.elements.length; i++) {
 				if (i > 0 ) {
@@ -60,7 +60,7 @@ public class RDGPrinter {
 			return;
 		case PATTERN:
 		case LOOKAHEAD:
-		case COMPLETION:
+		case FILL:
 		default:
 			out.print("'???'");
 		}

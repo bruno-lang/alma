@@ -90,7 +90,7 @@ public final class GrammarBuilder {
 			return rule;
 		}
 		followed.add(rule);
-		if ((rule.type == RuleType.SEQUENCE || rule.type == RuleType.SELECTION) && rule.elements.length == 1) {
+		if ((rule.type == RuleType.SEQUENCE || rule.type == RuleType.ALTERNATIVES) && rule.elements.length == 1) {
 			return rule.elements[0];
 		}
 		if (rule.type == RuleType.SEQUENCE) { // inline nested sequences
@@ -125,8 +125,8 @@ public final class GrammarBuilder {
 	}
 
 	/**
-	 * Contracts selections with just {@link Terminal}s and 1 character literals
-	 * to a single {@link Terminal}. A selection of just literal characters will
+	 * Contracts selections with just {@link CharacterSet}s and 1 character literals
+	 * to a single {@link CharacterSet}. A selection of just literal characters will
 	 * also be contracted to a single terminal.
 	 */
 	public static Rule compact(Rule rule, Set<Rule> followed) {
@@ -134,11 +134,11 @@ public final class GrammarBuilder {
 			return rule;
 		}
 		followed.add(rule);
-		if (rule.type == RuleType.SELECTION) {
+		if (rule.type == RuleType.ALTERNATIVES) {
 			int ts = 0;
 			int ls = 0;
 			for (Rule e : rule.elements) {
-				if (e.type == RuleType.TERMINAL) {
+				if (e.type == RuleType.CHARACTER_SET) {
 					ts++;
 				}
 				if (e.type == RuleType.LITERAL && UTF8.characters(e.literal) == 1) {
@@ -146,12 +146,12 @@ public final class GrammarBuilder {
 				}
 			}
 			if (ts+ls == rule.elements.length) {
-				Terminal t = terminalOf(rule.elements[0]);
+				CharacterSet t = terminalOf(rule.elements[0]);
 				for (int i = 1; i < rule.elements.length; i++) {
 					Rule r = rule.elements[i];
 					t = t.and(terminalOf(r));
 				}
-				return Rule.terminal(t);
+				return Rule.charset(t);
 			}
 		} 
 		if (rule.elements.length > 0) {
@@ -162,8 +162,8 @@ public final class GrammarBuilder {
 		return rule;
 	}
 	
-	private static Terminal terminalOf(Rule r) {
-		return r.type == RuleType.TERMINAL ? r.terminal : Terminal.character(UTF8.codePoint(r.literal));
+	private static CharacterSet terminalOf(Rule r) {
+		return r.type == RuleType.CHARACTER_SET ? r.charset : CharacterSet.character(UTF8.codePoint(r.literal));
 	}
 	
 	/**
@@ -192,14 +192,14 @@ public final class GrammarBuilder {
 	}
 
 	/**
-	 * Substitutes {@link RuleType#REFERENCE} {@link Rule}s with the actual rule.
+	 * Substitutes {@link RuleType#INCLUDE} {@link Rule}s with the actual rule.
 	 */
 	public static Rule dereference(Rule rule, Map<String,Rule> namedRules, Set<Rule> followed) {
 		if (followed.contains(rule)) {
 			return rule;
 		}
 		followed.add(rule);
-		if (rule.type == RuleType.REFERENCE) {
+		if (rule.type == RuleType.INCLUDE) {
 			boolean noCapture = rule.name.charAt(0) == '-';
 			Rule r = namedRules.get(rule.name);
 			if (r == null) {
@@ -212,20 +212,20 @@ public final class GrammarBuilder {
 			r = dereference(r, namedRules, followed);
 			return noCapture ? r.elements[0] : r;
 		} else if (rule.elements.length > 0) {
-			if (rule.type == RuleType.TERMINAL) {
-				Terminal t = rule.terminal;
+			if (rule.type == RuleType.CHARACTER_SET) {
+				CharacterSet t = rule.charset;
 				for (Rule ref : rule.elements) {
 					Rule t2 = namedRules.get(ref.name);
 					if (t2.type == RuleType.CAPTURE)
 						t2 = t2.elements[0];
 					if (t2.type == RuleType.LITERAL) {
-						t2 = Rule.terminal(Terminal.character(UTF8.codePoint(t2.literal)));
+						t2 = Rule.charset(CharacterSet.character(UTF8.codePoint(t2.literal)));
 					}
-					if (t2.type != RuleType.TERMINAL)
+					if (t2.type != RuleType.CHARACTER_SET)
 						throw new IllegalArgumentException("Cannot merge rule of type "+t2.type+" with a terminal: "+t2);
-					t = t.and(t2.terminal);
+					t = t.and(t2.charset);
 				}
-				return Rule.terminal(t);
+				return Rule.charset(t);
 			}
 			for (int i = 0; i < rule.elements.length; i++) {
 				rule.elements[i] = dereference(rule.elements[i], namedRules, followed);
