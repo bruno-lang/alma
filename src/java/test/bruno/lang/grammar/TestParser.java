@@ -1,55 +1,17 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Rule.fill;
-import static bruno.lang.grammar.Grammar.Rule.seq;
-import static bruno.lang.grammar.Grammar.Rule.symbol;
-import static bruno.lang.grammar.GrammarBuilder.buildGrammar;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.junit.Ignore;
 import org.junit.Test;
-
-import bruno.lang.grammar.print.Printer;
-import bruno.lang.grammar.print.Processor;
 
 public class TestParser {
 
 	@Test
-	public void thatBrunoLangCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/bruno.grammar", Alma.GRAMMAR, "grammar");
-		Grammar bruno = buildGrammar(t);
-		Processor printer = Printer.rulePrinter(System.out);
-		System.out.println(bruno);
-		printer.process(Parsed.parse("etc/example.lib", bruno, "library"));
-		printer.process(Parsed.parse("etc/example.mod", bruno, "module"));
-	}
-	
-	@Test
-	public void thatBrunoASTCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/bruno.grammar", Alma.GRAMMAR, "grammar");
-		Grammar bruno = buildGrammar(t);
-		Processor printer = Printer.rulePrinter(System.out);
-		printer.process(Parsed.parse("etc/example.ast", bruno, "expr"));
-	}
-	
-	@Test
-	public void thatAlmaGrammarCanBeParsed() throws IOException {
-		Grammar g0 = Alma.GRAMMAR;
-		Parsed t1 = Parsed.parse("examples/alma.grammar", g0, "grammar");
-		Grammar g1 = buildGrammar(t1);
-		Parsed t2 = Parsed.parse("examples/alma.grammar", g1, "grammar");
-		Printer.rulePrinter(System.out).process(t2);
-	}
-	
-	@Test
-	public void thatLookaheadWorks() throws IOException {
-		Parsed p = Parsed.parse("examples/test.grammar", Alma.GRAMMAR, "grammar");
-		Grammar test = buildGrammar(p);
+	public void lookahead() throws IOException {
+		Grammar test = Alma.make("examples/test.alma");				
 		Parsed example = Parsed.parse("etc/example.test", test, "start");
 		assertEquals("y", example.tree.rule(1).name);
 		assertEquals("x", example.tree.rule(3).name);
@@ -58,32 +20,8 @@ public class TestParser {
 		assertEquals("y", example.tree.rule(8).name);
 	}
 	
-	@Test
-	public void thatJSONGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/json.grammar", Alma.GRAMMAR, "grammar");
-		Grammar json = buildGrammar(t);
-		Parsed jsont = Parsed.parse("etc/example.json", json, "file");
-		Printer.rulePrinter(System.out).process(jsont);
-	}
-	
-	@Test
-	public void thatHugeJSONCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/json.grammar", Alma.GRAMMAR, "grammar");
-		Grammar json = buildGrammar(t);
-		Parsed jsont = Parsed.parse("../../../huge.json", json, "file");
-		assertNotNull(jsont);
-	}
-	
-	@Test
-	public void thatXMLGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/xml.grammar", Alma.GRAMMAR, "grammar");
-		Grammar xml = buildGrammar(t);
-		Parsed xmlt = Parsed.parse("etc/example.xml", xml, "document");
-		Printer.rulePrinter(System.out).process(xmlt);
-	}
-
 	@Test(timeout=200)
-	public void thatCompletionWorks() {
+	public void fill() {
 		String input = "% this is the comments text\n% this is another one\n";
 		Grammar grammar = COMMENTS;
 		ParseTree tokens = Parser.parse(ByteBuffer.wrap(UTF8.bytes(input)), grammar.rule("grammar".intern()));
@@ -92,31 +30,9 @@ public class TestParser {
 		assertEquals(" this is another one", input.substring(tokens.start(4), tokens.end(4)));
 	}
 	
-	@Test
-	@Ignore
-	public void thatJavaGrammarCanBeParsed() throws IOException {
-		Parsed t = Parsed.parse("examples/java.grammar", Alma.GRAMMAR, "grammar");
-		Grammar java = buildGrammar(t);
-		assertParses(java, new File("src/java/main/bruno/lang/grammar/"), ".java");
-		assertParses(java, new File("src/java/test/bruno/lang/grammar/"), ".java");
-	}
-
-	private void assertParses(Grammar java, File src, String ending) throws IOException {
-		for (File source : src.listFiles()) {
-			if (source.getName().endsWith(ending)) {
-				Parsed example = Parsed.parse(source.getAbsolutePath(), java, "file");
-				assertEquals(source.length(), example.tree.end());
-			}
-		}
-	}	
-	
 	/**
 	 * A minimal grammar for just comments to test completion feature.
 	 */
-	static final Grammar COMMENTS = comments();
+	static final Grammar COMMENTS = Alma.make("-grammar=comment+-comment='%'~@text[{10}]-".getBytes());
 
-	private static Grammar comments() {
-		return new Grammar(seq(seq(symbol('%'), fill().is("text"), symbol('\n')).is("comment")).plus().is("grammar"));
-	}
-	
 }

@@ -11,11 +11,6 @@ import org.junit.Test;
 public class TestTerminal {
 
 	@Test
-	public void test() {
-		Parser.parse(ByteBuffer.wrap("foo".getBytes()), Alma.name_);
-	}
-	
-	@Test
 	public void wildcardIncludesAnyCodePoint() {
 		assertContainsCharacters(CharacterSet.WILDCARD, '?');
 	}

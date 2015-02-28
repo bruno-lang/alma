@@ -10,7 +10,7 @@ import java.util.NoSuchElementException;
  * 
  * A grammar is literally a set of named {@link Rule}s.
  */
-public final class Grammar implements Iterable<Grammar.Rule>{
+public final class Grammar implements Iterable<Grammar.Rule> {
 
 	public static enum RuleType {
 		LITERAL, CHARACTER_SET, PATTERN, REPETITION, SEQUENCE, ALTERNATIVES, FILL, LOOKAHEAD, CAPTURE, DECISION,
@@ -93,34 +93,16 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 			return new Rule(RuleType.SEQUENCE, false, "", elements, Occur.once, NO_LITERAL, null, null);
 		}
 
-		public static Rule symbol( int codePoint ) {
-			return string(new String(UTF8.bytes(codePoint)));
-		}
-
 		public static Rule literal(byte[] l) {
 			return new Rule(RuleType.LITERAL, false, "", NO_ELEMENTS, Occur.once, l, null, null);
 		}
 		
-		public static Rule string(String l) {
-			return new Rule(RuleType.LITERAL, false, "", NO_ELEMENTS, Occur.once, UTF8.bytes(l), null, null);
-		}
-
 		public static Rule pattern(Pattern p) {
 			return new Rule(RuleType.PATTERN, false, "", NO_ELEMENTS, Occur.once, NO_LITERAL, null, p);
 		}
 
 		public static Rule charset(CharacterSet t) {
 			return new Rule(RuleType.CHARACTER_SET, false, "", NO_ELEMENTS, Occur.once, NO_LITERAL, t, null);
-		}
-		
-		public static Rule charset(CharacterSet t, String... refs) {
-			if (refs.length == 0)
-				return charset(t);
-			Rule[] refRules = new Rule[refs.length];
-			for (int i = 0; i < refs.length; i++) {
-				refRules[i] = include(refs[i]);
-			}
-			return new Rule(RuleType.CHARACTER_SET, false, "", refRules, Occur.once, NO_LITERAL, t, null);
 		}
 
 		public final RuleType type;
@@ -161,18 +143,6 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 			return new Rule(type, true, name, elements, occur, literal, charset, pattern);
 		}
 
-		public Rule plus() {
-			return occurs(Occur.plus);
-		}
-
-		public Rule star() {
-			return occurs(Occur.star);
-		}
-
-		public Rule qmark() {
-			return occurs(Occur.qmark);
-		}
-		
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.REPETITION) {
 				return occur == Occur.once ? elements[0] : new Rule(RuleType.REPETITION, false, name, elements, occur, literal, charset, pattern);
@@ -213,7 +183,6 @@ public final class Grammar implements Iterable<Grammar.Rule>{
 			case DECISION:
 				return "<";
 			case CHARACTER_SET:
-				//FIXME cannot use this as this also substitutes the rule definition itself
 				for (Rule r : rules) {
 					if (r.elements[0].charset == charset && r.elements[0] != root) {
 						return "\\"+r.name;

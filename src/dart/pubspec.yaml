@@ -1,6 +1,0 @@
-name: lingukit
-author: Jan Bernitt
-description: formal language kit
-
-dependencies:
-  unittest: any

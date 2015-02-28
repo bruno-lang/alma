@@ -24,10 +24,6 @@ import bruno.lang.grammar.Grammar.RuleType;
  */
 public final class GrammarBuilder {
 
-	public static Grammar buildGrammar(Parsed grammar) {
-		return new Grammar(finish(RuleBuilder.buildRules(grammar)));
-	}
-	
 	public static Grammar buildGrammar(Rule...roots) {
 		return new Grammar(finish(namedRules(roots)));
 	}

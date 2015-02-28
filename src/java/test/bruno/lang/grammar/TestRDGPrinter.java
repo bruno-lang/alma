@@ -10,8 +10,7 @@ public class TestRDGPrinter {
 
 	@Test
 	public void printingJSON() throws IOException {
-		Parsed t = Parsed.parse("examples/json.grammar", Alma.GRAMMAR, "grammar");
-		Grammar json = GrammarBuilder.buildGrammar(t);
+		Grammar json = Alma.make("examples/prelude.alma", "examples/json.alma");
 		new RDGPrinter(System.out).print(json);
 	}
 	
