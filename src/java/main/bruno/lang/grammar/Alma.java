@@ -106,7 +106,6 @@ final class Alma {
 			case '=' : move(reg); break;
 			case '>' : lookahead(reg); break;
 			case '^' : excludeCharset(reg); break;
-			case '&' : reg.charset = reg.rule.charset; break;
 			// illegal:
 			default  : 
 				if (isAlphanumeric(opcode)) {
