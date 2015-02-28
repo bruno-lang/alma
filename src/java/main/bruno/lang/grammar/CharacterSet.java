@@ -14,32 +14,7 @@ import java.nio.ByteBuffer;
  */
 public final class CharacterSet {
 	
-	/**
-	 * Simply all unicodes are contained in the range of the terminal.
-	 */
-	public static final CharacterSet WILDCARD = range(0, UTF8.MAX_CODE_POINT);
-	
-	/**
-	 * Should follow the Unicode 5.0 standard,
-	 * see https://spreadsheets.google.com/pub?key=pd8dAQyHbdewRsnE5x5GzKQ
-	 */
-	public static final CharacterSet WHITESPACE = range(9, 13).and(character(32));
-	
 	public static final CharacterSet EMPTY = new CharacterSet(new int[0]);
-	
-	public static final CharacterSet
-		DIGITS = range('0', '9'),
-		HEX_NUMBER = DIGITS.and(range('A', 'F')),
-		OCTAL_NUMBER = range('0', '7'),
-		BINARY_NUMBER = range('0', '1'),
-		UPPER_LETTERS = range('A','Z'),
-		LOWER_LETTERS = range('a', 'z'), 
-		LETTERS = UPPER_LETTERS.and(LOWER_LETTERS)
-		;
-	
-	public static CharacterSet notRange(int minCodePoint, int maxCodePoint) {
-		return new CharacterSet(new int[] { -minCodePoint, -maxCodePoint }); 
-	}
 	
 	public static CharacterSet range(int minCodePoint, int maxCodePoint) {
 		return new CharacterSet(new int[] { minCodePoint, maxCodePoint });
@@ -47,10 +22,6 @@ public final class CharacterSet {
 	
 	public static CharacterSet character(int codePoint) {
 		return range(codePoint, codePoint);
-	}
-	
-	public static CharacterSet notCharacter(int codePoint) {
-		return notRange(codePoint, codePoint);
 	}
 	
 	public final int[] asciis;
