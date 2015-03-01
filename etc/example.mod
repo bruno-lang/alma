@@ -559,8 +559,8 @@ or even source code like
 		{ ..
 		| Out-Of-Data-Space! = [ Cleanup! ]
 		| Out-Of-Code-Space! = [ Cleanup! ]
+		| Out-Of-Call-Space! = [ Cleanup! ]
 		| Out-Of-Disk-Space! = [ Cleanup! ]
-		| Out-Of-Flow-Space! = [ Cleanup! ]
 		| Out-Of-Type-Range! = [ Cleanup! ]
 		| Cleanup!           = ?
 		}
@@ -569,8 +569,8 @@ or even source code like
 		{ ..
 		| Out-Of-Data-Space! = []
 		| Out-Of-Code-Space! = []
+		| Out-Of-Call-Space! = []
 		| Out-Of-Disk-Space! = []
-		| Out-Of-Flow-Space! = []
 		| Out-Of-Type-Range! = []
 		}
 		

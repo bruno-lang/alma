@@ -8,17 +8,17 @@ import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.ParseTree;
 import bruno.lang.grammar.Parsed;
 
-public final class Printer {
+public final class Print {
 
-	public static Processor rulePrinter(PrintStream out) {
-		return new GenericRulePrinter(out);
+	public static Highlighter highlighter(PrintStream out) {
+		return new Highlighter(out);
 	}
 	
-	public static Processor levelPrinter(PrintStream out) {
+	public static LevelPrinter levelPrinter(PrintStream out) {
 		return new LevelPrinter(out);
 	}
 	
-	public static final class ParseTreePrinter implements Processor {
+	public static final class ParseTreePrinter {
 		
 		private final PrintStream out;
 
@@ -27,8 +27,7 @@ public final class Printer {
 			this.out = out;
 		}
 
-		@Override
-		public void process(Parsed t) {
+		public void print(Parsed t) {
 			final ParseTree tokens = t.tree.sequential();
 			for (int i = 0; i < tokens.count(); i++) {
 				byte[] indent = new byte[Math.abs(tokens.level(i))];
@@ -43,7 +42,7 @@ public final class Printer {
 
 	}
 	
-	public static final class RainbowPrinter implements Processor {
+	public static final class RainbowPrinter {
 		
 		private final PrintStream out;
 		private int color;
@@ -52,8 +51,7 @@ public final class Printer {
 			this.out = out;
 		}
 		
-		@Override
-		public void process(Parsed t) {
+		public void print(Parsed t) {
 			final ParseTree tokens = t.tree.sequential();
 			for (int i = 0; i < tokens.count(); i++) {
 				printColor(t.file, out, ANSIColor.rainbow(color++), tokens.start(i), tokens.end(i));
@@ -62,14 +60,13 @@ public final class Printer {
 		
 	}
 	
-	public static abstract class ColorPrinter implements Processor {
+	public static abstract class ColorPrinter {
 
 		abstract void print(ParseTree tokens, ByteBuffer in, int index);
 		
 		abstract void print(String s);
 
-		@Override
-		public void process(Parsed t) {
+		public void print(Parsed t) {
 			ParseTree tokens = t.tree.sequential();
 			for (int i = 0; i < tokens.count(); i++) {
 				print(tokens, t.file, i);
@@ -78,11 +75,11 @@ public final class Printer {
 		}
 	}
 	
-	private static final class GenericRulePrinter extends ColorPrinter {
+	public static final class Highlighter extends ColorPrinter {
 
 		private final PrintStream out;
 		
-		GenericRulePrinter(PrintStream out) {
+		Highlighter(PrintStream out) {
 			this.out = out;
 		}
 

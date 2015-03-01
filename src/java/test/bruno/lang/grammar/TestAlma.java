@@ -6,8 +6,8 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import bruno.lang.grammar.print.Printer;
-import bruno.lang.grammar.print.Processor;
+import bruno.lang.grammar.print.Print;
+import bruno.lang.grammar.print.Print.Highlighter;
 
 /**
  * Make some {@link Grammar}s and parse some examples with them. 
@@ -25,7 +25,8 @@ public class TestAlma {
 	@Test
 	public void json() throws IOException {
 		Grammar json = Alma.make("examples/prelude.alma", "examples/json.alma");
-		System.out.println(json);
+		Parsed jsont = Parsed.parse("etc/example.json", json, "file");
+		Print.highlighter(System.out).print(jsont);
 	}
 	
 	@Test
@@ -39,16 +40,16 @@ public class TestAlma {
 	public void xml() throws IOException {
 		Grammar xml = Alma.make("examples/prelude.alma", "examples/xml.alma");
 		Parsed xmlt = Parsed.parse("etc/example.xml", xml, "document");
-		Printer.rulePrinter(System.out).process(xmlt);
+		Print.highlighter(System.out).print(xmlt);
 	}
 	
 	@Test
 	public void bruno() throws IOException {
 		Grammar bruno = Alma.make("examples/prelude.alma", "examples/bruno.alma");
-		Processor printer = Printer.rulePrinter(System.out);
-		printer.process(Parsed.parse("etc/example.lib", bruno, "library"));
-		printer.process(Parsed.parse("etc/example.ast", bruno, "expr"));		
-		printer.process(Parsed.parse("etc/example.mod", bruno, "module"));
+		Highlighter highlighter = Print.highlighter(System.out);
+		highlighter.print(Parsed.parse("etc/example.lib", bruno, "library"));
+		highlighter.print(Parsed.parse("etc/example.ast", bruno, "expr"));		
+		highlighter.print(Parsed.parse("etc/example.mod", bruno, "module"));
 	}
 	
 	@Test

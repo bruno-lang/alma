@@ -2,7 +2,7 @@ package bruno.lang.grammar;
 
 import java.nio.ByteBuffer;
 
-import bruno.lang.grammar.print.Printer;
+import bruno.lang.grammar.print.Print;
 
 public final class ParseException extends RuntimeException {
 
@@ -27,7 +27,7 @@ public final class ParseException extends RuntimeException {
 		String msg = "Failed to parse at "+pos+":";
 		System.err.println(msg);
 		ParseTree debug = tree.debug();
-		new Printer.ParseTreePrinter(System.err).process(new Parsed(input, debug));
+		new Print.ParseTreePrinter(System.err).print(new Parsed(input, debug));
 		input.position(pos);
 		//FIXME what if end of file...
 		byte[] x = new byte[Math.min(60, input.limit()-pos)];
