@@ -16,7 +16,7 @@
 -Key          = \KeyOf [Zs ',']^ [s ',{}()[]']^*
 -Variable     = '?' [zZ9 '-_' ]+
 -TypeVariable = \Z \9?
--Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' \9+
+-Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' \9+@NUM
 -Verb         = \z [z9 '-']* [z9]? ['?!']?
 -name         = Key | Noun
 
@@ -36,31 +36,31 @@
 -variant      = [\Faulty \Optional \Transient]
 -indirection  = [\TypeOf \LazyOf \KeyOf]
 
--dimension    = slicetype | channeltype | arraytype
--slicetype    = '[<' \lengthtype < '>]'
--channeltype  = ['[]'] ['<>']{1-2} < ['[]']
--arraytype    = '[' Noun ']' | '[' < \lengthtype ']'
--lengthtype   = spantype | scalartype
--spantype     = scalartype@MIN '-' scalartype@MAX
--scalartype   = \9+ | '*' | TypeVariable
+-dimension    = sliceType | channelType | arrayType
+-sliceType    = '[<' \lengthType < '>]'
+-channelType  = ['[]'] ['<>']{1-2} < ['[]']
+-arrayType    = '[' Noun ']' | '[' < \lengthType ']'
+-lengthType   = spanType | scalarType
+-spanType     = scalarType@MIN '-' scalarType@MAX
+-scalarType   = \9+ | '*' | TypeVariable
 
--subrange     = '{' < subrangetype ('|' subrangetype)* '}'
--subrangetype = (valuetype@MIN)? ('..' (valuetype@MAX)?)?
--valuetype    = literal | scalartype
+-subrange     = '{' < subrangeType ('|' subrangeType)* '}'
+-subrangeType = (valueType@MIN)? ('..' (valueType@MAX)?)?
+-valueType    = literal | scalarType
 
--type         = shape | \complextype
--complextype  = sumtype ( . '&' . sumtype)*
--sumtype      = (. '+' ,)? fulltype (. '+' , fulltype)*
--fulltype     = indirection? \kind dimension* variant?
--kind         = Wildcard  | ordinaltype | listtype   | settype | fntype
-              | tupletype | namedtype   | lengthtype | TypeVariable
--namedtype    = Noun subrange?
--ordinaltype  = '#' < \complextype
--listtype     = '[' < type ']'
--settype      = '{' < type '}'
--fntype       = '(->)'
+-type         = shape | \complexType
+-complexType  = sumType ( . '&' . sumType)*
+-sumType      = (. '+' ,)? fullType (. '+' , fullType)*
+-fullType     = indirection? \kind dimension* variant?
+-kind         = Wildcard  | ordinalType | listType   | setType | fnType
+              | tupleType | namedType   | lengthType | TypeVariable
+-namedType    = Noun subrange?
+-ordinalType  = '#' < \complexType
+-listType     = '[' < type ']'
+-setType      = '{' < type '}'
+-fnType       = '(->)'
               | '(' type@INSTANCE , '->' < ( , type , '->' )* , type@RETURN ')'
--tupletype    = '()' | '(,)' | '(' field (['\;,']@X? , field )* ')'
+-tupleType    = '()' | '(,)' | '(' field (['\;,']@X? , field )* ')'
 -field        = label? ('..' | type) ,
 -label        = . Verb ':' ,
 
@@ -76,7 +76,7 @@
               | op  | concept | fault | ratio | comment
 -attrs        = (Atom ; )* 
 
--fault        = 'fault' < ; Noun , '::' . namedtype !
+-fault        = 'fault' < ; Noun , '::' . namedType !
 
 
 % Data %
