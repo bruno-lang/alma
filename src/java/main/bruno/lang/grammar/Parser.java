@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 
 import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
-import bruno.lang.grammar.print.Printer;
 
 /**
  * A multi-language parser that can parse any language given a starting
@@ -14,31 +13,8 @@ import bruno.lang.grammar.print.Printer;
  */
 public final class Parser {
 
-	public static ParseTree parse(ByteBuffer input, Rule start) {
-		ParseTree tree = new ParseTree(Math.max(512, input.capacity()));
-		int t = 0;
-		try {
-			t = parseRule(start, input, 0, tree);
-		} catch (ParseException e) { 
-			t = e.errorPosition;
-		} catch (Exception e) {
-			e.printStackTrace(System.err);
-		}
-		if (tree.end() != input.capacity()) {
-			int pos = Math.abs(t);
-			String msg = "Failed to parse at "+pos+":";
-			System.err.println(msg);
-			ParseTree debug = tree.debug();
-			new Printer.ParseTreePrinter(System.err).process(new Parsed(input, debug));
-			input.position(pos);
-			//FIXME what if end of file...
-			byte[] x = new byte[Math.min(60, input.limit()-pos)];
-			input.get(x);
-			System.err.println(new String(x));
-			throw new RuntimeException(msg);
-		}
-		//TODO verify and visualize errors
-		return tree;
+	public static int parse(ByteBuffer input, Rule start, ParseTree tree) {
+		return parseRule(start, input, 0, tree);
 	}
 	
 	private static int parseRule(Rule rule, ByteBuffer input, int position, ParseTree tree) {
@@ -46,23 +22,23 @@ public final class Parser {
 		case LITERAL:
 			return parseLiteral(rule, input, position);
 		case CHARACTER_SET:
-			return parseTerminal(rule, input, position);
+			return parseCharacterSet(rule, input, position);
 		case PATTERN:
 			return parsePattern(rule, input, position);
 		case REPETITION:
-			return parseIteration(rule, input, position, tree);
+			return parseRepetition(rule, input, position, tree);
 		case SEQUENCE:
 			return parseSequence(rule, input, position, tree);
 		case ALTERNATIVES:
-			return parseSelection(rule, input, position, tree);
+			return parseAlternatives(rule, input, position, tree);
 		case FILL:
-			return parseCompletion(rule, input, position, tree);
+			return parseFill(rule, input, position, tree);
 		case LOOKAHEAD:
 			return parseRule(rule.elements[0], input, position, tree);
 		case CAPTURE:
 			return parseCapture(rule, input, position, tree);
 		default:
-			throw new IllegalArgumentException("`"+rule+"` has no proper type: "+rule.type);
+			throw new IllegalArgumentException("`"+rule+"` has uses non-runtime type: "+rule.type);
 		}
 	}
 	
@@ -70,7 +46,7 @@ public final class Parser {
 		return -position-1;
 	}
 
-	private static int parseCompletion(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseFill(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		final int l = input.limit();
 		while (position < l) {
 			int end = parseRule(rule.elements[0], input, position, tree);
@@ -109,7 +85,7 @@ public final class Parser {
 		return end;
 	}
 
-	private static int parseSelection(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseAlternatives(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		int end = mismatch(position);
 		for (Rule r : rule.elements) {
 			int endPosition = parseRule(r, input, position, tree);
@@ -135,7 +111,7 @@ public final class Parser {
 				if (endPosition < 0) {
 					if (decisionIndex <= i) {
 						tree.erase(end);
-						throw new ParseException(end, endPosition);
+						throw new ParseException(input, end, endPosition, tree);
 					}
 					tree.erase(position);
 					return endPosition;
@@ -149,7 +125,7 @@ public final class Parser {
 		return end;
 	}
 
-	private static int parseIteration(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseRepetition(Rule rule, ByteBuffer input, int position, ParseTree tree) {
 		int end = position;
 		int c = 0;
 		while (c < rule.occur.max) {
@@ -168,7 +144,7 @@ public final class Parser {
 		return end;
 	}
 
-	private static int parseTerminal(Rule rule, ByteBuffer input, int position) {
+	private static int parseCharacterSet(Rule rule, ByteBuffer input, int position) {
 		if (position >= input.limit())
 			return mismatch(position);
 		if (rule.charset.contains(input, position)) {

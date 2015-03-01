@@ -36,9 +36,10 @@ public final class Parsed {
 		RandomAccessFile aFile = new RandomAccessFile(src, "r");
 		FileChannel in = aFile.getChannel();
 		MappedByteBuffer buffer = in.map(FileChannel.MapMode.READ_ONLY, 0, in.size());
+		ParseTree tree = new ParseTree(Math.max(512, buffer.capacity()));
 		try {
 			buffer.load();
-			ParseTree tree = Parser.parse(buffer, grammar.rule(start.intern()));
+			Parser.parse(buffer, grammar.rule(start.intern()), tree);
 			return new Parsed(buffer, tree);
 		} finally {
 			buffer.clear();

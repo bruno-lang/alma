@@ -53,7 +53,7 @@ public class TestTerminal {
 	public void asciiInclusiveAndExclusiveRanges() {
 		CharacterSet mixed = notRange('a', 'z').and(range('c', 'e'));
 		
-		assertEquals("[{'a'-'z'}]^ [{'c'-'e'}]", mixed.toString());
+		assertEquals("[{'a'-'z'}]^ & [{'c'-'e'}]", mixed.toString());
 		
 		assertContainsCharacters(mixed, "cde97873AZGHAIKN§$%&/()=@.:-,;#+~^");
 		assertNotContainsCharacters(mixed, "abfghijkz");
@@ -63,7 +63,7 @@ public class TestTerminal {
 	public void asciiInclusiveAndExclusiveRanges2() {
 		CharacterSet mixed = notRange('a', 'z').and(notRange('A', 'Z')).and(range('c', 'e'));
 		
-		assertEquals("[{'a'-'z'}{'A'-'Z'}]^ [{'c'-'e'}]", mixed.toString());
+		assertEquals("[{'a'-'z'}{'A'-'Z'}]^ & [{'c'-'e'}]", mixed.toString());
 		
 		assertContainsCharacters(mixed, "cde97873§$%&/()=@.:-,;#+~^");
 		assertNotContainsCharacters(mixed, "abfghijkzAZGHAIKN");
@@ -113,7 +113,7 @@ public class TestTerminal {
 	public void nonAsciiInclusiveAndExclusiveRanges() {
 		CharacterSet mixed = notRange(500,800).and(range(600,650));
 		
-		assertEquals("[{#1F4-#320}]^ [{#258-#28A}]", mixed.toString());
+		assertEquals("[{#1F4-#320}]^ & [{#258-#28A}]", mixed.toString());
 		
 		assertContainsCharacters(mixed, 600,650,624,801,499,5,999,348);
 		assertNotContainsCharacters(mixed, 500,800,599,651,745,567);
@@ -123,7 +123,7 @@ public class TestTerminal {
 	public void asciiAndNonAsciiWithInclduingAndExcludingRanges() {
 		CharacterSet mixed = notRange(500, 800).and(range(600,650)).and(notRange(450, 550)).and(notRange('a', 'z')).and(range('d', 'i')).and(range(120 /*x*/, 200));
 		
-		assertEquals("[{#1F4-#320}{#1C2-#226}{'a'-'z'}]^ [{#258-#28A}{'d'-'i'}{'x'-#C8}]", mixed.toString());
+		assertEquals("[{#1F4-#320}{#1C2-#226}{'a'-'z'}]^ & [{#258-#28A}{'d'-'i'}{'x'-#C8}]", mixed.toString());
 		
 		assertContainsCharacters(mixed, 600,650,624,801,5,999,348,'x','d','i','z',200,201);
 		assertNotContainsCharacters(mixed, 500,800,599,651,745,567,'a','c','j','w');

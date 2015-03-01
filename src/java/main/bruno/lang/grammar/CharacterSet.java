@@ -142,7 +142,7 @@ public final class CharacterSet {
 		boolean lastWasExcluding = false;
 		for (int i = 0; i < ranges.length; i+=2) {
 			if (lastWasExcluding && ranges[i] >= 0) {
-				b.append("]^ [");
+				b.append("]^ & [");
 			}
 			String boundary = toBoundary(ranges[i]);
 			if (ranges[i] == ranges[i+1]) {

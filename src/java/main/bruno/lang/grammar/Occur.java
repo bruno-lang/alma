@@ -3,51 +3,18 @@ package bruno.lang.grammar;
 public final class Occur {
 	
 	public static final int MAX_OCCURANCE = 1000;
+	
+	public static final Occur ONCE = occur(1 , 1);
 
 	/**
 	 * <pre>
-	 * { min, max }
+	 * { min - max }
 	 * </pre>
 	 */
 	public static Occur occur( int min, int max ) {
 		return new Occur(min, max);
 	}
 	
-	public static Occur x(int times) {
-		return occur(times, times);
-	}
-	
-	public static final Occur never = occur(0, 0);
-	
-	
-	/**
-	 * <pre>
-	 * *
-	 * </pre>
-	 */
-	public static final Occur once = occur(1 , 1);
-	
-	/**
-	 * <pre>
-	 * *
-	 * </pre>
-	 */
-	public static final Occur star = occur(0 , MAX_OCCURANCE);
-	
-	/**
-	 * <pre>
-	 * +
-	 * </pre>
-	 */
-	public static final Occur plus = occur(1 , MAX_OCCURANCE);
-	
-	/**
-	 * <pre>
-	 * ?
-	 * </pre>
-	 */
-	public static final Occur qmark = occur(0 , 1);
-
 	public final int min;
 	public final int max;
 
@@ -59,13 +26,13 @@ public final class Occur {
 	
 	@Override
 	public String toString() {
-		if (min == star.min && max == star.max) {
+		if (min == 0 && max == MAX_OCCURANCE) {
 			return "*";
 		}
-		if (min == plus.min && max == plus.max) {
+		if (min == 1 && max == MAX_OCCURANCE) {
 			return "+";
 		}
-		if (min == qmark.min && max == qmark.max) {
+		if (min == 0 && max == 1) {
 			return "?";
 		}
 		if (min == max) {

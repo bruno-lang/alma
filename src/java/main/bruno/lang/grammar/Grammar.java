@@ -66,10 +66,10 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		private static final Rule[] NO_ELEMENTS = new Rule[0];
 		private static final byte[] NO_LITERAL = new byte[0];
 
-		public static final Rule DECISION = new Rule(RuleType.DECISION, false, "", new Rule[0], Occur.never, NO_LITERAL, null, null);
+		public static final Rule DECISION = new Rule(RuleType.DECISION, false, "", new Rule[0], Occur.ONCE, NO_LITERAL, null, null);
 
 		public static Rule lookahead(Rule ahead) {
-			return new Rule(RuleType.LOOKAHEAD, false, "", new Rule[] { ahead }, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.LOOKAHEAD, false, "", new Rule[] { ahead }, Occur.ONCE, NO_LITERAL, null, null);
 		}
 
 		public static Rule decision() {
@@ -77,32 +77,32 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		}
 		
 		public static Rule fill() {
-			return new Rule(RuleType.FILL, false, "", new Rule[1], Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.FILL, false, "", new Rule[1], Occur.ONCE, NO_LITERAL, null, null);
 		}
 
 		public static Rule include(String name) {
-			return new Rule(RuleType.INCLUDE, false, name, NO_ELEMENTS, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.INCLUDE, false, name, NO_ELEMENTS, Occur.ONCE, NO_LITERAL, null, null);
 		}
 
 		public static Rule alt(Rule...elements) {
-			return new Rule(RuleType.ALTERNATIVES, false, "", elements, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.ALTERNATIVES, false, "", elements, Occur.ONCE, NO_LITERAL, null, null);
 		}
 
 		public static Rule seq(Rule...elements) {
 			complete(elements);
-			return new Rule(RuleType.SEQUENCE, false, "", elements, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.SEQUENCE, false, "", elements, Occur.ONCE, NO_LITERAL, null, null);
 		}
 
 		public static Rule literal(byte[] l) {
-			return new Rule(RuleType.LITERAL, false, "", NO_ELEMENTS, Occur.once, l, null, null);
+			return new Rule(RuleType.LITERAL, false, "", NO_ELEMENTS, Occur.ONCE, l, null, null);
 		}
 		
 		public static Rule pattern(Pattern p) {
-			return new Rule(RuleType.PATTERN, false, "", NO_ELEMENTS, Occur.once, NO_LITERAL, null, p);
+			return new Rule(RuleType.PATTERN, false, "", NO_ELEMENTS, Occur.ONCE, NO_LITERAL, null, p);
 		}
 
 		public static Rule charset(CharacterSet t) {
-			return new Rule(RuleType.CHARACTER_SET, false, "", NO_ELEMENTS, Occur.once, NO_LITERAL, t, null);
+			return new Rule(RuleType.CHARACTER_SET, false, "", NO_ELEMENTS, Occur.ONCE, NO_LITERAL, t, null);
 		}
 
 		public final RuleType type;
@@ -136,7 +136,7 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		
 		public Rule named(String name, boolean unique) {
 			Rule[] elems = type == RuleType.CAPTURE ? elements : new Rule[] { this };
-			return new Rule(RuleType.CAPTURE, unique, name, elems, Occur.once, NO_LITERAL, null, null);
+			return new Rule(RuleType.CAPTURE, unique, name, elems, Occur.ONCE, NO_LITERAL, null, null);
 		}
 		
 		public Rule subst() {
@@ -145,9 +145,9 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.REPETITION) {
-				return occur == Occur.once ? elements[0] : new Rule(RuleType.REPETITION, false, name, elements, occur, literal, charset, pattern);
+				return occur == Occur.ONCE ? elements[0] : new Rule(RuleType.REPETITION, false, name, elements, occur, literal, charset, pattern);
 			}
-			if (occur == Occur.once)
+			if (occur == Occur.ONCE)
 				return this;
 			return new Rule(RuleType.REPETITION, false, "", new Rule[] { this }, occur, NO_LITERAL, null, null);
 		}

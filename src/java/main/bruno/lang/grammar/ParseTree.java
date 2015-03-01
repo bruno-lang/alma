@@ -7,7 +7,8 @@ import bruno.lang.grammar.Grammar.Rule;
 
 
 /**
- * A parse tree as a sequence of tokens for a particular {@link Grammar}.
+ * A parse tree as a sequence of tokens for a particular {@link Grammar} a.k.a.
+ * index overlay parse tree.
  * 
  * @author jan
  */
@@ -91,6 +92,38 @@ public final class ParseTree {
 		}
 	}
 
+	// ------------------------------------------------------------------------
+	// everything below is not essential for the tree but used for error handling
+	// ------------------------------------------------------------------------
+	
+	/*
+	 * printing... 
+	 */
+	
+	public void print(int position, PrintStream out) {
+		int index = tokenIndexFor(position);
+		StringBuilder b = new StringBuilder();
+		toString(b, "", index);
+		out.println(b);
+	}
+	
+	@Override
+	public String toString() {
+		if (top < 0)
+			return "(empty)";
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i <= top; i++) {
+			toString(b, "", i);
+		}
+		return b.toString();
+	}
+	
+	private void toString(StringBuilder b, String indent, int index) {
+		char[] ind = new char[Math.abs(levels[index])];
+		Arrays.fill(ind, ' ');
+		b.append(String.format("%4s ", index)).append(ind).append(rules[index].name).append(' ').append(starts[index]).append(':').append(ends[index]).append('\n');
+	}
+	
 	/*
 	 * further processing utility functions below.
 	 */
@@ -112,30 +145,6 @@ public final class ParseTree {
 			}
 		}
 		return c;
-	}
-	
-	@Override
-	public String toString() {
-		if (top < 0)
-			return "(empty)";
-		StringBuilder b = new StringBuilder();
-		for (int i = 0; i <= top; i++) {
-			toString(b, "", i);
-		}
-		return b.toString();
-	}
-	
-	private void toString(StringBuilder b, String indent, int index) {
-		char[] ind = new char[Math.abs(levels[index])];
-		Arrays.fill(ind, ' ');
-		b.append(String.format("%4s ", index)).append(ind).append(rules[index].name).append(' ').append(starts[index]).append(':').append(ends[index]).append('\n');
-	}
-	
-	public void print(int position, PrintStream out) {
-		int index = tokenIndexFor(position);
-		StringBuilder b = new StringBuilder();
-		toString(b, "", index);
-		out.println(b);
 	}
 	
 	public ParseTree debug() {
@@ -164,30 +173,29 @@ public final class ParseTree {
 		final int count = count();
 		i++;
 		if (i >= count || level(i) <= level) {
-			dest.push(rule(index), level, start(index), end(index));
+			dest.sequentialPush(rule(index), level, start(index), end(index));
 			return i;
 		}
 		int start = start(index);
 		while (i < count && level(i) == nextLevel) {
 			int s = start(i);
 			if (s > start) {
-				dest.push(rule(index), -level(index), start, s);
+				dest.sequentialPush(rule(index), -level(index), start, s);
 			}
 			i = sequential(dest, i);
 			start = dest.ends[dest.top];
 		}
 		int end = end(index);
 		if (end > start) {
-			dest.push(rule(index), -level, start, end);
+			dest.sequentialPush(rule(index), -level, start, end);
 		}
 		return i;
 	}
 	
-	private void push(Rule rule, int level, int start, int end) {
+	private void sequentialPush(Rule rule, int level, int start, int end) {
 		rules[++top] = rule;
 		levels[top] = level;
 		starts[top] = start;
 		ends[top] = end;
 	}
-
 }
