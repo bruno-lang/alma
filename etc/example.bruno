@@ -545,8 +545,8 @@ or even source code like
 	data Process :: #[~]
 		{ Out-Of-Data-Space! = ?
 		| Out-Of-Code-Space! = ?
+		| Out-Of-Call-Space! = ?
 		| Out-Of-Disk-Space! = ?
-		| Out-Of-Flow-Space! = ?
 		| Out-Of-Type-Range! = ?
 		}	
 		
@@ -598,6 +598,10 @@ or even source code like
 	
 	concept List :: = {force, cons, append, concat, take, 
 	                                    drop, remove, insert, at, slice}
+
+	family A`ny :: _
+	op force :: A -> A 
+
 	                                    
 	on Alarm :: Machine m -> Machine
 		1. notify master-control || something else
