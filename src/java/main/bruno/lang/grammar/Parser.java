@@ -1,20 +1,23 @@
 package bruno.lang.grammar;
 
+import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_WS;
+import static java.lang.Character.isWhitespace;
+
 import java.nio.ByteBuffer;
 
 import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
 /**
- * A multi-language parser that can parse any language given a starting
- * {@link Rule}.
+ * A universal parser that can parse any language given a starting {@link Rule}.
  * 
  * @author jan
  */
 public final class Parser {
 
-	public static int parse(ByteBuffer input, Rule start, ParseTree tree) {
-		return parseRule(start, input, 0, tree);
+	public static int parse(ByteBuffer input, Rule start, ParseTree target) {
+		return parseRule(start, input, 0, target);
 	}
 	
 	private static int parseRule(Rule rule, ByteBuffer input, int position, ParseTree tree) {
@@ -154,8 +157,39 @@ public final class Parser {
 	}
 	
 	private static int parsePattern(Rule rule, ByteBuffer input, int position) {
-		final int l = rule.pattern.length(input, position);
-		return l < 0 ? mismatch(position) : position + l;
+		final int l = input.limit();
+		int p = position;
+		switch (rule.pattern) {
+		default:
+		case MAY_BE_INDENT:
+		case MUST_BE_INDENT:
+			while (p < l && isIndent(input.get(p))) { p++; }
+			return p > position || rule.pattern == MAY_BE_INDENT ? p : mismatch(position);
+		case MAY_BE_WS:
+		case MUST_BE_WS:
+			while (p < l &&	isWhitespace(input.get(p))) { p++; }
+			return p > position || rule.pattern == MAY_BE_WS ? p : mismatch(position);
+		case MUST_BE_WRAP:
+			while (p  < l && isIndent(input.get(p))) { p++; }
+			if (p >= l) {
+				return mismatch(position);
+			}
+			final int w = p;
+			while (p < l && isWrap(input.get(p))) { p++; }
+			if (w == p) {
+				return mismatch(position);
+			}
+			while (p < l && isIndent(input.get(p))) { p++; }
+			return p;
+		}
+	}
+	
+	private static boolean isIndent(int b) {
+		return b == ' ' || b == '\t';
+	}
+	
+	private static boolean isWrap(int b) {
+		return b == '\n' || b == '\r';
 	}
 
 }

@@ -1,12 +1,12 @@
 package bruno.lang.grammar;
 
+import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_WS;
+import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WRAP;
+import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WS;
 import static bruno.lang.grammar.Grammar.Rule.charset;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
-import static bruno.lang.grammar.Patterns.MAY_BE_INDENT;
-import static bruno.lang.grammar.Patterns.MAY_BE_WS;
-import static bruno.lang.grammar.Patterns.MUST_BE_INDENT;
-import static bruno.lang.grammar.Patterns.MUST_BE_WRAP;
-import static bruno.lang.grammar.Patterns.MUST_BE_WS;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
 
@@ -424,12 +424,7 @@ final class Alma {
 	}
 	
 	private static void excludeCharset(Registers reg) {
-		Rule r = reg.rule;
-		if (r.type == RuleType.CHARACTER_SET) {
-			reg.rule = Rule.charset(r.charset.not());
-		} else if (r.type == RuleType.PATTERN) {
-			reg.rule = Rule.pattern(Patterns.not(r.pattern));
-		}
+		reg.rule = Rule.charset(reg.rule.charset.not());
 	}
 
 	private static void and(CharacterSet other, Registers reg) {

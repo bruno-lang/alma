@@ -42,7 +42,6 @@ public final class Parsed {
 			Parser.parse(buffer, grammar.rule(start.intern()), tree);
 			return new Parsed(buffer, tree);
 		} finally {
-			buffer.clear();
 			in.close();
 			aFile.close();
 		}

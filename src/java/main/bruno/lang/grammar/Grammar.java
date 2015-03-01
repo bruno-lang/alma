@@ -18,6 +18,12 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		INCLUDE;
 	}
 	
+	public static enum Pattern {
+		MAY_BE_WS, MUST_BE_WS,
+		MAY_BE_INDENT, MUST_BE_INDENT,
+		MUST_BE_WRAP
+	}
+	
 	private final Rule[] rules;
 
 	public Grammar(Rule... namedRules) {
@@ -190,7 +196,13 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 				}
 				return charset.toString();
 			case PATTERN:
-				return pattern.toString();
+				switch (pattern) {
+				case MAY_BE_INDENT: return ",";
+				case MUST_BE_INDENT: return ";";
+				case MAY_BE_WS: return ".";
+				case MUST_BE_WS: return ":";
+				case MUST_BE_WRAP: return "!";
+				}
 			case LITERAL:
 				if (UTF8.characters(literal) == 1) {
 					return UTF8.toLiteral(UTF8.codePoint(literal));

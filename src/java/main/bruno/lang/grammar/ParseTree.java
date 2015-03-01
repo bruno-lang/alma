@@ -32,8 +32,7 @@ public final class ParseTree {
 		this.levels = new int[length];
 	}
 	
-	private ParseTree(Rule[] rules, int[] starts, int[] ends, int[] levels,
-			int level, int top) {
+	private ParseTree(Rule[] rules, int[] starts, int[] ends, int[] levels,	int level, int top) {
 		super();
 		this.rules = rules;
 		this.starts = starts;
