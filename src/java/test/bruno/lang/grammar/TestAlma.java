@@ -49,7 +49,7 @@ public class TestAlma {
 		Highlighter highlighter = Print.highlighter(System.out);
 		highlighter.print(Parsed.parse("etc/example.lib", bruno, "library"));
 		highlighter.print(Parsed.parse("etc/example.ast", bruno, "expr"));		
-		highlighter.print(Parsed.parse("etc/example.mod", bruno, "module"));
+		highlighter.print(Parsed.parse("etc/example.bruno", bruno, "module"));
 	}
 	
 	@Test
