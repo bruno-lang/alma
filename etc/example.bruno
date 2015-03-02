@@ -122,7 +122,7 @@
 	family T :: _ with eq
 	fn first :: [T] list -> T sample -> Index start -> T =
 	    e | sample == list at start 
-		list first sample (start + '1) 
+		list first sample (start + 1) 
 	    
 	data Coordinate :: Int & Bit[32]
 	data X-Coordinate :: Coordinate
@@ -488,9 +488,9 @@ or even source code like
 		
 	fn pairs :: Point p -> Int 
 		=  | x == _ | y == _
-		------[sample 1]-----
+		%-----[sample 1]----%
 		1  |   1    |  2
-		------[sample 2]-----
+		%-----[sample 2]----%
 		2  |   0    |  4
 		3  |   _    |  _
 	where 
@@ -606,3 +606,8 @@ or even source code like
 	on Alarm :: Machine m -> Machine
 		1. notify master-control || something else
 		.. Recover : m
+		
+	fn manual :: Byte[@1024] mem -> X = ? 
+	
+	fn map :: [A] l -> (A -> B) a-a' -> B = ?
+	

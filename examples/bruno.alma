@@ -17,7 +17,7 @@
 -Variable     = '?' [zZ9 '-_' ]+
 -TypeVariable = \Z \9?
 -Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' \9+@NUM
--Verb         = \z [z9 '-']* [z9]? ['?!']?
+-Verb         = \z [z9 '-']* [z9]? ['?!' \apostrophe]?
 -name         = Key | Noun
 
 % Operators %
@@ -27,16 +27,15 @@
 % Literals %
 -Literal      = [s'?#"=><&|)].,;*\}']^
 -numeric      = ['+-']? \9+ (['.,'] \9+)*
--quoted       = '"""' < .  ~@TEXT (. '"""') | '"' < ['"']^*@TEXT '"'
--unquoted     = \apostrophe \_ \Literal* | numeric (numeric | Literal)*
--literal      = quoted | unquoted
-
+-quoted       = '"""' < .  ~@TEXT (. '"""') | '"' < ['"']^*@TEXT '"' | \apostrophe < \apostrophe^*@TEXT \apostrophe
+-literal      = quoted | numeric (numeric | Literal)*
 
 % Types %
 -variant      = [\Faulty \Optional \Transient]
 -indirection  = [\TypeOf \LazyOf \KeyOf]
 
--dimension    = sliceType | channelType | arrayType
+-dimension    = manualType | sliceType | channelType | arrayType
+-manualType   = '[@' < scalarType ']'
 -sliceType    = '[<' \lengthType < '>]'
 -channelType  = ['[]'] ['<>']{1-2} < ['[]']
 -arrayType    = '[' Noun ']' | '[' < \lengthType ']'
@@ -78,7 +77,6 @@
 
 -fault        = 'fault' < ; Noun , '::' . namedType !
 
-
 % Data %
 -ratio        = 'ratio' < ; Noun , '::' . literal , '=' , literal !
 -data         = 'data' < ; \name , '::' . attrs type enumeration? with* init? !
@@ -88,20 +86,17 @@
 -constant     = '..' | \name ( . ':' < , type)? init?
 -init         = . '=' < . (Open | expr)
 
-
 % Functions %
 -fn           = ('fn' | 'proc' )< ;  \operational , '::' . inout? . '=' . impl
 -inout        = \descriptor | '(' < , \descriptor , ')'
 -descriptor   = ( param , '->' , )+ type
 -param        = type ; Verb@NAME?
 -impl         = case | Open !
--case         = , where | hline | (, [z '?']'.')? , (expr condition? | condition) ! case?
--hline        = , '-' {4-*} ! case
+-case         = , where | (, [z '?']'.')? , (expr condition? | condition) ! case?
 -condition    = ( , '|' , expr)+
 -where        = 'where' < . variable , (variable , )*
 -variable     = Verb@NAME (, ':' , type)? , (select | '=' , expr !)
 -select       = ( . '|=' < , expr ! )+
-
 
 % Expressions %
 -seq          = . expr ( . ',' ? . expr )* .
@@ -116,7 +111,6 @@
 -comment      = '%' ~ '%'
 -term         = Wildcard | Atom     | Key  | literal 
               | Variable | Operator | Verb | Noun | TypeVariable
-
 
 % Abstract Data Types %
 -op           = 'op'      < ; \operational ,  '::' . Verb? . inout

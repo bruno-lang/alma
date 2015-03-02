@@ -172,7 +172,7 @@ public final class Parser {
 		case MUST_BE_WRAP:
 			while (p  < l && isIndent(input.get(p))) { p++; }
 			if (p >= l) {
-				return mismatch(position);
+				return p; // end of input is also treated as wrap
 			}
 			final int w = p;
 			while (p < l && isWrap(input.get(p))) { p++; }
