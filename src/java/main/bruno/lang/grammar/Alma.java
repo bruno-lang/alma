@@ -34,7 +34,6 @@ final class Alma {
 		
 		// buffers
 		byte[] str = new byte[256]; int str_len = 0;
-		byte[] key = new byte[256]; int key_len = 0;
 
 		// composition state
 		CharacterSet charset = CharacterSet.EMPTY;
@@ -62,12 +61,43 @@ final class Alma {
 	public static Grammar make(byte[]... codes) {
 		Registers reg = new Registers();
 		for (byte[] code : codes) {
-			codeMode(code, 0, reg);
+			defMode(code, 0, reg);
 		}
 		return new Grammar(GrammarBuilder.finish(copyOf(reg.idx, reg.idx_len)));
 	}
 	
 	/* MODES */
+	
+	public static int defMode(byte[] code, int pos, Registers reg) {
+		while (pos < code.length) {
+			byte opcode = code[pos];
+			switch (opcode) {
+			// no-ops:
+			case ' '  : break;
+			case '\n' : break; 
+			case '\r' : break;
+			case '\t' : break;
+			case '-'  : break;
+			// modes: 
+			case '%' : pos = commentMode(code, pos+1); break; 
+			//  functions:
+			case '='  : 
+				String name = new String(reg.str, 0, reg.str_len);
+				reg.str_len = 0;
+				pos = codeMode(code, pos+1, reg);
+				pushToIdx(name, reg);
+				break;
+			default:
+				if (isAlphanumeric(opcode)) {
+					pos = textMode(code, pos, reg);
+				} else {
+					illegalOp("def", pos, opcode);
+				}
+			}
+			pos++;
+		}
+		return pos;
+	}
 	
 	public static int codeMode(byte[] code, int pos, Registers reg) {
 		while (pos < code.length) {
@@ -79,13 +109,13 @@ final class Alma {
 			case '\r' : break;
 			case '\t' : break;
 			// modes:
+			case '-' : return pos;
 			case '%' : pos = commentMode(code, pos+1); break; 
 			case '\'': pos = literalMode(code, pos+1, reg); pushToSeq(makeLiteral(reg), reg); break;
 			case '[' : pos = charsetMode(code, pos+1, reg); pushToSeq(makeCharset(reg), reg); break;
 			case '{' : pos = rangeMode(code, pos+1, reg); occur(reg.low, reg.high, reg); resetNumeric(reg); break;
 			case '\\': pos = textMode(code, pos+1, reg); pushToSeq(lookup(reg, true), reg); unpack(reg); break;
 			case '@' : pos = textMode(code, pos+1, reg); rename(reg); break;
-			case '-' : pushToIdx(reg); pos = textMode(code, pos+1, reg); break;
 			// repetition:
 			case '?' : occur(0, 1, reg); break;
 			case '*' : occur(0, Occur.MAX_OCCURANCE, reg); break;
@@ -103,7 +133,6 @@ final class Alma {
 			case '~' : pushToSeq(Rule.fill(), reg); break;
 			case '<' : pushToSeq(Rule.DECISION, reg); break;
 			case '|' : pushToAlt(reg); break;
-			case '=' : move(reg); break;
 			case '>' : lookahead(reg); break;
 			case '^' : excludeCharset(reg); break;
 			case '&' : reg.charset = reg.rule.charset; reg.rule = null; break;
@@ -113,7 +142,7 @@ final class Alma {
 					pos = textMode(code, pos, reg);
 					pushToSeq(lookup(reg, true), reg);
 				} else {
-					illegalOp(pos, opcode);
+					illegalOp("code", pos, opcode);
 				}
 			}
 			pos++;
@@ -145,7 +174,7 @@ final class Alma {
 				if (isAlphanumeric(opcode)) {
 					and(charsetOf(lookup(new String(new byte[] { opcode }), reg, false)), reg); break;
 				} else {
-					illegalOp(pos, opcode);
+					illegalOp("charset", pos, opcode);
 				}
 			}
 			pos++;
@@ -182,7 +211,7 @@ final class Alma {
 			case '9'  : pos = numericMode(code, pos, reg); break;
 			// functions:
 			case '-': reg.isHigh = !reg.isHigh; break;
-			default : illegalOp(pos, opcode);
+			default : illegalOp("range", pos, opcode);
 			}
 			pos++;
 		}
@@ -258,8 +287,8 @@ final class Alma {
 	
 	/* OPs */
 
-	private static void illegalOp(int pos, byte opcode) {
-		throw new IllegalArgumentException("`"+((char)opcode)+"` is not a valid op-code at position: "+pos);
+	private static void illegalOp(String mode, int pos, byte opcode) {
+		throw new IllegalArgumentException("`"+((char)opcode)+"` is not a valid op-code in "+mode+" mode at position: "+pos);
 	}
 	
 	private static CharacterSet charsetOf(Rule rule) {
@@ -304,9 +333,7 @@ final class Alma {
 		return pos;
 	}
 
-	private static void pushToIdx(Registers reg) {
-		if (reg.key_len == 0)
-			return;
+	private static void pushToIdx(String name, Registers reg) {
 		pushToAlt(reg);
 		Rule r = Rule.alt(copyOf(reg.alt, reg.alt_len));
 		if (r.elements.length == 1 && r.type == RuleType.ALTERNATIVES) { // unfold alternative of length 1
@@ -315,9 +342,7 @@ final class Alma {
 		if (r.elements.length == 1 && r.type == RuleType.SEQUENCE) { // unfold sequence of length 1
 			r = r.elements[0];
 		}
-		String name = new String(reg.key, 0, reg.key_len);
 		reg.idx[reg.idx_len++] = r.is(name);
-		reg.key_len = 0;
 		reg.seq_len = 0;
 		reg.alt_len = 0;
 	}
@@ -336,12 +361,6 @@ final class Alma {
 		reg.low = 0;
 		reg.high = 0;
 		reg.isHigh = false;
-	}
-	
-	private static void move(Registers reg) {
-		reg.key_len = reg.str_len;
-		System.arraycopy(reg.str, 0, reg.key, 0, reg.key_len); 
-		reg.str_len = 0;
 	}
 	
 	private static void rename(Registers reg) {
