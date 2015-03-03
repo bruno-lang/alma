@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.ParseTree;
-import bruno.lang.grammar.Parsed;
+import bruno.lang.grammar.IndexOverlayedFile;
 
 public final class Print {
 
@@ -27,15 +27,15 @@ public final class Print {
 			this.out = out;
 		}
 
-		public void print(Parsed t) {
-			final ParseTree tokens = t.tree.sequential();
-			for (int i = 0; i < tokens.count(); i++) {
-				byte[] indent = new byte[Math.abs(tokens.level(i))];
+		public void print(IndexOverlayedFile f) {
+			final ParseTree tree = f.indexOverlay.sequential();
+			for (int i = 0; i < tree.count(); i++) {
+				byte[] indent = new byte[Math.abs(tree.level(i))];
 				Arrays.fill(indent, (byte)' ');
 				out.append(new String(indent));
-				printColor(out, ANSIColor.GREEN, tokens.rule(i).name);
+				printColor(out, ANSIColor.GREEN, tree.rule(i).name);
 				out.append(' ');
-				printColor(t.file, out, ANSIColor.BLUE, tokens.start(i), tokens.end(i));
+				printColor(f.file, out, ANSIColor.BLUE, tree.start(i), tree.end(i));
 				out.append('\n');
 			}
 		}
@@ -51,10 +51,10 @@ public final class Print {
 			this.out = out;
 		}
 		
-		public void print(Parsed t) {
-			final ParseTree tokens = t.tree.sequential();
-			for (int i = 0; i < tokens.count(); i++) {
-				printColor(t.file, out, ANSIColor.rainbow(color++), tokens.start(i), tokens.end(i));
+		public void print(IndexOverlayedFile f) {
+			final ParseTree tree = f.indexOverlay.sequential();
+			for (int i = 0; i < tree.count(); i++) {
+				printColor(f.file, out, ANSIColor.rainbow(color++), tree.start(i), tree.end(i));
 			}
 		}
 		
@@ -62,14 +62,14 @@ public final class Print {
 	
 	public static abstract class ColorPrinter {
 
-		abstract void print(ParseTree tokens, ByteBuffer in, int index);
+		abstract void print(ParseTree tree, ByteBuffer in, int index);
 		
 		abstract void print(String s);
 
-		public void print(Parsed t) {
-			ParseTree tokens = t.tree.sequential();
-			for (int i = 0; i < tokens.count(); i++) {
-				print(tokens, t.file, i);
+		public void print(IndexOverlayedFile f) {
+			ParseTree tree = f.indexOverlay.sequential();
+			for (int i = 0; i < tree.count(); i++) {
+				print(tree, f.file, i);
 			}
 			print(ANSIColor.BLACK+"\n"+ANSIColor.RESET);
 		}
@@ -84,19 +84,19 @@ public final class Print {
 		}
 
 		@Override
-		public void print(ParseTree tokens, ByteBuffer in, int index) {
-			int s = tokens.start(index);
-			int e = tokens.end(index);
+		public void print(ParseTree tree, ByteBuffer input, int index) {
+			int s = tree.start(index);
+			int e = tree.end(index);
 			if (e == s) {
 				return;
 			}
-			int l = tokens.level(index);
+			int l = tree.level(index);
 			if (l < 0) {
-				printColor(in, out, ANSIColor.BLACK+ANSIColor.BOLD, s, e);
+				printColor(input, out, ANSIColor.BLACK+ANSIColor.BOLD, s, e);
 				return;
 			}
-			Rule r = tokens.rule(index);
-			printColorBlock(in, out, ANSIColor.rainbow(r.name.hashCode()/2-1), s, e);
+			Rule r = tree.rule(index);
+			printColorBlock(input, out, ANSIColor.rainbow(r.name.hashCode()/2-1), s, e);
 			out.append(ANSIColor.RESET);
 		}
 		
@@ -115,19 +115,19 @@ public final class Print {
 		}
 		
 		@Override
-		public void print(ParseTree tokens, ByteBuffer in, int index) {
-			int s = tokens.start(index);
-			int e = tokens.end(index);
+		public void print(ParseTree tree, ByteBuffer input, int index) {
+			int s = tree.start(index);
+			int e = tree.end(index);
 			if (e == s) {
 				return;
 			}
-			int l = tokens.level(index);
+			int l = tree.level(index);
 			String color = ANSIColor.rainbow(l);
 			if (l < 0) {
-				printColor(in, out, color, s, e);
+				printColor(input, out, color, s, e);
 				return;
 			}
-			printColorBlock(in, out, color, s, e);
+			printColorBlock(input, out, color, s, e);
 		}
 		
 		@Override

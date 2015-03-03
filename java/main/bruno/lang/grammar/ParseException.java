@@ -27,7 +27,7 @@ public final class ParseException extends RuntimeException {
 		String msg = "Failed to parse at "+pos+":";
 		System.err.println(msg);
 		ParseTree debug = tree.debug();
-		new Print.ParseTreePrinter(System.err).print(new Parsed(input, debug));
+		new Print.ParseTreePrinter(System.err).print(new IndexOverlayedFile(input, debug));
 		input.position(pos);
 		//FIXME what if end of file...
 		byte[] x = new byte[Math.min(60, input.limit()-pos)];

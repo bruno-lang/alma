@@ -46,8 +46,8 @@ final class Alma {
 	
 	public static void main(String[] args) throws IOException {
 		Grammar g = make(copyOf(args, args.length-2));
-		Parsed p = Parsed.parse(args[args.length-2], g, args[args.length-1]);
-		System.out.println(p);
+		IndexOverlayedFile file = IndexOverlayedFile.read(args[args.length-2], g, args[args.length-1]);
+		System.out.println(file.indexOverlay);
 	}
 	
 	public static Grammar make(String... files) throws IOException {

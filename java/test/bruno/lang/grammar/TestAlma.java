@@ -25,31 +25,31 @@ public class TestAlma {
 	@Test
 	public void json() throws IOException {
 		Grammar json = Alma.make("alma/prelude.alma", "alma/json.alma");
-		Parsed jsont = Parsed.parse("_data/example.json", json, "file");
-		Print.highlighter(System.out).print(jsont);
+		IndexOverlayedFile example = IndexOverlayedFile.read("_data/example.json", json, "file");
+		Print.highlighter(System.out).print(example);
 	}
 	
 	@Test
 	public void jsonHuge() throws IOException {
 		Grammar json = Alma.make("alma/prelude.alma", "alma/json.alma");
-		Parsed jsont = Parsed.parse("../../../huge.json", json, "file");
-		assertNotNull(jsont);
+		IndexOverlayedFile example = IndexOverlayedFile.read("../../../huge.json", json, "file");
+		assertNotNull(example);
 	}
 	
 	@Test
 	public void xml() throws IOException {
 		Grammar xml = Alma.make("alma/prelude.alma", "alma/xml.alma");
-		Parsed xmlt = Parsed.parse("_data/example.xml", xml, "document");
-		Print.highlighter(System.out).print(xmlt);
+		IndexOverlayedFile example = IndexOverlayedFile.read("_data/example.xml", xml, "document");
+		Print.highlighter(System.out).print(example);
 	}
 	
 	@Test
 	public void bruno() throws IOException {
 		Grammar bruno = Alma.make("alma/prelude.alma", "alma/bruno.alma");
 		Highlighter highlighter = Print.highlighter(System.out);
-		highlighter.print(Parsed.parse("_data/example.lib", bruno, "library"));
-		highlighter.print(Parsed.parse("_data/example.ast", bruno, "expr"));		
-		highlighter.print(Parsed.parse("_data/example.bruno", bruno, "module"));
+		highlighter.print(IndexOverlayedFile.read("_data/example.lib", bruno, "library"));
+		highlighter.print(IndexOverlayedFile.read("_data/example.ast", bruno, "expr"));		
+		highlighter.print(IndexOverlayedFile.read("_data/example.bruno", bruno, "module"));
 	}
 	
 	@Test
