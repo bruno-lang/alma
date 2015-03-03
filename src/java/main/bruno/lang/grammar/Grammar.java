@@ -63,7 +63,6 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 				b.append('\n');
 			}
 		}
-		b.append("-\n");
 		return b.toString();
 	}
 

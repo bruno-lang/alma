@@ -18,7 +18,6 @@ JSON
 -null    = 'null'
 -name    = '"' \text '"'
 -text    = [zZ9 '_-']+
--
 ```
 
 XML
@@ -34,6 +33,5 @@ XML
 -cdata      = '<![CDATA[' ~@data ']]>'
 -comment    = '<!--' ~@info '-->'
 -name       = [zZ]+
--
 ```
 

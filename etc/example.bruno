@@ -191,7 +191,7 @@ or even source code like
 	family L :: 0-M
 
 	fn fill :: T[L] a -> T e -> T[L]
-		= a fill-with-from-to '0 M
+		= a fill-with-from-to 0 M
 	
 	family E :: _
 	family A :: E[*]
@@ -476,7 +476,7 @@ or even source code like
 	
 	fn switch :: (Weekday d -> String) 
 		    =     | d == _
-		--------------------
+		%------------------%
 		"Monday"  | Monday
 		"Tuesday" | Tuesday 
 		

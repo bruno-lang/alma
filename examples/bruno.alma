@@ -129,4 +129,3 @@
 
 % Definitions %
 -def          = 'def' < ; name , '::' , '=' . expr !
--
