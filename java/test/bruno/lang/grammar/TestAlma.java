@@ -18,34 +18,34 @@ public class TestAlma {
 
 	@Test
 	public void prelude() throws IOException {
-		Grammar prelude = Alma.make("examples/prelude.alma");
+		Grammar prelude = Alma.make("alma/prelude.alma");
 		System.out.println(prelude);
 	}
 	
 	@Test
 	public void json() throws IOException {
-		Grammar json = Alma.make("examples/prelude.alma", "examples/json.alma");
+		Grammar json = Alma.make("alma/prelude.alma", "alma/json.alma");
 		Parsed jsont = Parsed.parse("etc/example.json", json, "file");
 		Print.highlighter(System.out).print(jsont);
 	}
 	
 	@Test
 	public void jsonHuge() throws IOException {
-		Grammar json = Alma.make("examples/prelude.alma", "examples/json.alma");
+		Grammar json = Alma.make("alma/prelude.alma", "alma/json.alma");
 		Parsed jsont = Parsed.parse("../../../huge.json", json, "file");
 		assertNotNull(jsont);
 	}
 	
 	@Test
 	public void xml() throws IOException {
-		Grammar xml = Alma.make("examples/prelude.alma", "examples/xml.alma");
+		Grammar xml = Alma.make("alma/prelude.alma", "alma/xml.alma");
 		Parsed xmlt = Parsed.parse("etc/example.xml", xml, "document");
 		Print.highlighter(System.out).print(xmlt);
 	}
 	
 	@Test
 	public void bruno() throws IOException {
-		Grammar bruno = Alma.make("examples/prelude.alma", "examples/bruno.alma");
+		Grammar bruno = Alma.make("alma/prelude.alma", "alma/bruno.alma");
 		Highlighter highlighter = Print.highlighter(System.out);
 		highlighter.print(Parsed.parse("etc/example.lib", bruno, "library"));
 		highlighter.print(Parsed.parse("etc/example.ast", bruno, "expr"));		
@@ -54,6 +54,6 @@ public class TestAlma {
 	
 	@Test
 	public void printBruno() throws IOException {
-		System.out.println(Alma.make("examples/prelude.alma", "examples/bruno.alma"));
+		System.out.println(Alma.make("alma/prelude.alma", "alma/bruno.alma"));
 	}
 }
