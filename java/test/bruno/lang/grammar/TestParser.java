@@ -12,7 +12,7 @@ public class TestParser {
 	@Test
 	public void lookahead() throws IOException {
 		Grammar test = Alma.make("alma/test.alma");				
-		Parsed example = Parsed.parse("etc/example.test", test, "start");
+		Parsed example = Parsed.parse("_data/example.test", test, "start");
 		assertEquals("y", example.tree.rule(1).name);
 		assertEquals("x", example.tree.rule(3).name);
 		assertEquals("y", example.tree.rule(5).name);
