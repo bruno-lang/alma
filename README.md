@@ -2,7 +2,15 @@
 
 _understandable parsing_
 
-### Examples
+### repo structure
+```
+alma/
++-- _data/        example input files parsed in tests
++-- alma/         several grammars specified in alma language
++-- java/         java implementation
+```
+
+### examples
 JSON
 ```matlab
 -file    = json .
@@ -33,12 +41,4 @@ XML
 -cdata      = '<![CDATA[' ~@data ']]>'
 -comment    = '<!--' ~@info '-->'
 -name       = [zZ]+
-```
-
-### repo structure
-```
-alma/
-+-- _data/        example input files parsed in tests
-+-- alma/         several grammars specified in alma language
-+-- java/         java implementation
 ```
