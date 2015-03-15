@@ -32,7 +32,7 @@ public class BParser {
 			p = mismatch(p0);
 			int ruleN = r0 + 2;
 			while (lang.get(ruleN) != 0 || lang.get(ruleN + 1) != 0) {
-				int pN = parse(p0, data, lang.getShort(ruleN), lang, tree);
+				int pN = parse(p0, data, lang.getShort(ruleN) << 5, lang, tree);
 				if (pN >= 0) {
 					return pN;
 				}
@@ -50,7 +50,7 @@ public class BParser {
 				if (ruleOp == '<') { // decision
 					decided = true;
 				} else if (ruleOp == '~') { // fill
-					int rF = lang.getShort(ruleN + 2);
+					int rF = lang.getShort(ruleN + 2) << 5;
 					while (p < pE && parse(p, data, rF, lang, tree) < 0) { p++; }
 					if (p < pE) {
 						tree.erase(p);
@@ -58,7 +58,7 @@ public class BParser {
 						return mismatch(pE);
 					}
 				} else {
-					int pN = parse(p, data, lang.getShort(ruleN), lang, tree);
+					int pN = parse(p, data, lang.getShort(ruleN) << 5, lang, tree);
 					if (pN < 0) {
 						if (decided) {
 							tree.erase(p);
@@ -78,7 +78,7 @@ public class BParser {
 		case '*' : // repetition
 			final int min = lang.getShort(r0 + 4); // +2*2
 			final int max = lang.getShort(r0 + 6); // +3*2
-			final int rN = lang.getShort(r0 + 2);
+			final int rN = lang.getShort(r0 + 2) << 5;
 			int n = 0;
 			while (n < max) {
 				int pN = parse(p, data, rN, lang, tree);
@@ -100,7 +100,7 @@ public class BParser {
 			return (lang.get(r0 + 2 +(c/8)) & mask) == mask ? p0 + 1 : mismatch(p0);
 		case '=' : // capture
 			tree.push(r0, p0);
-			int end = parse(p0, data, lang.getInt(r0 + 2), lang , tree);
+			int end = parse(p0, data, lang.getShort(r0 + 2) << 5, lang , tree);
 			if (end > p0) {
 				tree.done(end); 
 			} else {
@@ -108,7 +108,7 @@ public class BParser {
 			}
 			return end;			
 		case '\'': // literal
-			int bi = lang.getShort(r0 + 2) + 2; 
+			int bi = (lang.getShort(r0 + 2) << 5) + 2; 
 			byte b = lang.get(bi);
 			while (b != 0 && p < pE && b == data.get(p)) {
 				p++;

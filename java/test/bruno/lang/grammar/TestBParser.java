@@ -16,7 +16,7 @@ public class TestBParser {
 		String lang =
 				w("v1")+
 				w("#-aabbcc")+
-				w("'-"+i(32))
+				w("'-"+i(1))
 		;
 		int pN = BParser.parse(0, wrap(data.getBytes()), 64, wrap(lang.getBytes()));
 		assertEquals(6, pN);
@@ -28,8 +28,8 @@ public class TestBParser {
 		String lang =
 				w("v1")+
 				w("#-abc")+
-				w("'-"+i(32))+
-				w("*-"+i(64)+i(0)+i(5))
+				w("'-"+i(1))+
+				w("*-"+i(2)+i(0)+i(5))
 		;
 		int pN = BParser.parse(0, wrap(data.getBytes()), 96, wrap(lang.getBytes()));
 		assertEquals(12, pN);
@@ -40,11 +40,11 @@ public class TestBParser {
 		String data = "abcdef";
 		ByteBuffer lang = ByteBuffer.allocate(194)
 				.put(w("v1").getBytes())
-				.put(w("#-abc").getBytes())    // 32
-				.put(w("#-def").getBytes())    // 64
-				.put("'-".getBytes()).putShort((short) 32).put(zeros(28)) // 96
-				.put("'-".getBytes()).putShort((short) 64).put(zeros(28)) // 128
-				.put("&-".getBytes()).putShort((short) 96).putShort((short) 128).put(zeros(26));
+				.put(w("#-abc").getBytes())    // 1
+				.put(w("#-def").getBytes())    // 2
+				.put("'-".getBytes()).putShort((short) 1).put(zeros(28)) // 3
+				.put("'-".getBytes()).putShort((short) 2).put(zeros(28)) // 4
+				.put("&-".getBytes()).putShort((short) 3).putShort((short) 4).put(zeros(26));
 		;
 		int pN = BParser.parse(0, wrap(data.getBytes()), 160, lang);
 		assertEquals(6, pN);
@@ -54,11 +54,11 @@ public class TestBParser {
 	public void alternativesOfTwoLiterals() {
 		ByteBuffer lang = ByteBuffer.allocate(194)
 				.put(w("v1").getBytes())
-				.put(w("#-abc").getBytes())    // 32
-				.put(w("#-def").getBytes())    // 64
-				.put("'-".getBytes()).putShort((short) 32).put(zeros(28)) // 96
-				.put("'-".getBytes()).putShort((short) 64).put(zeros(28)) // 128
-				.put("|-".getBytes()).putShort((short) 96).putShort((short) 128).put(zeros(26));
+				.put(w("#-abc").getBytes())    // 1
+				.put(w("#-def").getBytes())    // 2
+				.put("'-".getBytes()).putShort((short) 1).put(zeros(28)) // 3
+				.put("'-".getBytes()).putShort((short) 2).put(zeros(28)) // 4
+				.put("|-".getBytes()).putShort((short) 3).putShort((short) 4).put(zeros(26));
 		;
 		int pN = BParser.parse(0, wrap("abc".getBytes()), 160, lang);
 		assertEquals(3, pN);
