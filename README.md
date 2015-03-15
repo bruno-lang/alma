@@ -2,7 +2,15 @@
 
 _understandable parsing_
 
-### Examples
+### repo structure
+```
+alma/
++-- _data/        example input files parsed in tests
++-- alma/         several grammars specified in alma language
++-- java/         java implementation
+```
+
+### examples
 JSON
 ```matlab
 -file    = json .
@@ -34,10 +42,3 @@ XML
 -comment    = '<!--' ~@info '-->'
 -name       = [zZ]+
 ```
-
-### Code Organisation
-The repository contains implementations in different languages found within
-the folder named after the language. The `alma` folder contains serveral 
-example grammars written in alma. `_data` contains some example files that
-are parsed to test the grammars.
-
