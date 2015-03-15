@@ -6,8 +6,6 @@ import bruno.lang.grammar.print.Print;
 
 public final class ParseException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
-	
 	public final int determinationPosition;
 	public final int errorPosition;
 	public final ParseTree tree;
