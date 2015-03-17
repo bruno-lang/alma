@@ -82,8 +82,8 @@ public class BParseTree {
 				b.append(' ');
 			}
 			// name
-			int j = (lang.getShort(rules[i] + 4) << 5)+2;
-			int l = lang.get(j-1);
+			int l = lang.get(rules[i]+1)-2;
+			int j = rules[i] + 4;
 			for (int h = l; h > 0; h--) {
 				b.append((char)lang.get(j++));
 			}

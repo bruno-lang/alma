@@ -14,9 +14,8 @@ public class TestBParser {
 	public void justOneLiteral() {
 		String data = "aabbcc";
 		ByteBuffer lang = lang(
-				binary("aabbcc"),
-				literal(0));
-		int pN = BParser.parse(0, wrap(data.getBytes()), 32, lang);
+				literal("aabbcc"));
+		int pN = BParser.parse(0, wrap(data.getBytes()), 0, lang);
 		assertEquals(6, pN);
 	}
 	
@@ -24,10 +23,9 @@ public class TestBParser {
 	public void repeatingOneLiteral() {
 		String data = "abcabcabcabc";
 		ByteBuffer lang = lang(
-				binary("abc"),
-				literal(0),
-				repetition(1, 0, 5));
-		int pN = BParser.parse(0, wrap(data.getBytes()), 64, lang);
+				literal("abc"),
+				repetition(0, 0, 5));
+		int pN = BParser.parse(0, wrap(data.getBytes()), 32, lang);
 		assertEquals(12, pN);
 	}
 	
@@ -35,26 +33,22 @@ public class TestBParser {
 	public void sequenceOfTwoLiterals() {
 		String data = "abcdef";
 		ByteBuffer lang = lang(
-				binary("abc"),
-				binary("def"),
-				literal(0),
-				literal(1),
-				sequence(2,3));
-		int pN = BParser.parse(0, wrap(data.getBytes()), 128, lang);
+				literal("abc"),
+				literal("def"),
+				sequence(0, 1));
+		int pN = BParser.parse(0, wrap(data.getBytes()), 64, lang);
 		assertEquals(6, pN);
 	}
 	
 	@Test
 	public void optionsOfTwoLiterals() {
 		ByteBuffer lang = lang(
-				binary("abc"),
-				binary("def"),
-				literal(0),
-				literal(1),
-				options(2, 3));
-		int pN = BParser.parse(0, wrap("abc".getBytes()), 128, lang);
+				literal("abc"),
+				literal("def"),
+				options(0, 1));
+		int pN = BParser.parse(0, wrap("abc".getBytes()), 64, lang);
 		assertEquals(3, pN);
-		pN = BParser.parse(0, wrap("def".getBytes()), 128, lang);
+		pN = BParser.parse(0, wrap("def".getBytes()), 64, lang);
 		assertEquals(3, pN);
 	}
 	
@@ -119,27 +113,24 @@ public class TestBParser {
 	public void sequenceLiteralWSRepetitionOfCharacterset() {
 		String data = "keyword  x~zz~";
 		ByteBuffer lang = lang(
-				binary("keyword"),
-				literal(0),
+				literal("keyword"),
 				characterset('x', 'z', '0', '~'),
-				repetition(2, 0, 10),
-				sequence(1, ',', 3));
-		int pN = BParser.parse(0, wrap(data.getBytes()), 128, lang);
+				repetition(1, 0, 10),
+				sequence(0, ',', 2));
+		int pN = BParser.parse(0, wrap(data.getBytes()), 96, lang);
 		assertEquals(14, pN);
 	}
 	
 	@Test
 	public void sequenceWithDecision() {
 		ByteBuffer lang = lang(
-				binary("ab"),
-				binary("cd"),
-				literal(0),
-				literal(1),
-				sequence(2, '<', 3)
+				literal("ab"),
+				literal("cd"),
+				sequence(0, '<', 1)
 				);
-		assertEquals(4, BParser.parse(0, wrap("abcd".getBytes()), 128, lang));
+		assertEquals(4, BParser.parse(0, wrap("abcd".getBytes()), 64, lang));
 		try {
-			BParser.parse(0, wrap("abdc".getBytes()), 128, lang);
+			BParser.parse(0, wrap("abdc".getBytes()), 64, lang);
 			fail("error expected");
 		} catch (BParseException e) {
 			assertEquals(-3, e.errorPosition);
@@ -149,59 +140,51 @@ public class TestBParser {
 	@Test
 	public void sequenceWithFill() {
 		ByteBuffer lang = lang(
-				binary("ab"),
-				binary("cd"),
-				literal(0),
-				literal(1),
-				sequence(2, '~', 3)
+				literal("ab"),
+				literal("cd"),
+				sequence(0, '~', 1)
 				);
-		assertEquals(4, BParser.parse(0, wrap("abcd".getBytes()), 128, lang));
-		assertEquals(6, BParser.parse(0, wrap("abxxcd".getBytes()), 128, lang));
-		assertEquals(6, BParser.parse(0, wrap("abdccd".getBytes()), 128, lang));
+		assertEquals(4, BParser.parse(0, wrap("abcd".getBytes()), 64, lang));
+		assertEquals(6, BParser.parse(0, wrap("abxxcd".getBytes()), 64, lang));
+		assertEquals(6, BParser.parse(0, wrap("abdccd".getBytes()), 64, lang));
 	}
 	
 	@Test
 	public void sequenceWithLookahead() {
 		ByteBuffer lang = lang(
-				binary("ab"),
-				binary("cd"),
-				literal(0),
-				literal(1),
-				sequence(2, '>', 3),
-				sequence(4, 3)
+				literal("ab"),
+				literal("cd"),
+				sequence(0, '>', 1),
+				sequence(2, 1)
 				);
-		assertEquals(2,  BParser.parse(0, wrap("abcd".getBytes()), 128, lang));
-		assertEquals(-4, BParser.parse(0, wrap("abd".getBytes()), 128, lang));
-		assertEquals(-4, BParser.parse(0, wrap("abccd".getBytes()), 128, lang));
-		assertEquals(4,  BParser.parse(0, wrap("abcd".getBytes()), 160, lang));
+		assertEquals(2,  BParser.parse(0, wrap("abcd".getBytes()), 64, lang));
+		assertEquals(-4, BParser.parse(0, wrap("abd".getBytes()), 64, lang));
+		assertEquals(-4, BParser.parse(0, wrap("abccd".getBytes()), 64, lang));
+		assertEquals(4,  BParser.parse(0, wrap("abcd".getBytes()), 96, lang));
 	}
 	
 	@Test
 	public void optionsWithWhitespace() {
 		ByteBuffer lang = lang(
-				binary("abc"),
-				binary("def"),
-				literal(0),
-				literal(1),
-				options(2, ';', 3));
-		assertEquals(3,  BParser.parse(0, wrap("abc".getBytes()), 128, lang));
-		assertEquals(3,  BParser.parse(0, wrap("   ".getBytes()), 128, lang));
-		assertEquals(3,  BParser.parse(0, wrap("def".getBytes()), 128, lang));
+				literal("abc"),
+				literal("def"),
+				options(0, ';', 1));
+		assertEquals(3,  BParser.parse(0, wrap("abc".getBytes()), 64, lang));
+		assertEquals(3,  BParser.parse(0, wrap("   ".getBytes()), 64, lang));
+		assertEquals(3,  BParser.parse(0, wrap("def".getBytes()), 64, lang));
 	}
 	
 	@Test
 	public void captureLiteral() {
 		ByteBuffer lang = lang(
-				binary("abc"),
-				binary("name"),
-				literal(0),
-				capture(2, 1));
+				literal("abc"),
+				capture(2, "name"));
 		BParseTree tree = new BParseTree(lang, 10);
-		BParser.parse(0, wrap("abc".getBytes()), 96, lang, tree);
+		BParser.parse(0, wrap("abc".getBytes()), 32, lang, tree);
 		assertEquals(1, tree.count());
 		assertEquals(0, tree.start(0));
 		assertEquals(3, tree.end(0));
-		assertEquals(96, tree.rule(0));
+		assertEquals(32, tree.rule(0));
 		assertEquals("name 0-3", tree.toString());
 	}
 
@@ -213,25 +196,19 @@ public class TestBParser {
 		return b;
 	}
 
-	private byte[] capture(int what, int as) {
+	private byte[] capture(int what, String name) {
 		byte[] b = new byte[32];
 		b[0] = '=';
-		b[1] = 2;
-		ByteBuffer.wrap(b).putShort(2, (short) what).putShort(4, (short) as);
+		b[1] = (byte) (name.length()+2);
+		for (int i = 0; i < name.length(); i++) {
+			b[i+4] = (byte) name.charAt(i);
+		}
 		return b;
 	}
 	
-	private static byte[] literal(int index) {
+	private static byte[] literal(String s) {
 		byte[] b = new byte[32];
 		b[0] = '\'';
-		b[1] = 1;
-		ByteBuffer.wrap(b).putShort(2, (short) index);
-		return b;
-	}
-	
-	private static  byte[] binary(String s) {
-		byte[] b = new byte[32];
-		b[0] = '#';
 		b[1] = (byte) s.length();
 		for (int i = 0; i < s.length(); i++) {
 			b[i+2] = (byte) s.charAt(i);

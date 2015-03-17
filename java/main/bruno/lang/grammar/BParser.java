@@ -114,11 +114,11 @@ public class BParser {
 			}
 			return end;			
 		case '\'': // literal 
-			int bN = (lang.getShort(r0 + 2) << 5) + 2;
-			int bE = lang.get(bN-1);
-			if (bE > pE-p0)
+			int n = lang.get(r0+1);
+			int bN = r0+2;
+			if (n > pE-p0)
 				return mismatch(pE);
-			for (int i = bE; i > 0; i--) {
+			for (int i = n; i > 0; i--) {
 				if (lang.get(bN) != data.get(p)) {
 					return mismatch(p);
 				}
@@ -126,8 +126,6 @@ public class BParser {
 				bN++;
 			}
 			return p;
-		case '#'  :  // binary
-			throw new IllegalArgumentException("Direct reference to binary");
 		case '\\' : // include
 			throw new IllegalArgumentException("Unresolved include: "+lang.getShort(r0+2));
 		// whitespace 
