@@ -30,35 +30,41 @@ public class BParser {
 		switch (op) {
 		case '|' : // alternatives
 			p = mismatch(p0);
-			int ruleN = r0 + 2;
-			while (lang.get(ruleN) != 0 || lang.get(ruleN + 1) != 0) {
-				int pN = parse(p0, data, ruleN, lang, tree);
+			int rN = r0;
+			for (int i = lang.get(r0+1); i > 0; i--) {
+				rN += 2;
+				int pN = parse(p0, data, rN, lang, tree);
 				if (pN >= 0) {
 					return pN;
 				}
 				p = min(p, pN);
-				ruleN += 2;
 			}
 			tree.erase(p0);
 			return p;			
 		case '&' : // sequence
 			boolean decided = false;
 			int pL = Integer.MAX_VALUE;
-			ruleN = r0 + 2; 
-			while (lang.get(ruleN) != 0 || lang.get(ruleN + 1) != 0) {
-				byte ruleOp = lang.get(ruleN);
-				if (ruleOp == '<') { // decision
-					decided = true;
-				} else if (ruleOp == '~') { // fill
-					int rF = ruleN + 2;
+			rN = r0; 
+			for (int i = lang.get(r0+1); i > 0; i--) {
+				rN += 2;
+				switch (lang.get(rN)) {
+				case '<': // decision
+					decided = true; 
+					break;
+				case '~': // fill
+					int rF = rN + 2;
 					while (p < pE && parse(p, data, rF, lang, tree) < 0) { p++; }
 					if (p < pE) {
 						tree.erase(p);
+						break;
 					} else {
 						return mismatch(pE);
 					}
-				} else {
-					int pN = parse(p, data, ruleN, lang, tree);
+				case '>': // look-ahead
+					pL = p; // the end of the previous rule is the result
+					break;
+				default:
+					int pN = parse(p, data, rN, lang, tree);
 					if (pN < 0) {
 						if (decided) {
 							tree.erase(p);
@@ -67,30 +73,24 @@ public class BParser {
 						tree.erase(p0);
 						return pN;
 					}
-					if (ruleOp == '>') { // look-ahead
-						pL = p; // the end of the previous rule is the result
-					}
 					p = pN;
 				}
-				ruleN += 2;
 			}
 			return min(p, pL);			
 		case '*' : // repetition
 			final int min = lang.getShort(r0 + 4); // +2*2
 			final int max = lang.getShort(r0 + 6); // +3*2
-			final int rN = r0 + 2;
-			int n = 0;
-			while (n < max) {
+			rN = r0 + 2;
+			for (int i = 0; i < max; i++) {
 				int pN = parse(p, data, rN, lang, tree);
 				if (pN < 0) {
 					tree.erase(p);
-					if (n < min) {
+					if (i < min) {
 						return pN;
 					}
 					return p;
 				} else {
 					p = pN;
-					n++;
 				}
 			}
 			return p;			
@@ -109,14 +109,23 @@ public class BParser {
 				tree.pop();
 			}
 			return end;			
-		case '\'': // literal
-			int bi = (lang.getShort(r0 + 2) << 5) + 2; 
-			byte b = lang.get(bi);
-			while (b != 0 && p < pE && b == data.get(p)) {
+		case '\'': // literal 
+			int bN = (lang.getShort(r0 + 2) << 5) + 2;
+			int bE = lang.get(bN-1);
+			if (bE > pE-p0)
+				return mismatch(pE);
+			for (int i = bE; i > 0; i--) {
+				if (lang.get(bN) != data.get(p)) {
+					return mismatch(p);
+				}
 				p++;
-				b = lang.get(++bi);
+				bN++;
 			}
-			return b == 0 ? p : mismatch(p);
+			return p;
+		case '#'  :  // binary
+			throw new IllegalArgumentException("Direct reference to binary");
+		case '\\' : // include
+			throw new IllegalArgumentException("Unresolved include: "+lang.getShort(r0+2));
 		// whitespace 
 		case ',' : 
 		case ';' :
@@ -138,8 +147,7 @@ public class BParser {
 			}
 			while (p < pE && isIndent(data.get(p))) { p++; }
 			return p;
-		// goto
-		default  :
+		default  : // goto
 			return parse(p0, data, lang.getShort(r0) << 5, lang, tree);
 		}
 	}
