@@ -14,7 +14,11 @@ import java.nio.ByteBuffer;
 public class BParser {
 
 	public static int parse(int p0, ByteBuffer data, int r0, ByteBuffer lang) {
-		return parse(p0, data, r0, lang, new BParseTree(lang, 500));
+		return read(p0, data, r0, lang, new BParseTree(lang, 500));
+	}
+	
+	public static int parse(int p0, ByteBuffer data, int r0, ByteBuffer lang, BParseTree tree) {
+		return read(p0, data, r0, lang, tree);
 	}
 	
 	/**
@@ -22,7 +26,7 @@ public class BParser {
 	 * @param p0 start position in data buffer
 	 * @return position in data after matched rule r0
 	 */
-	private static int parse(int p0, ByteBuffer data, int r0, ByteBuffer lang, BParseTree tree) {
+	private static int read(int p0, ByteBuffer data, int r0, ByteBuffer lang, BParseTree tree) {
 		byte op = lang.get(r0);
 		System.out.println(String.format("p0: %3d  r0: %3d => op: %3d [%s]", p0, r0, op, Character.valueOf((char) op)));
 		final int pE = data.limit();
@@ -33,7 +37,7 @@ public class BParser {
 			int rN = r0;
 			for (int i = lang.get(r0+1); i > 0; i--) {
 				rN += 2;
-				int pN = parse(p0, data, rN, lang, tree);
+				int pN = read(p0, data, rN, lang, tree);
 				if (pN >= 0) {
 					return pN;
 				}
@@ -53,7 +57,7 @@ public class BParser {
 					break;
 				case '~': // fill
 					int rF = rN + 2;
-					while (p < pE && parse(p, data, rF, lang, tree) < 0) { p++; }
+					while (p < pE && read(p, data, rF, lang, tree) < 0) { p++; }
 					if (p < pE) {
 						tree.erase(p);
 						break;
@@ -64,7 +68,7 @@ public class BParser {
 					pL = p; // the end of the previous rule is the result
 					break;
 				default:
-					int pN = parse(p, data, rN, lang, tree);
+					int pN = read(p, data, rN, lang, tree);
 					if (pN < 0) {
 						if (decided) {
 							tree.erase(p);
@@ -82,7 +86,7 @@ public class BParser {
 			final int max = lang.getShort(r0 + 6); // +3*2
 			rN = r0 + 2;
 			for (int i = 0; i < max; i++) {
-				int pN = parse(p, data, rN, lang, tree);
+				int pN = read(p, data, rN, lang, tree);
 				if (pN < 0) {
 					tree.erase(p);
 					if (i < min) {
@@ -102,7 +106,7 @@ public class BParser {
 			return (lang.get(r0 + 2 +(c/8)) & mask) == mask ? p0 + 1 : mismatch(p0);
 		case '=' : // capture
 			tree.push(r0, p0);
-			int end = parse(p0, data, r0 + 2, lang , tree);
+			int end = read(p0, data, r0 + 2, lang , tree);
 			if (end > p0) {
 				tree.done(end); 
 			} else {
@@ -148,7 +152,7 @@ public class BParser {
 			while (p < pE && isIndent(data.get(p))) { p++; }
 			return p;
 		default  : // goto
-			return parse(p0, data, lang.getShort(r0) << 5, lang, tree);
+			return read(p0, data, lang.getShort(r0) << 5, lang, tree);
 		}
 	}
 

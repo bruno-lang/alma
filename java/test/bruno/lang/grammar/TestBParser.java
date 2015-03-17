@@ -189,6 +189,22 @@ public class TestBParser {
 		assertEquals(3,  BParser.parse(0, wrap("def".getBytes()), 128, lang));
 	}
 	
+	@Test
+	public void captureLiteral() {
+		ByteBuffer lang = lang(
+				binary("abc"),
+				binary("name"),
+				literal(0),
+				capture(2, 1));
+		BParseTree tree = new BParseTree(lang, 10);
+		BParser.parse(0, wrap("abc".getBytes()), 96, lang, tree);
+		assertEquals(1, tree.count());
+		assertEquals(0, tree.start(0));
+		assertEquals(3, tree.end(0));
+		assertEquals(96, tree.rule(0));
+		assertEquals("name 0-3", tree.toString());
+	}
+
 	private static ByteBuffer lang(byte[]...words) {
 		ByteBuffer b = ByteBuffer.allocate(words.length*32);
 		for (byte[] w : words) {
@@ -196,10 +212,19 @@ public class TestBParser {
 		}
 		return b;
 	}
+
+	private byte[] capture(int what, int as) {
+		byte[] b = new byte[32];
+		b[0] = '=';
+		b[1] = 2;
+		ByteBuffer.wrap(b).putShort(2, (short) what).putShort(4, (short) as);
+		return b;
+	}
 	
 	private static byte[] literal(int index) {
 		byte[] b = new byte[32];
 		b[0] = '\'';
+		b[1] = 1;
 		ByteBuffer.wrap(b).putShort(2, (short) index);
 		return b;
 	}
@@ -217,6 +242,7 @@ public class TestBParser {
 	private static byte[] repetition(int index, int min, int max) {
 		byte[] b = new byte[32];
 		b[0] = '*';
+		b[1] = 3;
 		ByteBuffer.wrap(b).putShort(2, (short) index).putShort(4, (short) min).putShort(6, (short) max);
 		return b;
 	}
@@ -251,7 +277,7 @@ public class TestBParser {
 	private static byte[] characterset(char... members) {
 		byte[] set = new byte[32];
 		set[0] = '_';
-		set[1] = (byte)8;
+		set[1] = 8;
 		for (char c : members) {
 			set[2+c/8] |= 1 << (c % 8);
 		}

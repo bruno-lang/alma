@@ -76,14 +76,15 @@ public class BParseTree {
 	@Override
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		for (int i = 0; i < top; i++) {
+		for (int i = 0; i <= top; i++) {
 			// indent
 			for (int g = 0; g < levels[i]; g++) {
 				b.append(' ');
 			}
 			// name
-			int j = lang.getShort(rules[i] + 4) + 2;
-			while (lang.get(j) != 0) {
+			int j = (lang.getShort(rules[i] + 4) << 5)+2;
+			int l = lang.get(j-1);
+			for (int h = l; h > 0; h--) {
 				b.append((char)lang.get(j++));
 			}
 			b.append(' ').append(starts[i]).append('-').append(ends[i]);
