@@ -2,6 +2,7 @@ package bruno.lang.grammar;
 
 import static java.nio.ByteBuffer.wrap;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.nio.ByteBuffer;
 
@@ -44,7 +45,7 @@ public class TestBParser {
 	}
 	
 	@Test
-	public void alternativesOfTwoLiterals() {
+	public void optionsOfTwoLiterals() {
 		ByteBuffer lang = lang(
 				binary("abc"),
 				binary("def"),
@@ -68,7 +69,7 @@ public class TestBParser {
 		pN = BParser.parse(0, wrap("b".getBytes()), 0, lang);
 		assertEquals(-1, pN);
 	}
-
+	
 	@Test
 	public void whitespaceMayBeIndent() {
 		String data = " \t\n";
@@ -127,6 +128,67 @@ public class TestBParser {
 		assertEquals(14, pN);
 	}
 	
+	@Test
+	public void sequenceWithDecision() {
+		ByteBuffer lang = lang(
+				binary("ab"),
+				binary("cd"),
+				literal(0),
+				literal(1),
+				sequence(2, '<', 3)
+				);
+		assertEquals(4, BParser.parse(0, wrap("abcd".getBytes()), 128, lang));
+		try {
+			BParser.parse(0, wrap("abdc".getBytes()), 128, lang);
+			fail("error expected");
+		} catch (BParseException e) {
+			assertEquals(-3, e.errorPosition);
+		}
+	}
+	
+	@Test
+	public void sequenceWithFill() {
+		ByteBuffer lang = lang(
+				binary("ab"),
+				binary("cd"),
+				literal(0),
+				literal(1),
+				sequence(2, '~', 3)
+				);
+		assertEquals(4, BParser.parse(0, wrap("abcd".getBytes()), 128, lang));
+		assertEquals(6, BParser.parse(0, wrap("abxxcd".getBytes()), 128, lang));
+		assertEquals(6, BParser.parse(0, wrap("abdccd".getBytes()), 128, lang));
+	}
+	
+	@Test
+	public void sequenceWithLookahead() {
+		ByteBuffer lang = lang(
+				binary("ab"),
+				binary("cd"),
+				literal(0),
+				literal(1),
+				sequence(2, '>', 3),
+				sequence(4, 3)
+				);
+		assertEquals(2,  BParser.parse(0, wrap("abcd".getBytes()), 128, lang));
+		assertEquals(-4, BParser.parse(0, wrap("abd".getBytes()), 128, lang));
+		assertEquals(-4, BParser.parse(0, wrap("abccd".getBytes()), 128, lang));
+		assertEquals(4,  BParser.parse(0, wrap("abcd".getBytes()), 160, lang));
+	}
+	
+	@Test
+	public void optionsWithWhitespace() {
+		ByteBuffer lang = lang(
+				binary("abc"),
+				binary("def"),
+				literal(0),
+				literal(1),
+				options(2, ';', 3));
+		assertEquals(3,  BParser.parse(0, wrap("abc".getBytes()), 128, lang));
+		assertEquals(3,  BParser.parse(0, wrap("   ".getBytes()), 128, lang));
+		assertEquals(3,  BParser.parse(0, wrap("def".getBytes()), 128, lang));
+	}
+	
 	private static ByteBuffer lang(byte[]...words) {
 		ByteBuffer b = ByteBuffer.allocate(words.length*32);
 		for (byte[] w : words) {
@@ -162,23 +224,16 @@ public class TestBParser {
 	private static byte[] sequence(Object... elements) {
 		byte[] b = new byte[32];
 		b[0] = '&';
-		b[1] = (byte) elements.length;
-		ByteBuffer buf = ByteBuffer.wrap(b);
-		int i = 2;
-		for (Object e : elements) {
-			if (e instanceof Number) {
-				buf.putShort(i, ((Number)e).shortValue());
-			} else {
-				buf.put(i, (byte) ((Character)e).charValue());
-			}
-			i+=2;
-		}
-		return b;
+		return elements(b, elements);
 	}
 	
 	private static byte[] options(Object... elements) {
 		byte[] b = new byte[32];
 		b[0] = '|';
+		return elements(b, elements);
+	}
+	
+	private static byte[] elements(byte[] b, Object... elements) {
 		b[1] = (byte) elements.length;
 		ByteBuffer buf = ByteBuffer.wrap(b);
 		int i = 2;
