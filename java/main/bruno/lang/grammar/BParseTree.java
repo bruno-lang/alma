@@ -87,7 +87,7 @@ public class BParseTree {
 			for (int h = l; h > 0; h--) {
 				b.append((char)lang.get(j++));
 			}
-			b.append(' ').append(starts[i]).append('-').append(ends[i]);
+			b.append(' ').append(starts[i]).append('-').append(ends[i]).append('\n');
 		}
 		return b.toString();
 	}

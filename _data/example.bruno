@@ -107,7 +107,7 @@
 	family A :: _
 	family B :: _
 
-	fn lazy :: (A -> P -> B) f -> A v -> P p -> >B
+	fn lazy :: (A -> P -> B) f -> A v -> P p -> () -> B
 	    = () -> (a f p)
         
         
@@ -141,10 +141,14 @@
 	data String :: [Char]
 	data Octal :: Char[8]
 	
-	family T :: _
-	family S :: T
-	fn specialise `+>` :: T value -> $S type -> S 
-		= (`ast `specialise ?value ?type) 
+	family G  :: _
+	family T1 :: G
+	family T2 :: G
+	sub specialise `+>` :: T1 value -> T2 
+		= (`ast `specialise ?value T2) 
+	% instead of explicitly passing the target type it is used implicitly 
+	through use of type families. also this illustrates well that 
+	both T1 and T2 share a common generalisation G %
 	
 	data Bla :: String = """
 	
@@ -164,7 +168,10 @@ or even source code like
 	fn map :: [A] l -> (A -> B) fn -> [B] = "XXX"
 	fn singleton :: A v -> {A} = {v}
 	
-	data Setify :: ([A] -> [{A}]) = (_ map singleton)
+	fn setify :: ([A] -> [{A}]) = (_ map singleton)
+	
+	family L :: *
+	fn setify :: (A[L] -> {A}[L]) = (_ map singleton)
 	
 	data SomeTHING :: () = `some-thing
 	
@@ -214,7 +221,7 @@ or even source code like
 	fn call-side-inline :: E[1-*] one -> E[1-*] other -> Bool
 		= one\last == other\last
 		
-	proc assoc `=>` :: K key -> V value -> (K, V) = (key, value)
+	sub assoc `=>` :: K key -> V value -> (K, V) = (key, value)
 	
 	family E :: _
 	fn at :: E[<*>] s -> Index i -> Int = (`ast `get ?s ?i)
@@ -293,7 +300,7 @@ or even source code like
 	where
 		channel: T]>] = each channel	
 		
-	proc send? `>|>` :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
+	sub send? `>|>` :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
 		= res
 		where
 		  res
@@ -361,15 +368,13 @@ or even source code like
 	
 	family R :: _[<]
 	family W :: _[>]
+	family M :: _[!*]
 	
 	family M :: _?
 	family E :: _!
 	family P :: _*
 	
-	family T :: $_
-	family L :: >_
 	family K :: @_	
-	
 	family I :: #_
 	
 	family E :: _ as Stack, Collection
@@ -422,7 +427,7 @@ or even source code like
 	data Exp :: Int = 2^27 - 1
 	
 	data Bit   :: () { ^0 | ^1 }
-	data S-Bit :: Bit { Positive | Negative }
+	data S-Bit :: Bit { ^+ | ^- }
 	data M-Bit :: Bit
 
 	data Byte  :: M-Bit[8]
@@ -431,11 +436,11 @@ or even source code like
 	
 	data Int   :: Word & Bit[1-32]
 
-	data Coefficient :: Int  & Bit[56] & (S-Bit;M-Bit[55])
+	data Coefficient :: Int  & Bit[56] & (S-Bit M-Bit[55])
 	data Exponent    :: Int  & Byte
 	data Dec         :: Word & (Coefficient Exponent)
 
-	data Numerator   :: Int  & Bit[32] & (S-Bit; M-Bit[31])
+	data Numerator   :: Int  & Bit[32] & (S-Bit M-Bit[31])
 	data Denominator :: Int  & M-Bit[32]
 	data Frac        :: Word & (Numerator Denominator)
 	
@@ -586,15 +591,15 @@ or even source code like
 	family E :: _
 	family L :: [E]
 	
-	op cons :: L -> E -> L
-	op append :: L l -> E e -> L
-	op concat :: L l -> L other -> L
-	op take :: L l -> Count c -> L
-	op drop :: L l -> Count c -> L
-	op remove :: L l -> Index i -> L
-	op insert :: L l -> Index i -> L
-	op at :: L l -> Index i -> E?
-	op slice :: L l -> Index from -> Index to -> L
+	op cons   :: L -> E e -> L
+	op append :: L -> E e -> L
+	op concat :: L -> L other -> L
+	op take   :: L -> Count c -> L
+	op drop   :: L -> Count c -> L
+	op remove :: L -> Index i -> L
+	op insert :: L -> Index i -> L
+	op at     :: L -> Index i -> E?
+	op slice  :: L -> Index from -> Index to -> L
 	
 	concept List :: = {force, cons, append, concat, take, 
 	                                    drop, remove, insert, at, slice}
@@ -607,7 +612,7 @@ or even source code like
 		1. notify master-control || something else
 		.. Recover : m
 		
-	fn manual :: Byte[@1024] mem -> X = ? 
+	fn manual :: Byte[!1024] mem -> X = ? 
 	
 	fn map :: [A] l -> (A -> B) a-a' -> B = ?
 	

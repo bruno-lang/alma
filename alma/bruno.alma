@@ -1,8 +1,6 @@
 % bruno (alma version) %
 
 % Type Variant Symbols %
--TypeOf       = '$'
--LazyOf       = '>'
 -KeyOf        = '@'
 -Optional     = '?'
 -Faulty       = '!'
@@ -16,7 +14,7 @@
 -Key          = \KeyOf [Zs ',']^ [s ',{}()[]']^*
 -Variable     = '?' [zZ9 '-_' ]+
 -TypeVariable = \Z \9?
--Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' \9+@NUM
+-Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' ['+-'9] \9*
 -Verb         = \z [z9 '-']* [z9]? ['?!' \apostrophe]?
 -name         = Key | Noun
 
@@ -32,10 +30,9 @@
 
 % Types %
 -variant      = [\Faulty \Optional \Transient]
--indirection  = [\TypeOf \LazyOf \KeyOf]
 
 -dimension    = manualType | sliceType | channelType | arrayType
--manualType   = '[@' < scalarType ']'
+-manualType   = '[!' < scalarType ']'
 -sliceType    = '[<' \lengthType < '>]'
 -channelType  = ['[]'] ['<>']{1-2} < ['[]']
 -arrayType    = '[' Noun ']' | '[' < \lengthType ']'
@@ -50,7 +47,7 @@
 -type         = shape | \complexType
 -complexType  = sumType ( . '&' . sumType)*
 -sumType      = (. '+' ,)? fullType (. '+' , fullType)*
--fullType     = indirection? \kind dimension* variant?
+-fullType     = \KeyOf? \kind dimension* variant?
 -kind         = Wildcard  | ordinalType | listType   | setType | fnType
               | tupleType | namedType   | lengthType | TypeVariable
 -namedType    = Noun subrange?
@@ -87,7 +84,7 @@
 -init         = . '=' < . (Open | expr)
 
 % Functions %
--fn           = ('fn' | 'proc' )< ;  \operational , '::' . inout? . '=' . impl
+-fn           = ('fn' | 'sub' )< ;  \operational , '::' . inout? . '=' . impl
 -inout        = \descriptor | '(' < , \descriptor , ')'
 -descriptor   = ( param , '->' , )+ type
 -param        = type ; Verb@NAME?

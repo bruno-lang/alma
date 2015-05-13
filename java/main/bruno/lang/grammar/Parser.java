@@ -3,6 +3,7 @@ package bruno.lang.grammar;
 import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_INDENT;
 import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_WS;
 import static java.lang.Character.isWhitespace;
+import static java.lang.Math.min;
 
 import java.nio.ByteBuffer;
 
@@ -34,10 +35,6 @@ public final class Parser {
 			return parseSequence(rule, input, position, tree);
 		case ALTERNATIVES:
 			return parseAlternatives(rule, input, position, tree);
-		case FILL:
-			return parseFill(rule, input, position, tree);
-		case LOOKAHEAD:
-			return parseRule(rule.elements[0], input, position, tree);
 		case CAPTURE:
 			return parseCapture(rule, input, position, tree);
 		default:
@@ -101,31 +98,55 @@ public final class Parser {
 		return end;
 	}
 
-	private static int parseSequence(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	private static int parseSequence(Rule rule, ByteBuffer input, int p0, ParseTree tree) {
 		final int elems = rule.elements.length;
-		int end = position;
-		int decisionIndex = elems+1;
+		int p = p0;
+		final int pE = input.limit(); 
+		boolean decided = false;
+		int pL = Integer.MAX_VALUE;
 		for (int i = 0; i < elems; i++) {
 			Rule r = rule.elements[i];
-			if (r == Rule.DECISION) {
-				decisionIndex = i;
-			} else {
-				int endPosition = parseRule(r, input, end, tree);
-				if (endPosition < 0) {
-					if (decisionIndex <= i) {
-						tree.erase(end);
-						throw new ParseException(input, end, endPosition, tree);
+			switch (r.type) {
+			case DECISION:
+				decided = true; break;
+			case LOOKAHEAD:
+				pL = p; break; // the end of the previous rule is the result
+			case CAPTURE:
+			case FILL:
+				boolean capture = r.type == RuleType.CAPTURE;
+				if (r.type == RuleType.FILL || (capture && r.elements[0].type == RuleType.FILL)) {
+					if (capture) {
+						tree.push(r, p);
 					}
-					tree.erase(position);
-					return endPosition;
+					Rule rF = rule.elements[i+1];
+					while (p < pE && parseRule(rF, input, p, tree) < 0) { p++; }
+					if (p >= pE) {
+						if (capture) {
+							tree.pop();
+						}
+						return mismatch(pE);
+					}
+					if (capture) {
+						tree.done(p);
+					} else {
+						tree.erase(p);
+					}
+					break;
+				} // fall through from capture that does not wrap fill
+			default:
+				int pN = parseRule(r, input, p, tree);
+				if (pN < 0) {
+					if (decided) {
+						tree.erase(p);
+						throw new ParseException(input, p, pN, tree);
+					}
+					tree.erase(p0);
+					return pN;
 				}
-				if (r.type == RuleType.LOOKAHEAD) { // we know it is the last rule
-					return end; // the end of the previous rule is the result
-				}
-				end = endPosition;
+				p = pN;
 			}
 		}
-		return end;
+		return min(p, pL);
 	}
 
 	private static int parseRepetition(Rule rule, ByteBuffer input, int position, ParseTree tree) {

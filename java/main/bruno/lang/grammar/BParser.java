@@ -28,7 +28,6 @@ public class BParser {
 	 */
 	private static int read(int p0, ByteBuffer data, int r0, ByteBuffer lang, BParseTree tree) {
 		byte op = lang.get(r0);
-		System.out.println(String.format("p0: %3d  r0: %3d => op: %3d [%s]", p0, r0, op, Character.valueOf((char) op)));
 		final int pE = data.limit();
 		int p = p0; // "current" position pointer 
 		switch (op) {
