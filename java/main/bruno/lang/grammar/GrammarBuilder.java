@@ -67,7 +67,7 @@ public final class GrammarBuilder {
 			rule = deduplicateLiterals(rule, literals, followed); followed.clear();
 			rule = resolveIncludes(rule, rules, followed); followed.clear();
 			rule = unwrapSingleElements(rule, followed); followed.clear();
-			rule = flattenNestedSequences(rule, followed); followed.clear();
+			//rule = flattenNestedSequences(rule, followed); followed.clear();
 			rule = compactCharsets(rule, followed);
 			namedRules[i] = rule;
 		}		
@@ -86,9 +86,7 @@ public final class GrammarBuilder {
 		if (rule.type == RuleType.SEQUENCE) {
 			ArrayList<Rule> elems = new ArrayList<>(rule.elements.length);
 			for (Rule e : rule.elements) {
-				if (e.type == RuleType.FILL || e.type == RuleType.CAPTURE && e.elements[0].type == RuleType.FILL) {
-					return rule; // this gets messy otherwise
-				} else if (e.type != RuleType.SEQUENCE || e.isDecisionMaking()) {
+				if (e.type != RuleType.SEQUENCE || e.isDecisionMaking()) {
 					elems.add(e);
 				} else {
 					elems.addAll(Arrays.asList(e.elements)); // FIXME this is just 1 level not recursive

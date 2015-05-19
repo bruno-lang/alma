@@ -34,6 +34,6 @@ public class TestParser {
 	/**
 	 * A minimal grammar for just comments to test completion feature.
 	 */
-	static final Grammar COMMENTS = Alma.make("-grammar=comment+-comment='%'~@text[{10}]-".getBytes());
+	static final Grammar COMMENTS = Alma.make("-grammar=comment+ -comment='%' ~@text [{10}]".getBytes());
 
 }

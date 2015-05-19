@@ -7,7 +7,6 @@ import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WRAP;
 import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WS;
 import static bruno.lang.grammar.Grammar.Rule.charset;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
-import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOf;
 
 import java.io.IOException;
@@ -19,11 +18,11 @@ import bruno.lang.grammar.Grammar.Rule;
 import bruno.lang.grammar.Grammar.RuleType;
 
 /**
- * alma interpreter v1.0
+ * binary alma interpreter v1.0
  * 
  * @author jan
  */
-final class Alma {
+final class BAlma {
 
 	static final class Registers {
 
@@ -36,12 +35,15 @@ final class Alma {
 		byte[] str = new byte[256]; int str_len = 0;
 
 		// composition state
-		CharacterSet charset = CharacterSet.EMPTY;
-		Rule rule;
-		Rule[] seq = new Rule[256]; int seq_len = 0;
-		Rule[] alt = new Rule[256]; int alt_len = 0;
-		Rule[] idx = new Rule[512]; int idx_len = 0;
+		byte[][] words;
+		// + index pointers to current rule, seq, opt, ...
+		int cur = 0;
+		int seq = -1;
+		int alt = -1; // TODO name opt 
+		int idx = -1; // TODO name cap
+		int ref = -1; // index from end of words backwards containing yet unresolved refereces 
 		
+		CharacterSet charset = CharacterSet.EMPTY;
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -63,7 +65,7 @@ final class Alma {
 		for (byte[] code : codes) {
 			defMode(code, 0, reg);
 		}
-		return new Grammar(GrammarBuilder.finish(copyOf(reg.idx, reg.idx_len)));
+		return null; // new Grammar(GrammarBuilder.finish(copyOf(reg.idx, reg.idx_len)));
 	}
 	
 	/* MODES */
@@ -84,7 +86,7 @@ final class Alma {
 			case '='  : 
 				String name = new String(reg.str, 0, reg.str_len);
 				reg.str_len = 0;
-				pos = ruleMode(code, pos+1, reg);
+				pos = codeMode(code, pos+1, reg);
 				pushToIdx(name, reg);
 				break;
 			default:
@@ -99,7 +101,7 @@ final class Alma {
 		return pos;
 	}
 	
-	public static int ruleMode(byte[] code, int pos, Registers reg) {
+	public static int codeMode(byte[] code, int pos, Registers reg) {
 		while (pos < code.length) {
 			byte opcode = code[pos];
 			switch (opcode) {
@@ -111,36 +113,36 @@ final class Alma {
 			// modes:
 			case '-' : return pos;
 			case '%' : pos = commentMode(code, pos+1); break; 
-			case '\'': pos = literalMode(code, pos+1, reg); appendToSeqAndSet(makeLiteral(reg), reg); break;
-			case '[' : pos = charsetMode(code, pos+1, reg); appendToSeqAndSet(makeCharset(reg), reg); break;
-			case '\\': pos = textMode(code, pos+1, reg);    appendToSeqAndSet(lookup(reg, true), reg); unpack(reg); break;
-			case '{' : pos = rangeMode(code, pos+1, reg); modOccur(reg.low, reg.high, reg); resetNumeric(reg); break;
-			case '@' : pos = textMode(code, pos+1, reg); modName(reg); break;
+			case '\'': pos = literalMode(code, pos+1, reg); pushToSeq(makeLiteral(reg), reg); break;
+			case '[' : pos = charsetMode(code, pos+1, reg); pushToSeq(makeCharset(reg), reg); break;
+			case '{' : pos = rangeMode(code, pos+1, reg); occur(reg.low, reg.high, reg); resetNumeric(reg); break;
+			case '\\': pos = textMode(code, pos+1, reg); pushToSeq(lookup(reg, true), reg); unpack(reg); break;
+			case '@' : pos = textMode(code, pos+1, reg); rename(reg); break;
 			// repetition:
-			case '?' : modOccur(0, 1, reg); break;
-			case '*' : modOccur(0, Occur.MAX_OCCURANCE, reg); break;
-			case '+' : modOccur(1, Occur.MAX_OCCURANCE, reg); break;
+			case '?' : occur(0, 1, reg); break;
+			case '*' : occur(0, Occur.MAX_OCCURANCE, reg); break;
+			case '+' : occur(1, Occur.MAX_OCCURANCE, reg); break;
 			// whitespace:
-			case ',' : appendToSeqAndSet(pattern(MAY_BE_INDENT),  reg); break;
-			case '.' : appendToSeqAndSet(pattern(MAY_BE_WS),      reg); break;
-			case ';' : appendToSeqAndSet(pattern(MUST_BE_INDENT), reg); break;
-			case ':' : appendToSeqAndSet(pattern(MUST_BE_WS),     reg); break;
-			case '!' : appendToSeqAndSet(pattern(MUST_BE_WRAP),   reg); break;
+			case ',' : pushToSeq(pattern(MAY_BE_INDENT),  reg); break;
+			case '.' : pushToSeq(pattern(MAY_BE_WS),      reg); break;
+			case ';' : pushToSeq(pattern(MUST_BE_INDENT), reg); break;
+			case ':' : pushToSeq(pattern(MUST_BE_WS),     reg); break;
+			case '!' : pushToSeq(pattern(MUST_BE_WRAP),   reg); break;
 			// groups:
 			case '(' : pos = group(code, pos+1, reg); break;
 			case ')' : return pos; // done with this sub-group call
 			// functions:
-			case '~' : appendToSeqAndSet(Rule.fill(), reg); break;
-			case '<' : appendToSeqAndSet(Rule.decision(), reg); break;
-			case '>' : appendToSeqAndSet(Rule.lookahead(), reg); break;
-			case '|' : appendToAlt(reg); break;
-			case '^' : setExcludeCharset(reg); break;
-			case '&' : reg.charset = reg.rule.charset; reg.rule = null; break;
+			case '~' : pushToSeq(Rule.fill(), reg); break;
+			case '<' : pushToSeq(Rule.DECISION, reg); break;
+			case '|' : pushToAlt(reg); break;
+			case '>' : lookahead(reg); break;
+			case '^' : excludeCharset(reg); break;
+			case '&' : and(reg); break;
 			// illegal:
 			default  : 
 				if (isAlphanumeric(opcode)) {
 					pos = textMode(code, pos, reg);
-					appendToSeqAndSet(lookup(reg, true), reg);
+					pushToSeq(lookup(reg, true), reg);
 				} else {
 					illegalOp("code", pos, opcode);
 				}
@@ -154,7 +156,7 @@ final class Alma {
 	 * <pre>[ ... ]</pre> 
 	 */
 	public static int charsetMode(byte[] code, int pos, Registers reg) {
-		appendToSeqAndSet(null, reg);
+		pushToSeq(null, reg);
 		while (pos < code.length) {
 			final byte opcode = code[pos];
 			switch (opcode) {
@@ -306,52 +308,56 @@ final class Alma {
 	 * @return the position after the group
 	 */
 	private static int group(byte[] code, int pos, Registers reg) {
-		appendToSeqAndSet(null, reg);
-		Rule[] seq = copyOf(reg.seq, reg.seq_len);
-		Rule[] alt = copyOf(reg.alt, reg.alt_len);
-		reg.alt_len = 0;
-		reg.seq_len = 0;
-		pos = ruleMode(code, pos, reg);
-		// pack and restore:
-		// 1. push rule to seq, push seq to alt (if needed)
-		appendToSeqAndSet(null, reg);
-		if (reg.alt_len == 0 && reg.seq_len == 0) {
-			return pos; // nothing added - fine
-		}
-		Rule groupSeq = reg.seq_len == 1 ? reg.seq[0] : Rule.seq(copyOf(reg.seq, reg.seq_len));
-		arraycopy(seq, 0, reg.seq, 0, seq.length); // restore seq
-		reg.seq_len = seq.length;
-		if (reg.alt_len == 0) { // just a sequence
-			reg.rule = groupSeq;
-		} else { // multiple alternatives in the group 
-			reg.alt[reg.alt_len++] = groupSeq;
-			Rule groupAlt = Rule.alt(copyOf(reg.alt, reg.alt_len));
-			reg.rule = groupAlt;
-		}
-		arraycopy(alt, 0, reg.alt, 0, alt.length); // restore alt
-		reg.alt_len = alt.length;
+//		pushToSeq(null, reg);
+//		Rule[] seq = copyOf(reg.seq, reg.seq_len);
+//		Rule[] alt = copyOf(reg.alt, reg.alt_len);
+//		reg.alt_len = 0;
+//		reg.seq_len = 0;
+//		pos = codeMode(code, pos, reg);
+//		// pack and restore:
+//		// 1. push rule to seq, push seq to alt (if needed)
+//		pushToSeq(null, reg);
+//		if (reg.alt_len == 0 && reg.seq_len == 0) {
+//			return pos; // nothing added - fine
+//		}
+//		Rule groupSeq = reg.seq_len == 1 ? reg.seq[0] : Rule.seq(copyOf(reg.seq, reg.seq_len));
+//		arraycopy(seq, 0, reg.seq, 0, seq.length); // restore seq
+//		reg.seq_len = seq.length;
+//		if (reg.alt_len == 0) { // just a sequence
+//			reg.rule = groupSeq;
+//		} else { // multiple alternatives in the group 
+//			reg.alt[reg.alt_len++] = groupSeq;
+//			Rule groupAlt = Rule.alt(copyOf(reg.alt, reg.alt_len));
+//			reg.rule = groupAlt;
+//		}
+//		arraycopy(alt, 0, reg.alt, 0, alt.length); // restore alt
+//		reg.alt_len = alt.length;
 		return pos;
 	}
 
 	private static void pushToIdx(String name, Registers reg) {
-		appendToAlt(reg);
-		Rule r = Rule.alt(copyOf(reg.alt, reg.alt_len));
-		if (r.elements.length == 1 && r.type == RuleType.ALTERNATIVES) { // unfold alternative of length 1
-			r = r.elements[0];
-		}
-		if (r.elements.length == 1 && r.type == RuleType.SEQUENCE) { // unfold sequence of length 1
-			r = r.elements[0];
-		}
-		reg.idx[reg.idx_len++] = r.is(name);
-		reg.seq_len = 0;
-		reg.alt_len = 0;
+//		pushToAlt(reg);
+//		Rule r = Rule.alt(copyOf(reg.alt, reg.alt_len));
+//		if (r.elements.length == 1 && r.type == RuleType.ALTERNATIVES) { // unfold alternative of length 1
+//			r = r.elements[0];
+//		}
+//		if (r.elements.length == 1 && r.type == RuleType.SEQUENCE) { // unfold sequence of length 1
+//			r = r.elements[0];
+//		}
+//		reg.idx[reg.idx_len++] = r.is(name);
+//		reg.seq_len = 0;
+//		reg.alt_len = 0;
 	}
 
-	private static void appendToAlt(Registers reg) {
-		appendToSeqAndSet(null, reg); // complete current sequence
-		reg.alt[reg.alt_len++] = reg.seq_len == 1 ? reg.seq[0] : Rule.seq(copyOf(reg.seq, reg.seq_len));
-		reg.seq_len = 0;
+	private static void pushToAlt(Registers reg) {
+//		pushToSeq(null, reg); // complete current sequence
+//		reg.alt[reg.alt_len++] = reg.seq_len == 1 ? reg.seq[0] : Rule.seq(copyOf(reg.seq, reg.seq_len));
+//		reg.seq_len = 0;
 	}	
+	
+	private static void lookahead(Registers reg) {
+//		reg.rule = Rule.lookahead(reg.rule);
+	}
 	
 	private static void resetNumeric(Registers reg) {
 		reg.low = 0;
@@ -359,17 +365,17 @@ final class Alma {
 		reg.isHigh = false;
 	}
 	
-	private static void modName(Registers reg) {
-		reg.rule = reg.rule.as(new String(copyOf(reg.str, reg.str_len)));
-		reg.str_len = 0;
+	private static void rename(Registers reg) {
+//		reg.rule = reg.rule.as(new String(copyOf(reg.str, reg.str_len)));
+//		reg.str_len = 0;
 	}
 	
 	private static void unpack(Registers reg) {
-		if (reg.rule.type == RuleType.INCLUDE) {
-			reg.rule = reg.rule.subst();
-		} else {
-			reg.rule = reg.rule.elements[0];
-		}
+//		if (reg.rule.type == RuleType.INCLUDE) {
+//			reg.rule = reg.rule.subst();
+//		} else {
+//			reg.rule = reg.rule.elements[0];
+//		}
 	}
 	
 	private static Rule makeLiteral(Registers reg) {
@@ -403,20 +409,24 @@ final class Alma {
 		reg.str_len = 0;
 		return t;
 	}
+
+	private static void and(Registers reg) {
+//		reg.charset = reg.rule.charset; reg.rule = null;		
+	}
 	
-	private static void modOccur(int min, int max, Registers reg) {
-		reg.rule = reg.rule.occurs(Occur.occur(min, max));
+	private static void occur(int min, int max, Registers reg) {
+//		reg.rule = reg.rule.occurs(Occur.occur(min, max));
 	}
 	
 	/**
 	 * appends current rule to current sequence and makes the argument rule the
 	 * new current rule.
 	 */
-	private static void appendToSeqAndSet(Rule rule, Registers reg) {
-		if (reg.rule != null) {
-			reg.seq[reg.seq_len++] = reg.rule;
-		}
-		reg.rule = rule;
+	private static void pushToSeq(Rule rule, Registers reg) {
+//		if (reg.rule != null) {
+//			reg.seq[reg.seq_len++] = reg.rule;
+//		}
+//		reg.rule = rule;
 	}	
 	
 	private static Rule lookup(Registers reg, boolean referenceIfUnknown) {
@@ -426,20 +436,25 @@ final class Alma {
 	}
 
 	private static Rule lookup(String name, Registers reg, boolean include) {
-		for (int i = 0; i < reg.idx_len; i++) {
-			Rule r = reg.idx[i];
-			if (name.equals(r.name)) {
-				return r;
-			}
-		}
+//		for (int i = 0; i < reg.idx_len; i++) {
+//			Rule r = reg.idx[i];
+//			if (name.equals(r.name)) {
+//				return r;
+//			}
+//		}
 		if (include) {
 			return Rule.include(name);
 		}
 		throw new NoSuchElementException("`"+name+"`");
 	}
 	
-	private static void setExcludeCharset(Registers reg) {
-		reg.rule = Rule.charset(reg.rule.charset.not());
+	private static void excludeCharset(Registers reg) {
+		if (reg.words[reg.cur][0] != '_') {
+			throw new IllegalArgumentException("not a charset");
+		}
+		for (int i = 2; i < 10; i++) {
+			reg.words[reg.cur][i] = (byte) ~reg.words[reg.cur][i];
+		}
 	}
 
 	private static void and(CharacterSet other, Registers reg) {

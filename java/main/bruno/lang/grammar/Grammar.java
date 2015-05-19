@@ -72,9 +72,11 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		private static final byte[] NO_LITERAL = new byte[0];
 
 		public static final Rule DECISION = new Rule(RuleType.DECISION, false, "", new Rule[0], Occur.ONCE, NO_LITERAL, null, null);
+		public static final Rule LOOKAHEAD = new Rule(RuleType.LOOKAHEAD, false, "", new Rule[0], Occur.ONCE, NO_LITERAL, null, null);
+		public static final Rule FILL = new Rule(RuleType.FILL, false, "", new Rule[0], Occur.ONCE, NO_LITERAL, null, null);
 
-		public static Rule lookahead(Rule ahead) {
-			return new Rule(RuleType.LOOKAHEAD, false, "", new Rule[] { ahead }, Occur.ONCE, NO_LITERAL, null, null);
+		public static Rule lookahead() {
+			return LOOKAHEAD; 
 		}
 
 		public static Rule decision() {
@@ -82,7 +84,7 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		}
 		
 		public static Rule fill() {
-			return new Rule(RuleType.FILL, false, "", new Rule[1], Occur.ONCE, NO_LITERAL, null, null);
+			return FILL;
 		}
 
 		public static Rule include(String name) {
@@ -94,7 +96,6 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		}
 
 		public static Rule seq(Rule...elements) {
-			complete(elements);
 			return new Rule(RuleType.SEQUENCE, false, "", elements, Occur.ONCE, NO_LITERAL, null, null);
 		}
 
@@ -156,17 +157,6 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 				return this;
 			return new Rule(RuleType.REPETITION, false, "", new Rule[] { this }, occur, NO_LITERAL, null, null);
 		}
-		
-		private static void complete(Rule[] elements) {
-			for (int i = 0; i < elements.length-1; i++) {
-				RuleType t = elements[i].type;
-				if (t == RuleType.FILL) {
-					elements[i].elements[0] = elements[i+1];
-				} else if (t == RuleType.CAPTURE && elements[i].elements[0].type == RuleType.FILL) {
-					elements[i].elements[0].elements[0] = elements[i+1];
-				}
-			}
-		}		
 
 		@Override
 		public String toString() {
@@ -212,7 +202,7 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 			case FILL:
 				return "~";
 			case LOOKAHEAD:
-				return "("+elements[0].toString(root, rules)+")>";
+				return ">";
 			case ALTERNATIVES: {
 				StringBuilder b = new StringBuilder();
 				for (int i = 0; i<  elements.length; i++) {

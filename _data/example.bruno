@@ -6,11 +6,13 @@
 	family T :: _
 	family E :: _
 
+	concept Set :: = { contains }
+
 	fn foo :: ({([T], E[*])} e -> E) = x
 
-	op cons `+` :: ([T] l -> E e -> [T])
+	op cons `+ :: ([T] l -> E e -> [T])
 	
-	fn div `/` :: Int a -> Int b -> Int!		
+	fn div `/ :: Int a -> Int b -> Int!		
 		= a
 
 	data Float :: Number{-2e18..+2e18}
@@ -21,7 +23,7 @@
 	
 	data Bool :: () { False | True }
 
-	data Bit :: () { Zero = `0 | One = `1 }
+	data Bit :: () { Zero = ^0 | One = ^1 }
 	
 	data Seconds :: Time
 
@@ -35,7 +37,7 @@
 	data Year :: Int & (Digit Digit Digit Digit)
 	
 	data Point 		:: (x: X-,y: Y-) 
-	with "Point" 	:: Lit & (X- ':' Y-)
+	with "Point" 	:: (X- ':' Y-)
 	
 	data Points :: [Point]
 	
@@ -81,8 +83,8 @@
 	data Sign :: Char{'+'|'-'}
 	
 	data Time :: Int
-	data Days :: `relative Time 
-	data DayOfMonth :: `absolute Time
+	data Days `relative :: Time 
+	data DayOfMonth `absolute :: Time
 	
 	family E :: _
 
@@ -107,7 +109,7 @@
 	family A :: _
 	family B :: _
 
-	fn lazy :: (A -> P -> B) f -> A v -> P p -> >B
+	fn lazy :: (A -> P -> B) f -> A v -> P p -> () -> B
 	    = () -> (a f p)
         
         
@@ -127,10 +129,10 @@
 	data Coordinate :: Int & Bit[32]
 	data X-Coordinate :: Coordinate
 	data Y-Coordinate :: Coordinate
-	data Point :: (x: X-Coordinate, y:Y-Coordinate) 
-				& (X-Coordinate; Y-Coordinate)
-	with "Point" :: Lit & (X-Coordinate ':' Y-Coordinate)
-	data Points :: [Point]
+	data Point   :: (x: X-Coordinate, y:Y-Coordinate) 
+				  & (X-Coordinate; Y-Coordinate)
+	with "Point" :: (X-Coordinate ':' Y-Coordinate)
+	data Points  :: [Point]
 	
 	fn move :: Point p -> Int dx -> Int dy -> Point
 		= (p `x + dx, p `y + dy)
@@ -141,17 +143,23 @@
 	data String :: [Char]
 	data Octal :: Char[8]
 	
-	family T :: _
-	family S :: T
-	fn specialise `+>` :: T value -> $S type -> S 
-		= (`ast `specialise ?value ?type) 
+	family G  :: _
+	family T1 :: G
+	family T2 :: G
+	sub specialise `+> :: T1 value -> T2 
+		= (`ast `specialise ?value T2) 
+	% instead of explicitly passing the target type it is used implicitly 
+	through use of type families. also this illustrates well that 
+	both T1 and T2 share a common generalisation G %
 	
 	data Bla :: String = """
 	
 something very long with "quotes" in it; also having empty double quotes "" 
 or even source code like 
 
-	fn foo :: (A a -> B) = a bar
+	fn foo :: (A a -> B) = a bar and also ?variables or ^constants or `atoms
+
+    can be contained in a multiline string.
   
 	"""
 	
@@ -164,7 +172,10 @@ or even source code like
 	fn map :: [A] l -> (A -> B) fn -> [B] = "XXX"
 	fn singleton :: A v -> {A} = {v}
 	
-	data Setify :: ([A] -> [{A}]) = (_ map singleton)
+	fn setify :: ([A] -> [{A}]) = (_ map singleton)
+	
+	family L :: *
+	fn setify :: (A[L] -> {A}[L]) = (_ map singleton)
 	
 	data SomeTHING :: () = `some-thing
 	
@@ -177,7 +188,7 @@ or even source code like
 		
 	data Array2D :: Int[2][2]
 	
-	fn plus `+` :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
+	fn plus `+ :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
 	
 	fn partially-ast-impl :: Some a -> Thing =
 		(`ast baz) | case-a
@@ -214,7 +225,7 @@ or even source code like
 	fn call-side-inline :: E[1-*] one -> E[1-*] other -> Bool
 		= one\last == other\last
 		
-	proc assoc `=>` :: K key -> V value -> (K, V) = (key, value)
+	sub assoc `=> :: K key -> V value -> (K, V) = (key, value)
 	
 	family E :: _
 	fn at :: E[<*>] s -> Index i -> Int = (`ast `get ?s ?i)
@@ -293,7 +304,7 @@ or even source code like
 	where
 		channel: T]>] = each channel	
 		
-	proc send? `>|>` :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
+	sub send? `>|> :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
 		= res
 		where
 		  res
@@ -323,7 +334,7 @@ or even source code like
 	fn numbers! :: Foo f -> Bar
 		= [1/2 1.2/4]
 		
-	fn force-plus `+!` :: Int! a -> Int b -> Int!
+	fn force-plus `+! :: Int! a -> Int b -> Int!
 		= (`ast (`add ?a ?b))
 		
 	% Shapes %
@@ -361,15 +372,13 @@ or even source code like
 	
 	family R :: _[<]
 	family W :: _[>]
+	family M :: _[!*]
 	
 	family M :: _?
 	family E :: _!
 	family P :: _*
 	
-	family T :: $_
-	family L :: >_
 	family K :: @_	
-	
 	family I :: #_
 	
 	family E :: _ as Stack, Collection
@@ -380,11 +389,11 @@ or even source code like
 		
 	data Point   :: (x: Coordinate, y: Coordinate) 
 	              & (Coordinate; Coordinate)
-	with "Point" :: (Coordinate ':' Coordinate) & Lit
+	with "Point" :: (Coordinate ':' Coordinate)
 	with Point[] :: (Coordinate[*], Coordinate[*])
 	            
 	data Minutes   :: Time 
-	with "Minutes" :: Lit & (Digits 'min')
+	with "Minutes" :: (Digits 'min')
 	
 	data Era :: Date = 1970-01-01
 	
@@ -398,13 +407,13 @@ or even source code like
 	fn slice   :: E[L-*] array -> Int{L} length -> E[<L>] = ?
 	fn slice   :: E[L-*] array -> Int{L} length -> Int start -> E[<L>] = ?
 	
-	data Time :: `dimension Int{0..}
+	data Time `dimension :: Int{0..}
 	
-	data Minutes   :: `unit Time 
-	with "Minutes" :: Lit & (Digits "min")
+	data Minutes `unit   :: Time 
+	with "Minutes"       :: (Digits "min")
 	
-	data Seconds   :: `unit Time 
-	with "Seconds" :: Lit & (Digits "sec")
+	data Seconds `unit   :: Time 
+	with "Seconds"       :: (Digits "sec")
 
 	data Planet :: (weight: Kilograms, radius: Meters) 
 		{  Mercury = (3.303e+23kg, 2.4397e6m)
@@ -422,7 +431,7 @@ or even source code like
 	data Exp :: Int = 2^27 - 1
 	
 	data Bit   :: () { ^0 | ^1 }
-	data S-Bit :: Bit { Positive | Negative }
+	data S-Bit :: Bit { ^+ | ^- }
 	data M-Bit :: Bit
 
 	data Byte  :: M-Bit[8]
@@ -431,22 +440,22 @@ or even source code like
 	
 	data Int   :: Word & Bit[1-32]
 
-	data Coefficient :: Int  & Bit[56] & (S-Bit;M-Bit[55])
+	data Coefficient :: Int  & Bit[56] & (S-Bit M-Bit[55])
 	data Exponent    :: Int  & Byte
 	data Dec         :: Word & (Coefficient Exponent)
 
-	data Numerator   :: Int  & Bit[32] & (S-Bit; M-Bit[31])
+	data Numerator   :: Int  & Bit[32] & (S-Bit M-Bit[31])
 	data Denominator :: Int  & M-Bit[32]
 	data Frac        :: Word & (Numerator Denominator)
 	
-	data Next      :: Byte & (^1 MBit[7])
-	data Null      :: Byte & (^0 MBit[7])
-	data CharCode  :: Byte[1-4] & (Next[0-3] Null)
-	data String    :: Byte[0-*] & CharCode[0-*]
+	data Next        :: Byte & (^1 MBit[7])
+	data Null        :: Byte & (^0 MBit[7])
+	data CharCode    :: Byte[1-4] & (Next[0-3] Null)
+	data String      :: Byte[0-*] & CharCode[0-*]
 
-	data Char      :: Int{0..0xFFFF} & M-Bit[32]
+	data Char        :: Int{0..0xFFFF} & M-Bit[32]
 
-	data Text      :: String	
+	data Text        :: String	
 	
 	fn signum :: Relation v -> Int =
 		-1 | v is Less
@@ -454,7 +463,7 @@ or even source code like
 		0  | _
 	
 	family B :: Bool
-	fn or `||` :: B a -> B b -> B = (`ast `or ?a ?b)
+	fn or `|| :: B a -> B b -> B = (`ast `or ?a ?b)
 		
 	data ADT :: Byte[*] & (Ok, Data)+(Error, Text)
 	data ADT :: Byte[*] & (status:Ok, data:Page)+(status:Error, Text)
@@ -586,15 +595,15 @@ or even source code like
 	family E :: _
 	family L :: [E]
 	
-	op cons :: L -> E -> L
-	op append :: L l -> E e -> L
-	op concat :: L l -> L other -> L
-	op take :: L l -> Count c -> L
-	op drop :: L l -> Count c -> L
-	op remove :: L l -> Index i -> L
-	op insert :: L l -> Index i -> L
-	op at :: L l -> Index i -> E?
-	op slice :: L l -> Index from -> Index to -> L
+	op cons   :: L -> E e -> L
+	op append :: L -> E e -> L
+	op concat :: L -> L other -> L
+	op take   :: L -> Count c -> L
+	op drop   :: L -> Count c -> L
+	op remove :: L -> Index i -> L
+	op insert :: L -> Index i -> L
+	op at     :: L -> Index i -> E?
+	op slice  :: L -> Index from -> Index to -> L
 	
 	concept List :: = {force, cons, append, concat, take, 
 	                                    drop, remove, insert, at, slice}
@@ -607,7 +616,7 @@ or even source code like
 		1. notify master-control || something else
 		.. Recover : m
 		
-	fn manual :: Byte[@1024] mem -> X = ? 
+	fn manual :: Byte[!1024] mem -> X = ? 
 	
 	fn map :: [A] l -> (A -> B) a-a' -> B = ?
 	

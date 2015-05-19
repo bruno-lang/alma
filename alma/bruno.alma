@@ -1,8 +1,6 @@
 % bruno (alma version) %
 
 % Type Variant Symbols %
--TypeOf       = '$'
--LazyOf       = '>'
 -KeyOf        = '@'
 -Optional     = '?'
 -Faulty       = '!'
@@ -16,7 +14,7 @@
 -Key          = \KeyOf [Zs ',']^ [s ',{}()[]']^*
 -Variable     = '?' [zZ9 '-_' ]+
 -TypeVariable = \Z \9?
--Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' \9+@NUM
+-Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' ['+-'9] \9*
 -Verb         = \z [z9 '-']* [z9]? ['?!' \apostrophe]?
 -name         = Key | Noun
 
@@ -32,10 +30,9 @@
 
 % Types %
 -variant      = [\Faulty \Optional \Transient]
--indirection  = [\TypeOf \LazyOf \KeyOf]
 
 -dimension    = manualType | sliceType | channelType | arrayType
--manualType   = '[@' < scalarType ']'
+-manualType   = '[!' < scalarType ']'
 -sliceType    = '[<' \lengthType < '>]'
 -channelType  = ['[]'] ['<>']{1-2} < ['[]']
 -arrayType    = '[' Noun ']' | '[' < \lengthType ']'
@@ -50,7 +47,7 @@
 -type         = shape | \complexType
 -complexType  = sumType ( . '&' . sumType)*
 -sumType      = (. '+' ,)? fullType (. '+' , fullType)*
--fullType     = indirection? \kind dimension* variant?
+-fullType     = \KeyOf? \kind dimension* variant?
 -kind         = Wildcard  | ordinalType | listType   | setType | fnType
               | tupleType | namedType   | lengthType | TypeVariable
 -namedType    = Noun subrange?
@@ -78,8 +75,8 @@
 -fault        = 'fault' < ; Noun , '::' . namedType !
 
 % Data %
--ratio        = 'ratio' < ; Noun , '::' . literal , '=' , literal !
--data         = 'data' < ; \name , '::' . attrs type enumeration? with* init? !
+-ratio        = 'ratio' < ; Noun, '::' . literal , '=' , literal !
+-data         = 'data' < ; \name, attrs '::' . type enumeration? with* init? !
 -with         = . 'with' < ; ('"' Noun '"' | Noun '[]' ) , '::' . type
 -enumeration  = . '{' < . constants . '}'
 -constants    = constant ( . '|' < . constant )*
@@ -87,7 +84,7 @@
 -init         = . '=' < . (Open | expr)
 
 % Functions %
--fn           = ('fn' | 'proc' )< ;  \operational , '::' . inout? . '=' . impl
+-fn           = ('fn' | 'sub' )< ;  Verb, attrs '::' . inout? . '=' . impl
 -inout        = \descriptor | '(' < , \descriptor , ')'
 -descriptor   = ( param , '->' , )+ type
 -param        = type ; Verb@NAME?
@@ -113,13 +110,12 @@
               | Variable | Operator | Verb | Noun | TypeVariable
 
 % Abstract Data Types %
--op           = 'op'      < ; \operational ,  '::' . Verb? . inout
+-op           = 'op'      < ; Verb, attrs '::' . Verb? . inout
 -concept      = 'concept' < ; \parametrised , '::' . '=' , '{' . Verb . (',' . Verb .)* '}'
 -family       = 'family'  < ; TypeVariable , attrs '::' . type as? with_ops?
 -as           = . 'as' , \parametrised ( , ',' , \parametrised)*
 -with_ops     = . 'with' , Verb@OP ( , ',' , Verb@OP)*
 -parametrised = Noun (; TypeVariable)*
--operational  = Verb , ('`' Operator '`')?
 
 % Processes %
 -when         = ('when' | 'on') < ; Noun , '::' . inout . (effect !)* . then . where?

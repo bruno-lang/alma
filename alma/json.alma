@@ -5,7 +5,7 @@
 -member  = name . ':' . json
 -array   = '['< . \elements? . ']'
 -elements= json ( . ',' . json)*
--string  = '"' ~ '"'
+-string  = '"' ('\'\_ | ['"']^)* '"'
 -number  = ['-+']? \9* ('.' \9*)?
 -bool    = 'true' | 'false'
 -null    = 'null'

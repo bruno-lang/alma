@@ -7,6 +7,7 @@
 *.aux
 *.log
 *.synctex.gz
+*.*~
 
 bin/
 target/

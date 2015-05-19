@@ -178,14 +178,30 @@ public class TestBParser {
 	public void captureLiteral() {
 		ByteBuffer lang = lang(
 				literal("abc"),
-				capture(2, "name"));
+				capture(0, "name"));
 		BParseTree tree = new BParseTree(lang, 10);
 		BParser.parse(0, wrap("abc".getBytes()), 32, lang, tree);
 		assertEquals(1, tree.count());
 		assertEquals(0, tree.start(0));
 		assertEquals(3, tree.end(0));
 		assertEquals(32, tree.rule(0));
-		assertEquals("name 0-3", tree.toString());
+		assertEquals("name 0-3\n", tree.toString());
+	}
+	
+	@Test
+	public void captureNested() {
+		ByteBuffer lang = lang(
+				literal("abc"),
+				capture(0, "name"),
+				literal("def"),
+				capture(2, "value"),
+				sequence(1,3),
+				capture(4, "pair")
+				);
+		BParseTree tree = new BParseTree(lang, 10);
+		BParser.parse(0, wrap("abcdef".getBytes()), 160, lang, tree);
+		assertEquals(3, tree.count());
+		assertEquals("pair 0-6\n name 0-3\n value 3-6\n", tree.toString());
 	}
 
 	private static ByteBuffer lang(byte[]...words) {
@@ -200,6 +216,7 @@ public class TestBParser {
 		byte[] b = new byte[32];
 		b[0] = '=';
 		b[1] = (byte) (name.length()+2);
+		ByteBuffer.wrap(b).putShort(2, (short) what);
 		for (int i = 0; i < name.length(); i++) {
 			b[i+4] = (byte) name.charAt(i);
 		}

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import bruno.lang.grammar.print.Print;
@@ -29,10 +30,14 @@ public class TestAlma {
 		Print.highlighter(System.out).print(example);
 	}
 	
+	/**
+	 * just used manually to roughly check performance (file from http://mtgjson.com/)
+	 */
 	@Test
+	@Ignore
 	public void jsonHuge() throws IOException {
 		Grammar json = Alma.make("alma/prelude.alma", "alma/json.alma");
-		IndexOverlayedFile example = IndexOverlayedFile.read("../../../huge.json", json, "file");
+		IndexOverlayedFile example = IndexOverlayedFile.read("/home/jan/Downloads/AllSets.json", json, "file");
 		assertNotNull(example);
 	}
 	
