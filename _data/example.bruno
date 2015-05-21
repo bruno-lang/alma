@@ -12,7 +12,7 @@
 
 	op cons `+ :: ([T] l -> E e -> [T])
 	
-	fn div `/ :: Int a -> Int b -> Int!		
+	fn div `/ :: (Int a -> Int b -> Int!)		
 		= a
 
 	data Float :: Number{-2e18..+2e18}
@@ -36,8 +36,8 @@
 	
 	data Year :: Int & (Digit Digit Digit Digit)
 	
-	data Point 		:: (x: X-,y: Y-) 
-	with "Point" 	:: (X- ':' Y-)
+	data Point 	:: (x: X-,y: Y-) 
+	io   Point  :: (X- ':' Y-)
 	
 	data Points :: [Point]
 	
@@ -51,29 +51,29 @@
 	  b
 		
 		
-	fn quicksort :: [T] list -> [T] =
+	fn quicksort :: ([T] list -> [T]) =
 		list | list length <= 1  
 		(less ++ same ++ more)
-	where
+	:?:
 		pivot = list head
         less  = list filter (pivot >) quicksort    
         same  = list filter pivot ==
         more  = list filter (pivot <) quicksort
             
-	fn something :: [T] list -> {(T, T)}
+	fn something :: ([T] list -> {(T, T)})
 		= { a => b, 
 		    c => d }
 
 	family K :: _
 	family V :: _
-	fn assoc `=>` :: K key -> V value -> (K, V) = (key, value)
+	fn assoc `=>` :: (K key -> V value -> (K, V)) = (key, value)
 		
-	fn clojure :: [T] e -> (T, T) 
+	fn clojure :: ([T] e -> (T, T))
 		= ((a b),
 		   (b c),
 		   (c d))
 	
-	fn range :: Int low -> Int high -> [Int]
+	fn range :: (Int low -> Int high -> [Int])
 		= (`ast `range ?low ?high) 
 	
 	data Suit :: () { Spades | Hearts | Diamonds | Clubs }
@@ -93,23 +93,23 @@
 	    elements: E[*]*,
 	    tail: [E])
 	
-	fn at :: Elements list -> Index i -> E? =
+	fn at :: (Elements list -> Index i -> E?) =
 	    list at i | i < list length 
 		list tail at (i - list length)
 	
-	fn insert :: Elements list -> Index i -> T e -> [E] =
+	fn insert :: (Elements list -> Index i -> T e -> [E]) =
 	    list prepand e                        | i == 0 
 	    list take 1 append e ++ (list drop 1) | i == 1 
 	    (list length + 1, elements, newtail)  | i >= list length 
 	    (list take i) ++ (drop i prepand e)
-	where
+	:?:
 		newtail = tail insert at (i - list length)
 	    
 	family P :: (,)
 	family A :: _
 	family B :: _
 
-	fn lazy :: (A -> P -> B) f -> A v -> P p -> () -> B
+	fn lazy :: ((A -> P -> B) f -> A v -> P p -> () -> B)
 	    = () -> (a f p)
         
         
@@ -117,12 +117,12 @@
 	data Xyz :: Seconds = 2h + 42min
 	
 	family T :: _
-	fn or-default :: T? v -> T default -> T =
+	fn or-default :: (T? v -> T default -> T) =
 	    v | v exists
         default	
 	    
-	family T :: _ with eq
-	fn first :: [T] list -> T sample -> Index start -> T =
+	family T :: _ :&: eq
+	fn first :: ([T] list -> T sample -> Index start -> T) =
 	    e | sample == list at start 
 		list first sample (start + 1) 
 	    
@@ -131,10 +131,10 @@
 	data Y-Coordinate :: Coordinate
 	data Point   :: (x: X-Coordinate, y:Y-Coordinate) 
 				  & (X-Coordinate; Y-Coordinate)
-	with "Point" :: (X-Coordinate ':' Y-Coordinate)
+	io   Point   :: (X-Coordinate ':' Y-Coordinate)
 	data Points  :: [Point]
 	
-	fn move :: Point p -> Int dx -> Int dy -> Point
+	fn move :: (Point p -> Int dx -> Int dy -> Point)
 		= (p `x + dx, p `y + dy)
 	
 	data Min :: Point = "2:3"
@@ -146,7 +146,7 @@
 	family G  :: _
 	family T1 :: G
 	family T2 :: G
-	sub specialise `+> :: T1 value -> T2 
+	sub specialise `+> :: (T1 value -> T2)
 		= (`ast `specialise ?value T2) 
 	% instead of explicitly passing the target type it is used implicitly 
 	through use of type families. also this illustrates well that 
@@ -167,10 +167,10 @@ or even source code like
 	family B :: _
 	family F :: (A -> P -> B)
 	
-	fn invoke :: F f -> A a -> P p -> B = a f p
+	fn invoke :: (F f -> A a -> P p -> B) = a f p
 	
-	fn map :: [A] l -> (A -> B) fn -> [B] = "XXX"
-	fn singleton :: A v -> {A} = {v}
+	sub map :: ([A] l -> (A -> B) fn -> [B]) = "XXX"
+	sub singleton :: (A v -> {A}) = {v}
 	
 	fn setify :: ([A] -> [{A}]) = (_ map singleton)
 	
@@ -179,18 +179,18 @@ or even source code like
 	
 	data SomeTHING :: () = `some-thing
 	
-	fn test :: Int i -> Int = Math x
+	fn test :: (Int i -> Int) = Math x
 	
 	family T :: (Name, ..)
 
-	fn real :: Int v -> Real
+	fn real :: (Int v -> Real)
 		= 100,000.00e-34
 		
 	data Array2D :: Int[2][2]
 	
-	fn plus `+ :: Int a -> Int b -> Int! = (`ast `add ?a ?b)
+	fn plus `+ :: (Int a -> Int b -> Int!) = (`ast `add ?a ?b)
 	
-	fn partially-ast-impl :: Some a -> Thing =
+	fn partially-ast-impl :: (Some a -> Thing) =
 		(`ast baz) | case-a
 		(`ast que)
 		
@@ -201,47 +201,47 @@ or even source code like
 	family M :: *
 	family L :: 0-M
 
-	fn fill :: T[L] a -> T e -> T[L]
+	fn fill :: (T[L] a -> T e -> T[L])
 		= a fill-with-from-to 0 M
 	
 	family E :: _
 	family A :: E[*]
 	
-	fn same-length-array :: A a -> A b -> A	= "?"
+	fn same-length-array :: (A a -> A b -> A) = ?
 	
-	fn rotate180 :: Matrix* m -> Matrix 
+	fn rotate180 :: (Matrix* m -> Matrix)
 		= m rotate90 rotate90
 		
 	family F1 :: (->)
 	family F2 :: (_ -> _)
 	family F3 :: (_ -> _ -> _)
 	
-	fn empty? :: E[*] array -> Bool = array length == 0
+	fn empty? :: (E[*] array -> Bool) = array length == 0
 	
 	data Pi :: Float = (:= pi-gauss-legendre 0.000001 )
 	
 	fn first :: = at 0
 	
-	fn call-side-inline :: E[1-*] one -> E[1-*] other -> Bool
+	fn call-side-inline :: (E[1-*] one -> E[1-*] other -> Bool)
 		= one\last == other\last
 		
-	sub assoc `=> :: K key -> V value -> (K, V) = (key, value)
+	sub assoc `=> :: (K key -> V value -> (K, V)) = (key, value)
 	
 	family E :: _
-	fn at :: E[<*>] s -> Index i -> Int = (`ast `get ?s ?i)
+	fn at :: (E[<*>] s -> Index i -> Int) = (`ast `get ?s ?i)
 	
 	% keys %
 	
 	family V :: _
-	fn get :: T obj -> @V key -> V? = @akey-in-action-but-impl-doesn't-make-sense
+	fn get :: (T obj -> @V key -> V?) = @akey-in-action-but-impl-doesn't-make-sense
 	
-	fn put :: T obj -> @V key -> V value -> T = ?
+	fn put :: (T obj -> @V key -> V value -> T) = ?
 	
-	fn canonical-name :: @V key -> String = ?
+	fn canonical-name :: (@V key -> String) = ?
 	
-	fn on-channel :: Int[>] chan -> Int[>] = ?
+	fn on-channel :: (Int[>] chan -> Int[>]) = ?
 		
-	fn yields-channel :: @T[>] key -> T[>] = ?
+	fn yields-channel :: (@T[>] key -> T[>]) = ?
 
 	% == [ Processes & Channels ]== %
 
@@ -262,104 +262,104 @@ or even source code like
 		}	
 	
 	% single process %
-	when Ready :: HttpServer server -> HttpServer
+	when Ready :: (HttpServer server -> HttpServer)
 		1. server responds >> (server process (server requests <<))
 		.. Ready: server	
 
 	% single process with where %		
-	when Ready :: HttpServer server -> HttpServer
+	when Ready :: (HttpServer server -> HttpServer)
 		1. server responds >> response
 		.. Ready: server
-	where
+	:?:
 		response = server process request
 		request  = server requests <<
 		
 	% parallel with ad-hoc helper processes %
-	when Ready :: HttpServer server -> HttpServer
+	when Ready :: (HttpServer server -> HttpServer)
 		1. server respond! (server requests <<)
 		.. Ready: server 
 
-	fn respond! :: HttpServer server -> Request request -> ()
+	fn respond! :: (HttpServer server -> Request request -> ())
 		=< server responds send! (server process request)	
 		
 	% parallel with process "pool" %
-	when Ready :: HttpServer server -> HttpServer
+	when Ready :: (HttpServer server -> HttpServer)
 		1. idle-worker-input >> (server requests <<)
 		.. Ready: server
-	where 
+	:?: 
 		idle-worker-input: HttpRequest[>] = @pool receive-queue <<	
 
-	when Idle :: Worker worker -> Worker
+	when Idle :: (Worker worker -> Worker)
 		1. Work: worker responds >> (worker process (worker requests <<))
 		2. Register: @pool send-queue >> (worker requests key)
 		.. Idle: worker
 		
-	when Out-Of-Memory! :: Worker worker -> Worker?
+	when Out-Of-Memory! :: (Worker worker -> Worker?)
 		..		
 		
 	% working with channels %
 	
-	fn broadcast :: T value -> [T]>]] channels -> ()
+	fn broadcast :: (T value -> [T]>]] channels -> ())
 		= foreach (channel >> value)
-	where
+	:?:
 		channel: T]>] = each channel	
 		
-	sub send? `>|> :: T value -> T[>] channel -> Milliseconds timeout -> T[>]
+	sub send? `>|> :: (T value -> T[>] channel -> Milliseconds timeout -> T[>])
 		= res
-		where
+		:?:
 		  res
 			|= value >> channel
 			|= value >> (timeout make-channel) than-return channel
 		
 		
-	fn example :: T[>][3] channels -> T = value
-	where 
+	fn example :: (T[>][3] channels -> T) = value
+	:?: 
 		value 
 			|= channels at 0 <<
 			|= channels at 1 <<
 			|= channels at 2 <<	
 	
-	fn example2 :: Int[>] channel -> Int = res
-	where
+	fn example2 :: (Int[>] channel -> Int) = res
+	:?:
 		res
 			|= channel <<
 			|= 7 after 6ms 
 			
-	fn example3 :: Int[>] channel -> Int = res
-	where
+	fn example3 :: (Int[>] channel -> Int) = res
+	:?:
 		res
 			|= channel <<
 			|= 2
 		
-	fn numbers! :: Foo f -> Bar
+	fn numbers! :: (Foo f -> Bar)
 		= [1/2 1.2/4]
 		
-	fn force-plus `+! :: Int! a -> Int b -> Int!
+	fn force-plus `+! :: (Int! a -> Int b -> Int!)
 		= (`ast (`add ?a ?b))
 		
 	% Shapes %
 	
-	fn shapes :: ([] x -> {}) = "example"
-	fn shapes :: "" x -> String = "another example"
-	fn shapes :: `foo x -> String = "another example"
-	fn shapes :: @foo x -> String = "another example"
+	fn shapes :: ([] x -> {})       = "example"
+	fn shapes :: ("" x -> String)   = "another example"
+	fn shapes :: (`foo x -> String) = "another example"
+	fn shapes :: (@foo x -> String) = "another example"
 
 	family A :: (`ast , ..)
 
 	% testing some things... %
 	
-	when Greet :: Char[>] out -> ()
+	when Greet :: (Char[>] out -> ())
 		1. out print "Hello World"
 		.. 	
 		
 	% Concepts (again) %
 	
-	family X :: _ with eq, compare
+	family X :: _ :&: eq, compare
 	
-	family S :: [E] as Stack E with at
+	family S :: [E] = Stack E :&: at
 	
 	concept Stack E :: = { push, pop }
-	family S2 :: _ as Stack E, Collection E
+	family S2 :: _ = Stack E, Collection E
 	
 	
 	family T :: (,)
@@ -381,19 +381,18 @@ or even source code like
 	family K :: @_	
 	family I :: #_
 	
-	family E :: _ as Stack, Collection
-	family F :: _ as Stack with plus
+	family E :: _ = Stack, Collection
+	family F :: _ = Stack :&: plus
 	
-	fn contains :: Char[*] arr -> Char sample -> Bool 
+	fn contains :: (Char[*] arr -> Char sample -> Bool)
 		= arr index-of (sample, 0 \(eq => equals-ignore-case)) exists?
 		
 	data Point   :: (x: Coordinate, y: Coordinate) 
 	              & (Coordinate; Coordinate)
-	with "Point" :: (Coordinate ':' Coordinate)
-	with Point[] :: (Coordinate[*], Coordinate[*])
+	io Point     :: (Coordinate ':' Coordinate)
 	            
 	data Minutes   :: Time 
-	with "Minutes" :: (Digits 'min')
+	io   Minutes   :: (Digits 'min')
 	
 	data Era :: Date = 1970-01-01
 	
@@ -403,17 +402,17 @@ or even source code like
 	
 	family L :: *
 	family E :: _
-	fn stretch :: E[<*>] slice -> Int{L} length -> E[<L>] = ?
-	fn slice   :: E[L-*] array -> Int{L} length -> E[<L>] = ?
-	fn slice   :: E[L-*] array -> Int{L} length -> Int start -> E[<L>] = ?
+	fn stretch :: (E[<*>] slice -> Int{L} length -> E[<L>]) = ?
+	fn slice   :: (E[L-*] array -> Int{L} length -> E[<L>]) = ?
+	fn slice   :: (E[L-*] array -> Int{L} length -> Int start -> E[<L>]) = ?
 	
 	data Time `dimension :: Int{0..}
 	
 	data Minutes `unit   :: Time 
-	with "Minutes"       :: (Digits "min")
+	io   Minutes         :: (Digits "min")
 	
 	data Seconds `unit   :: Time 
-	with "Seconds"       :: (Digits "sec")
+	io   Seconds         :: (Digits "sec")
 
 	data Planet :: (weight: Kilograms, radius: Meters) 
 		{  Mercury = (3.303e+23kg, 2.4397e6m)
@@ -457,13 +456,13 @@ or even source code like
 
 	data Text        :: String	
 	
-	fn signum :: Relation v -> Int =
+	fn signum :: (Relation v -> Int) =
 		-1 | v is Less
 		1  | v is More
 		0  | _
 	
 	family B :: Bool
-	fn or `|| :: B a -> B b -> B = (`ast `or ?a ?b)
+	fn or `|| :: (B a -> B b -> B) = (`ast `or ?a ?b)
 		
 	data ADT :: Byte[*] & (Ok, Data)+(Error, Text)
 	data ADT :: Byte[*] & (status:Ok, data:Page)+(status:Error, Text)
@@ -478,31 +477,32 @@ or even source code like
 		
 	def Math :: = (`module `Math )	
 	
-	data Unit  :: ~ with "Unit" :: "()"
+	data Unit  :: ~ 
+	io   Unit  :: "()"
 	
-	fn show :: True t -> String = "true"
-	fn show :: False f -> String = "false"
+	fn show :: (True t -> String) = "true"
+	fn show :: (False f -> String) = "false"
 	
 	fn switch :: (Weekday d -> String) 
-		    =     | d == _
+		    = ?   | d == _
 		%------------------%
 		"Monday"  | Monday
 		"Tuesday" | Tuesday 
 		
-	fn another :: [Int] n -> Int idx -> Int =
-		       | n == ?1
+	fn another :: ([Int] n -> Int idx -> Int) =
+		   ?   | n == ?1
 		a. []  | 0
 		b. [1] | 1
 		c. _   | n at idx
 		
-	fn pairs :: Point p -> Int 
-		=  | x == _ | y == _
+	fn pairs :: (Point p -> Int) 
+		= ? | x == _ | y == _
 		%-----[sample 1]----%
-		1  |   1    |  2
+		1   |   1    |  2
 		%-----[sample 2]----%
-		2  |   0    |  4
-		3  |   _    |  _
-	where 
+		2   |   0    |  4
+		3   |   _    |  _
+	:?: 
 		x = p x
 		y = p y		
 		
@@ -588,35 +588,35 @@ or even source code like
 	data Bool :: #() { True | False }
 	
 	data Atom :: #Text
-	with "Atom" :: ('`' Text)
+	io   Atom :: ('`' Text)
 	
 	family L`ist :: [E]
 	
 	family E :: _
 	family L :: [E]
 	
-	op cons   :: L -> E e -> L
-	op append :: L -> E e -> L
-	op concat :: L -> L other -> L
-	op take   :: L -> Count c -> L
-	op drop   :: L -> Count c -> L
-	op remove :: L -> Index i -> L
-	op insert :: L -> Index i -> L
-	op at     :: L -> Index i -> E?
-	op slice  :: L -> Index from -> Index to -> L
+	op cons   :: (L -> E e -> L)
+	op append :: (L -> E e -> L)
+	op concat :: (L -> L other -> L)
+	op take   :: (L -> Count c -> L)
+	op drop   :: (L -> Count c -> L)
+	op remove :: (L -> Index i -> L)
+	op insert :: (L -> Index i -> L)
+	op at     :: (L -> Index i -> E?)
+	op slice  :: (L -> Index from -> Index to -> L)
 	
 	concept List :: = {force, cons, append, concat, take, 
 	                                    drop, remove, insert, at, slice}
 
 	family A`ny :: _
-	op force :: A -> A 
+	op force :: (A -> A)
 
 	                                    
-	on Alarm :: Machine m -> Machine
+	on Alarm :: (Machine m -> Machine)
 		1. notify master-control || something else
-		.. Recover : m
+		.. Recover: m
 		
-	fn manual :: Byte[!1024] mem -> X = ? 
+	fn manual :: (Byte[!1024] mem -> X) = ? 
 	
-	fn map :: [A] l -> (A -> B) a-a' -> B = ?
+	fn map :: ([A] l -> (A -> B) a-a' -> B) = ( {}, [], () )
 	

@@ -1,4 +1,4 @@
-(`library @lang.util [
+def @lang :: = [
 	(`export { Collections, Math })
 	
 	(`import @lang )
@@ -35,4 +35,4 @@
 		
 		(`mixin Characters Digits)
 	])
-])
+]

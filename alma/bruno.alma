@@ -1,32 +1,41 @@
 % bruno (alma version) %
 
 % Type Variant Symbols %
--KeyOf        = '@'
 -Optional     = '?'
 -Faulty       = '!'
 -Transient    = '*'
 -Self         = '~'
 -Wildcard     = '_'
--Open         = '?'
+-InQuestion   = '?'
 
 % Identifiers %
 -Atom         = '`' \s^+
--Key          = \KeyOf [Zs ',']^ [s ',{}()[]']^*
--Variable     = '?' [zZ9 '-_' ]+
--TypeVariable = \Z \9?
+-Key          = '@' [Zs ',']^ [s ',{}()[]']^*
+-Var          = '?' [zZ9 '-_' ]+
+
+-Abbr         = \Z \9?
 -Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' ['+-'9] \9*
 -Verb         = \z [z9 '-']* [z9]? ['?!' \apostrophe]?
--name         = Key | Noun
+-Item         = [z '?']'.'
+
+-label        = Verb ':'
+-abstraction  = Noun (; Abbr)*
+-name         = Noun | Key
+-step         = Noun ':'
 
 % Operators %
 -Op           = ['+/*=><&-']
 -Operator     = \Op [\Op '!?|']{0-2} | [\Op '|']{2-3}
 
 % Literals %
--Literal      = [s'?#"=><&|)].,;*\}']^
--numeric      = ['+-']? \9+ (['.,'] \9+)*
--quoted       = '"""' < .  ~@TEXT (. '"""') | '"' < ['"']^*@TEXT '"' | \apostrophe < \apostrophe^*@TEXT \apostrophe
--literal      = quoted | numeric (numeric | Literal)*
+-literal      = textual | numerical
+-textual      = '"""' < .  ~@TEXT (. '"""') 
+              | '"'   < ['"']^*@TEXT '"' 
+              | \apostrophe < \apostrophe^*@TEXT \apostrophe
+-numerical    = Number (Number | [s'?#"=><&|)].,;*\}']^)*
+-Number       = ['+-']? \9+ (['.,'] \9+)*
+
+% /////////////////////////////////////////////////////////////////////////////%
 
 % Types %
 -variant      = [\Faulty \Optional \Transient]
@@ -38,90 +47,75 @@
 -arrayType    = '[' Noun ']' | '[' < \lengthType ']'
 -lengthType   = spanType | scalarType
 -spanType     = scalarType@MIN '-' scalarType@MAX
--scalarType   = \9+ | '*' | TypeVariable
+-scalarType   = \9+ | '*' | Abbr
 
 -subrange     = '{' < subrangeType ('|' subrangeType)* '}'
 -subrangeType = (valueType@MIN)? ('..' (valueType@MAX)?)?
 -valueType    = literal | scalarType
 
--type         = shape | \complexType
--complexType  = sumType ( . '&' . sumType)*
--sumType      = (. '+' ,)? fullType (. '+' , fullType)*
--fullType     = \KeyOf? \kind dimension* variant?
--kind         = Wildcard  | ordinalType | listType   | setType | fnType
-              | tupleType | namedType   | lengthType | TypeVariable
+-T            = shape | T_sum ( . '&' . T_sum)*
+-T_sum      = (. '+' ,)? fullType (. '+' , fullType)*
+-fullType     = '@'? \kind dimension* variant?
+-kind         = Wildcard  | T_ordinal | T_list     | T_set  | T_fn
+              | T_tuple   | namedType | lengthType | T_dots | Abbr
 -namedType    = Noun subrange?
--ordinalType  = '#' < \complexType
--listType     = '[' < type ']'
--setType      = '{' < type '}'
--fnType       = '(->)'
-              | '(' type@INSTANCE , '->' < ( , type , '->' )* , type@RETURN ')'
--tupleType    = '()' | '(,)' | '(' field (['\;,']@X? , field )* ')'
--field        = label? ('..' | type) ,
--label        = . Verb ':' ,
+-T_dots       = '..'
+-T_ordinal    = '#' < T
+-T_list       = '[' < T ']'
+-T_set        = '{' < T '}'
+-T_fn         = '(->)'       | '(' (, T, (Verb, )? '->')+ , T   ')'
+-T_tuple      = '()' | '(,)' | '(' field (['\;,']@X? , field )* ')'
 
--shape        = Self | '[]' | '{}' | '()' | '""' | Atom | Key | literal
+-field        = (. label ,)? T ,
+-shape        = '[]' | '{}' | '()' | '""' | Self | Atom | Key | literal
 
 % /////////////////////////////////////////////////////////////////////////////%
 
-% Modularisation %
--file         = module | library
--library      = form
--module       = ( . \declaration)+ .
--declaration  = def | data    | when  | fn    | family
-              | op  | concept | fault | ratio | comment
--attrs        = (Atom ; )* 
-
--fault        = 'fault' < ; Noun , '::' . namedType !
-
-% Data %
--ratio        = 'ratio' < ; Noun, '::' . literal , '=' , literal !
--data         = 'data' < ; \name, attrs '::' . type enumeration? with* init? !
--with         = . 'with' < ; ('"' Noun '"' | Noun '[]' ) , '::' . type
--enumeration  = . '{' < . constants . '}'
--constants    = constant ( . '|' < . constant )*
--constant     = '..' | \name ( . ':' < , type)? init?
--init         = . '=' < . (Open | expr)
-
-% Functions %
--fn           = ('fn' | 'sub' )< ;  Verb, attrs '::' . inout? . '=' . impl
--inout        = \descriptor | '(' < , \descriptor , ')'
--descriptor   = ( param , '->' , )+ type
--param        = type ; Verb@NAME?
--impl         = case | Open !
--case         = , where | (, [z '?']'.')? , (expr condition? | condition) ! case?
--condition    = ( , '|' , expr)+
--where        = 'where' < . variable , (variable , )*
--variable     = Verb@NAME (, ':' , type)? , (select | '=' , expr !)
--select       = ( . '|=' < , expr ! )+
-
 % Expressions %
--seq          = . expr ( . ',' ? . expr )* .
--expr         = form ( , form )*
--form         = expand | tuple | list | set | comment | implicit | inline | \term
+-expr         = term ( , term )*
+-term         = expand   | tuple | list | set  | comment | implicit | inline 
+              | Wildcard | Atom  | Key  | literal 
+              | Operator | Var   | Verb | Noun | Abbr | InQuestion
+
 -inline       = '\' Verb@FUNCTION
--expand       =      '(:=' < \seq ')'
--implicit     =       '\(' < \seq ')'
--tuple        = '()' | '(' < \seq ')'
--list         = '[]' | '[' < \seq ']'
--set          = '{}' | '{' < \seq '}'
--comment      = '%' ~ '%'
--term         = Wildcard | Atom     | Key  | literal 
-              | Variable | Operator | Verb | Noun | TypeVariable
+-expand       = '(:=' < \form  ')'
+-implicit     = '\('  < \form  ')'
+-tuple        = '('   < \form? ')'
+-list         = '['   < \form? ']'
+-set          = '{'   < \form? '}'
+-comment      = '%'   <   ~   '%'
+-form         = . expr ( . ',' ? . expr )* .
 
-% Abstract Data Types %
--op           = 'op'      < ; Verb, attrs '::' . Verb? . inout
--concept      = 'concept' < ; \parametrised , '::' . '=' , '{' . Verb . (',' . Verb .)* '}'
--family       = 'family'  < ; TypeVariable , attrs '::' . type as? with_ops?
--as           = . 'as' , \parametrised ( , ',' , \parametrised)*
--with_ops     = . 'with' , Verb@OP ( , ',' , Verb@OP)*
--parametrised = Noun (; TypeVariable)*
+% Principles (these use ::) %
+-module       = ( . \principle )+ .
+-principle    = def | data    | when  | fn | family | sub
+              | op  | concept | fault | on | ratio  | io  | comment
 
-% Processes %
--when         = ('when' | 'on') < ; Noun , '::' . inout . (effect !)* . then . where?
--effect       = \9'.' < (; Noun , ':')? ; expr
--then         = '..' . ((transition !)* | !)
--transition   = , Noun , ':' . expr condition?
+-fault        = 'fault'   < ; Noun,        '::' . namedType !
+-ratio        = 'ratio'   < ; Noun,        '::' . literal,'=' , literal !
+-def          = 'def'     < ; name,        '::' .         '=' . expr !
+-io           = 'io'      < ; Noun,        '::' . T
+-data         = 'data'    < ; name, attrs  '::' . T   ( . '{' . constants . '}')? (. '='   < . expr)?
+-family       = 'family'  < ; Abbr, attrs  '::' . T   ( . '=' , abstractions   )? (. ':&:' < , ops )?
+-concept      = 'concept' < ; abstraction, '::' .         '=' . set
+-op           = 'op'      < ; Verb, attrs  '::' . T_fn
+-fn           = 'fn'      < ; Verb, attrs  '::' . T_fn? . '=' case+                 ( ':?:' < (. variable)+)?
+-sub          = 'sub'     < ; Verb, attrs  '::' . T_fn? . '=' case+                 ( ':?:' < (. variable)+)?
+-when         = 'when'    < ; Noun,        '::' . T_fn  . effect* '..', transition* ( ':?:' < (. variable)+)?
+-on           = 'on'      < ; Noun,        '::' . T_fn  . effect* '..', transition* ( ':?:' < (. variable)+)?
 
-% Definitions %
--def          = 'def' < ; name , '::' , '=' . expr !
+% lists of ... %
+-attrs        = (Atom ; )* 
+-ops          = Verb@OP     ( , ',' , Verb@OP)*
+-abstractions = abstraction ( , ',' , abstraction)*
+-constants    = constant    ( . '|' . < constant )* 
+
+% assignments ... %
+-constant     = '..' | name ( , ':' < , T)? (. '=' < . expr)?
+-variable     =        Verb ( , ':' < , T)? , ('=' < . expr ! | ( . '|=' < , expr ! )+ )
+
+% implementation body %
+-case         =       . Item? , expr (, '|', expr)* !
+-transition   =         step  , expr (, '|', expr)* !
+-effect       = \9'.' , step? , expr !
+

@@ -30,6 +30,9 @@ public final class IndexOverlayedFile {
 		try {
 			buffer.load();
 			Parser.parse(buffer, grammar.rule(start.intern()), tree);
+			if (tree.end() < in.size()) {
+				throw new ParseException(buffer, tree.end(), tree.end(), tree);
+			}
 			return new IndexOverlayedFile(buffer, tree);
 		} finally {
 			in.close();

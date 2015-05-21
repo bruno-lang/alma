@@ -52,8 +52,8 @@ public class TestAlma {
 	public void bruno() throws IOException {
 		Grammar bruno = Alma.make("alma/prelude.alma", "alma/bruno.alma");
 		Highlighter highlighter = Print.highlighter(System.out);
-		highlighter.print(IndexOverlayedFile.read("_data/example.lib", bruno, "library"));
 		highlighter.print(IndexOverlayedFile.read("_data/example.ast", bruno, "expr"));		
+		highlighter.print(IndexOverlayedFile.read("_data/example.lib", bruno, "module"));
 		highlighter.print(IndexOverlayedFile.read("_data/example.bruno", bruno, "module"));
 	}
 	
