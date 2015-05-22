@@ -194,12 +194,12 @@ or even source code like
 		(`ast baz) | case-a
 		(`ast que)
 		
-	family A :: 6-8
+	family A :: 6..8
 	
 	data Tuple :: (one: Int[A], other: String[A])
 	
 	family M :: *
-	family L :: 0-M
+	family L :: 0..M
 
 	fn fill :: (T[L] a -> T e -> T[L])
 		= a fill-with-from-to 0 M
@@ -222,7 +222,7 @@ or even source code like
 	
 	fn first :: = at 0
 	
-	fn call-side-inline :: (E[1-*] one -> E[1-*] other -> Bool)
+	fn call-side-inline :: (E[1..*] one -> E[1..*] other -> Bool)
 		= one\last == other\last
 		
 	sub assoc `=> :: (K key -> V value -> (K, V)) = (key, value)
@@ -339,8 +339,8 @@ or even source code like
 		
 	% Shapes %
 	
-	fn shapes :: ([] x -> {})       = "example"
-	fn shapes :: ("" x -> String)   = "another example"
+	fn shapes :: ([] -> {})         = "example"
+	fn shapes :: ("" -> String)     = "another example"
 	fn shapes :: (`foo x -> String) = "another example"
 	fn shapes :: (@foo x -> String) = "another example"
 
@@ -369,6 +369,12 @@ or even source code like
 	family L :: [_]
 	family S :: {_}
 	family D :: *
+	family D2 :: 42
+	family D3 :: 0..42
+	family D4 :: 42..*
+	family D5 :: *..42
+	family D6 :: 0..D
+	family D7 :: D..D2
 	
 	family R :: _[<]
 	family W :: _[>]
@@ -398,13 +404,13 @@ or even source code like
 	
 	family S1 :: _[<*>]
 	family S2 :: _[<2>]
-	family S3 :: _[<2-4>]
+	family S3 :: _[<2..4>]
 	
 	family L :: *
 	family E :: _
 	fn stretch :: (E[<*>] slice -> Int{L} length -> E[<L>]) = ?
-	fn slice   :: (E[L-*] array -> Int{L} length -> E[<L>]) = ?
-	fn slice   :: (E[L-*] array -> Int{L} length -> Int start -> E[<L>]) = ?
+	fn slice   :: (E[L..*] array -> Int{L} length -> E[<L>]) = ?
+	fn slice   :: (E[L..*] array -> Int{L} length -> Int start -> E[<L>]) = ?
 	
 	data Time `dimension :: Int{0..}
 	
@@ -435,9 +441,9 @@ or even source code like
 
 	data Byte  :: M-Bit[8]
 
-	data Word  :: Bit[1-64]
+	data Word  :: Bit[1..64]
 	
-	data Int   :: Word & Bit[1-32]
+	data Int   :: Word & Bit[1..32]
 
 	data Coefficient :: Int  & Bit[56] & (S-Bit M-Bit[55])
 	data Exponent    :: Int  & Byte
@@ -449,8 +455,8 @@ or even source code like
 	
 	data Next        :: Byte & (^1 MBit[7])
 	data Null        :: Byte & (^0 MBit[7])
-	data CharCode    :: Byte[1-4] & (Next[0-3] Null)
-	data String      :: Byte[0-*] & CharCode[0-*]
+	data CharCode    :: Byte[1..4] & (Next[0..3] Null)
+	data String      :: Byte[0..*] & CharCode[0..*]
 
 	data Char        :: Int{0..0xFFFF} & M-Bit[32]
 

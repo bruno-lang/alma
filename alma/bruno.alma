@@ -1,6 +1,8 @@
-% bruno (alma version) %
+% bruno grammar in alma %
 
-% Type Variant Symbols %
+% ///////////////////////////////[ Fragments ]/////////////////////////////////%
+
+% special symbols %
 -Optional     = '?'
 -Faulty       = '!'
 -Transient    = '*'
@@ -8,16 +10,17 @@
 -Wildcard     = '_'
 -InQuestion   = '?'
 
-% Identifiers %
+% basic words %
+-Abbr         = \Z \9?
+-Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' ['+-'9] \9*
+-Verb         = \z [z9 '-']* [z9]? ['?!' a]?
+-Item         = [z '?']'.'
 -Atom         = '`' \s^+
 -Key          = '@' [Zs ',']^ [s ',{}()[]']^*
 -Var          = '?' [zZ9 '-_' ]+
+-Number       = ['+-']? \9+ (['.,'] \9+)*
 
--Abbr         = \Z \9?
--Noun         = \Z [zZ '-']+ [zZ9 '!']* | '^' ['+-'9] \9*
--Verb         = \z [z9 '-']* [z9]? ['?!' \apostrophe]?
--Item         = [z '?']'.'
-
+% tags %
 -label        = Verb ':'
 -abstraction  = Noun (; Abbr)*
 -name         = Noun | Key
@@ -29,47 +32,45 @@
 
 % Literals %
 -literal      = textual | numerical
--textual      = '"""' < .  ~@TEXT (. '"""') 
+-textual      = '"""' < .     ~@TEXT (. '"""') 
               | '"'   < ['"']^*@TEXT '"' 
-              | \apostrophe < \apostrophe^*@TEXT \apostrophe
--numerical    = Number (Number | [s'?#"=><&|)].,;*\}']^)*
--Number       = ['+-']? \9+ (['.,'] \9+)*
+              | \a    <    \a^*@TEXT \a
+-numerical    = Number (Number | [s'^%+-*!?#=~&|<>()[]{}.,;\"`'a]^)*
 
-% /////////////////////////////////////////////////////////////////////////////%
+% /////////////////////////////////[ Types ]///////////////////////////////////%
 
-% Types %
--variant      = [\Faulty \Optional \Transient]
-
--dimension    = manualType | sliceType | channelType | arrayType
--manualType   = '[!' < scalarType ']'
--sliceType    = '[<' \lengthType < '>]'
--channelType  = ['[]'] ['<>']{1-2} < ['[]']
--arrayType    = '[' Noun ']' | '[' < \lengthType ']'
--lengthType   = spanType | scalarType
--spanType     = scalarType@MIN '-' scalarType@MAX
--scalarType   = \9+ | '*' | Abbr
-
--subrange     = '{' < subrangeType ('|' subrangeType)* '}'
--subrangeType = (valueType@MIN)? ('..' (valueType@MAX)?)?
--valueType    = literal | scalarType
-
--T            = shape | T_sum ( . '&' . T_sum)*
--T_sum      = (. '+' ,)? fullType (. '+' , fullType)*
--fullType     = '@'? \kind dimension* variant?
--kind         = Wildcard  | T_ordinal | T_list     | T_set  | T_fn
-              | T_tuple   | namedType | lengthType | T_dots | Abbr
--namedType    = Noun subrange?
--T_dots       = '..'
+-T            = shape 
+              | T_sum ( . '&' . T_sum)*
+			  | literal
+-T_sum        = (. '+' ,)? T_wide (. '+' , T_wide)*
+-T_wide       = T_base dimension* variant?
+-T_base       = T_ordinal    | T_key  | T_list   | T_set  | T_fn  | T_tuple   
+              | Noun subset? | T_many | T_length | Wildcard
+-T_many       = '..'
+-T_key        = '@' < T
 -T_ordinal    = '#' < T
 -T_list       = '[' < T ']'
 -T_set        = '{' < T '}'
--T_fn         = '(->)'       | '(' (, T, (Verb, )? '->')+ , T   ')'
--T_tuple      = '()' | '(,)' | '(' field (['\;,']@X? , field )* ')'
+-T_fn         = '(->)' | '('   (, T, (Verb, )? '->')+ , T    ')'
+-T_tuple      = '(,)'  | '(' < (, ['\;,']@X? . label? , T )+ ')'
+-T_length     = T_scalar@MIN ('..' < T_scalar@MAX)?
+-T_scalar     = '*' | \9+ | Abbr
 
--field        = (. label ,)? T ,
--shape        = '[]' | '{}' | '()' | '""' | Self | Atom | Key | literal
+-shape        = '[]' | '{}' | '()' | Self | Atom | Key
 
-% /////////////////////////////////////////////////////////////////////////////%
+-variant      = [\Faulty \Optional \Transient]
+
+-dimension    = D_manual | D_slice | D_channel | D_array
+-D_manual     = '[!' < T_scalar ']'
+-D_slice      = '[<' \T_length < '>]'
+-D_channel    = ['[]'] ['<>']{1-2} < ['[]']
+-D_array      = '[' Noun ']' | '[' < \T_length ']'
+
+-subset       = '{' < subrange ('|' < subrange)* '}'
+-subrange     = val@MIN? ('..' < val@MAX?)?
+-val          = literal | T_scalar
+
+% ////////////////////////[ Building Blocks ]//////////////////////////////////%
 
 % Expressions %
 -expr         = term ( , term )*
@@ -91,7 +92,7 @@
 -principle    = def | data    | when  | fn | family | sub
               | op  | concept | fault | on | ratio  | io  | comment
 
--fault        = 'fault'   < ; Noun,        '::' . namedType !
+-fault        = 'fault'   < ; Noun,        '::' . T !
 -ratio        = 'ratio'   < ; Noun,        '::' . literal,'=' , literal !
 -def          = 'def'     < ; name,        '::' .         '=' . expr !
 -io           = 'io'      < ; Noun,        '::' . T
@@ -106,9 +107,9 @@
 
 % lists of ... %
 -attrs        = (Atom ; )* 
--ops          = Verb@OP     ( , ',' , Verb@OP)*
--abstractions = abstraction ( , ',' , abstraction)*
--constants    = constant    ( . '|' . < constant )* 
+-ops          = Verb@OP     ( , ',' < , Verb@OP     )*
+-abstractions = abstraction ( , ',' < , abstraction )*
+-constants    = constant    ( . '|' < . constant    )* 
 
 % assignments ... %
 -constant     = '..' | name ( , ':' < , T)? (. '=' < . expr)?
