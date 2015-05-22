@@ -27,7 +27,7 @@
 -step         = Noun ':'
 
 % Operators %
--Op           = ['+/*=><&-']
+-Op           = ['-+/*=><&']
 -Operator     = \Op [\Op '!?|']{0-2} | [\Op '|']{2-3}
 
 % Literals %
@@ -41,7 +41,6 @@
 
 -T            = shape 
               | T_sum ( . '&' . T_sum)*
-			  | literal
 -T_sum        = (. '+' ,)? T_wide (. '+' , T_wide)*
 -T_wide       = T_base dimension* variant?
 -T_base       = T_ordinal    | T_key  | T_list   | T_set  | T_fn  | T_tuple   
@@ -54,11 +53,7 @@
 -T_fn         = '(->)' | '('   (, T, (Verb, )? '->')+ , T    ')'
 -T_tuple      = '(,)'  | '(' < (, ['\;,']@X? . label? , T )+ ')'
 -T_length     = T_scalar@MIN ('..' < T_scalar@MAX)?
--T_scalar     = '*' | \9+ | Abbr
-
--shape        = '[]' | '{}' | '()' | Self | Atom | Key
-
--variant      = [\Faulty \Optional \Transient]
+-T_scalar     = '*' | Abbr | literal
 
 -dimension    = D_manual | D_slice | D_channel | D_array
 -D_manual     = '[!' < T_scalar ']'
@@ -66,9 +61,11 @@
 -D_channel    = ['[]'] ['<>']{1-2} < ['[]']
 -D_array      = '[' Noun ']' | '[' < \T_length ']'
 
--subset       = '{' < subrange ('|' < subrange)* '}'
--subrange     = val@MIN? ('..' < val@MAX?)?
--val          = literal | T_scalar
+-shape        = '[]' | '{}' | '()' | Self | Atom | Key
+
+-variant      = [\Faulty \Optional \Transient]
+
+-subset       = '{' < T_length ('|' < T_length)* '}'
 
 % ////////////////////////[ Building Blocks ]//////////////////////////////////%
 

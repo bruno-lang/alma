@@ -412,7 +412,7 @@ or even source code like
 	fn slice   :: (E[L..*] array -> Int{L} length -> E[<L>]) = ?
 	fn slice   :: (E[L..*] array -> Int{L} length -> Int start -> E[<L>]) = ?
 	
-	data Time `dimension :: Int{0..}
+	data Time `dimension :: Int{0..*}
 	
 	data Minutes `unit   :: Time 
 	io   Minutes         :: (Digits "min")
