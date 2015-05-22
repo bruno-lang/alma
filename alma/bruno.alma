@@ -42,25 +42,26 @@
 -T            = '[]' | '{}' | '()' | Self | Atom | Key | T_sum ( . '&' . T_sum)*
 -T_sum        = (. '+' ,)? T_wide (. '+' , T_wide)*
 -T_wide       = T_base dimension* variant?
--T_base       = T_ordinal    | T_key  | T_list  | T_set  | T_tuple | T_fn 
-              | Noun subset? | T_many | T_range | Wildcard
+-T_base       = T_ordinal | T_key   | T_list   | T_set  | T_tuple | T_fn 
+              | Wildcard  | T_range | T_scalar | T_many
 -T_many       = '..'
 -T_key        = '@' < T
 -T_ordinal    = '#' < T
 -T_list       = '[' < T ']'
 -T_set        = '{' < T '}'
--T_fn         = '(->)' | '(' (. T, Verb?, '->')+ , T    ')'
+-T_fn         = '(->)' | '(' (. T, Verb?, '->')+    , T    ')'
 -T_tuple      = '(,)'  | '(' (, ['\;,']@X? . label? , T )+ ')'
--T_range      = T_scalar@MIN ('..' < T_scalar@MAX)?
+-T_range      = T_scalar@MIN '..' < T_scalar@MAX
 -T_scalar     = '*' | Noun | Abbr | literal
+-T_length     = T_range | T_scalar
 
--dimension    = D_manual | D_slice | D_channel | D_array
--D_manual     = '[!' < T_scalar ']'
--D_slice      = '[{' < T_range '}]'
--D_array      = '['  < T_range  ']'
+-dimension    = D_subset | D_manual | D_slice | D_channel | D_array
+-D_subset     = '{'  < T_length ('|' < T_length)* '}'
+-D_slice      = '[{' < T_length '}]'
+-D_array      = '['  < T_length  ']'
+-D_manual     = '[!' < T_scalar  ']'
 -D_channel    = ['[]'] ['<>']{1-2} < ['[]']
 
--subset       = '{' < T_range ('|' < T_range)* '}'
 -variant      = [\Faulty \Optional \Transient]
 
 % ////////////////////////[ Building Blocks ]//////////////////////////////////%
