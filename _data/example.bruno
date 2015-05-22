@@ -228,7 +228,7 @@ or even source code like
 	sub assoc `=> :: (K key -> V value -> (K, V)) = (key, value)
 	
 	family E :: _
-	fn at :: (E[<*>] s -> Index i -> Int) = (`ast `get ?s ?i)
+	fn at :: (E[{*}] s -> Index i -> Int) = (`ast `get ?s ?i)
 	
 	% keys %
 	
@@ -365,7 +365,7 @@ or even source code like
 	family T :: (,)
 	family F :: (->)
 	family A :: _[*]
-	family V :: _[<*>]
+	family V :: _[{*}]
 	family L :: [_]
 	family S :: {_}
 	family D :: *
@@ -402,15 +402,15 @@ or even source code like
 	
 	data Era :: Date = 1970-01-01
 	
-	family S1 :: _[<*>]
-	family S2 :: _[<2>]
-	family S3 :: _[<2..4>]
+	family S1 :: _[{*}]
+	family S2 :: _[{2}]
+	family S3 :: _[{2..4}]
 	
 	family L :: *
 	family E :: _
-	fn stretch :: (E[<*>] slice -> Int{L} length -> E[<L>]) = ?
-	fn slice   :: (E[L..*] array -> Int{L} length -> E[<L>]) = ?
-	fn slice   :: (E[L..*] array -> Int{L} length -> Int start -> E[<L>]) = ?
+	fn stretch :: (E[{*}] slice -> Int{L} length -> E[{L}]) = ?
+	fn slice   :: (E[L..*] array -> Int{L} length -> E[{L}]) = ?
+	fn slice   :: (E[L..*] array -> Int{L} length -> Int start -> E[{L}]) = ?
 	
 	data Time `dimension :: Int{0..*}
 	
