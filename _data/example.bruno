@@ -612,8 +612,8 @@ or even source code like
 	op at     :: (L -> Index i -> E?)
 	op slice  :: (L -> Index from -> Index to -> L)
 	
-	concept List :: = {force, cons, append, concat, take, 
-	                                    drop, remove, insert, at, slice}
+	concept List :: = { force, cons, append, concat, take, 
+	                    drop, remove, insert, at, slice }
 
 	family A`ny :: _
 	op force :: (A -> A)
