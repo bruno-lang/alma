@@ -50,7 +50,7 @@
 -T_list       = '[' < T ']'
 -T_set        = '{' < T '}'
 -T_fn         = '(' (. T, Verb?, '->')+    , T    ')'
--T_tuple      = '(' (, ['\;,']@X? . label? , T )+ ')'
+-T_tuple      = '(' (, [';,']@X? . label? , T )+ ')'
 -T_range      = T_scalar@MIN '..' < T_scalar@MAX
 -T_scalar     = '*' | Noun | Abbr | literal
 -T_length     = T_range | T_scalar
