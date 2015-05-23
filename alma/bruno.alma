@@ -22,9 +22,9 @@
 
 % tags %
 -label        = Verb ':'
--abstraction  = Noun (; Abbr)*
--name         = Noun | Key
 -step         = Noun ':'
+-name         = Noun | Key
+-abstraction  = Noun (; Abbr)*
 
 % Operators %
 -Op           = ['-+/*=><&']
@@ -49,8 +49,8 @@
 -T_ordinal    = '#' < T
 -T_list       = '[' < T ']'
 -T_set        = '{' < T '}'
--T_fn         = '(->)' | '(' (. T, Verb?, '->')+    , T    ')'
--T_tuple      = '(,)'  | '(' (, ['\;,']@X? . label? , T )+ ')'
+-T_fn         = '(' (. T, Verb?, '->')+    , T    ')'
+-T_tuple      = '(' (, ['\;,']@X? . label? , T )+ ')'
 -T_range      = T_scalar@MIN '..' < T_scalar@MAX
 -T_scalar     = '*' | Noun | Abbr | literal
 -T_length     = T_range | T_scalar

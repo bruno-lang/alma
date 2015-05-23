@@ -105,7 +105,8 @@
 	:?:
 		newtail = tail insert at (i - list length)
 	    
-	family P :: (,)
+	family P :: (..)
+	family P2 :: (.., ..)
 	family A :: _
 	family B :: _
 
@@ -212,7 +213,7 @@ or even source code like
 	fn rotate180 :: (Matrix* m -> Matrix)
 		= m rotate90 rotate90
 		
-	family F1 :: (->)
+	family F1 :: (_ -> .. -> _)
 	family F2 :: (_ -> _)
 	family F3 :: (_ -> _ -> _)
 	
@@ -362,8 +363,8 @@ or even source code like
 	family S2 :: _ = Stack E, Collection E
 	
 	
-	family T :: (,)
-	family F :: (->)
+	family T :: (..)
+	family F :: (_ -> .. -> _)
 	family A :: _[*]
 	family V :: _[{*}]
 	family L :: [_]
