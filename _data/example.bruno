@@ -45,8 +45,8 @@
 	ratio SI :: 2$ = 1€
 
 	fn max :: (Int a -> Int b -> Int) =
-	  a | a > b 	
-	  b
+	  a > b | a
+	  _     | b
 		
 		
 	fn quicksort :: ([T] list -> [T]) =
@@ -117,13 +117,15 @@
 	
 	family T :: _
 	fn or-default :: (T? v -> T default -> T) =
-	    v | v exists
-        default	
+	    v exists | v
+        _        | default	
 	    
 	family T :: _ :&: eq
 	fn first :: ([T] list -> T sample -> Index start -> T) =
-	    e | sample == list at start 
-		list first sample (start + 1) 
+		is-head | e
+		_       | list first sample (start + 1) 
+	:?:
+		is-head = sample == list at start
 	    
 	data Coordinate :: Int & Bit[32]
 	data X-Coordinate :: Coordinate
@@ -190,8 +192,8 @@ or even source code like
 	fn plus `+ :: (Int a -> Int b -> Int!) = (`ast `add ?a ?b)
 	
 	fn partially-ast-impl :: (Some a -> Thing) =
-		(`ast baz) | case-a
-		(`ast que)
+		case-a | (`ast baz)
+		_      | (`ast que)
 		
 	family A :: 6..8
 	
@@ -466,9 +468,9 @@ or even source code like
 	data Text        :: String	
 	
 	fn signum :: (Relation v -> Int) =
-		-1 | v is Less
-		1  | v is More
-		0  | _
+		v is Less | -1
+		v is More | 1
+		_         | 0
 	
 	family B :: Bool
 	fn or `|| :: (B a -> B b -> B) = (`ast `or ?a ?b)
@@ -492,26 +494,26 @@ or even source code like
 	fn show :: (True t -> String) = "true"
 	fn show :: (False f -> String) = "false"
 	
-	fn switch :: (Weekday d -> String) 
-		    = ?   | d == _
+	fn switch :: (Weekday d -> String) =
+		d == _  |   ?
 		%------------------%
-		"Monday"  | Monday
-		"Tuesday" | Tuesday 
+		Monday  | "Monday"  
+		Tuesday | "Tuesday"
 		
 	fn another :: ([Int] n -> Int idx -> Int) =
-		   ?   | n == ?1
-		a. []  | 0
-		b. [1] | 1
-		c. _   | n at idx
+		   n == _ |   ?
+		a. []     | 0
+		b. [1]    | 1
+		c. _      | n at idx
 		
-	fn pairs :: (Point p -> Int) 
+	fn x-or-y :: (Point p -> Int) =
 
-		= ? | x == _ | y == _
+		x == _ | y == _ | ?
 		%-----[sample 1]----%
-		1   |   1    |  2
+		  1    |   2    | x
 		%-----[sample 2]----%
-		2   |   0    |  4
-		3   |   _    |  _
+		  0    |   4    | x
+		  _    |  _     | y
 
 	:?: 
 		x = p x
