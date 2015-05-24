@@ -18,7 +18,7 @@
 -Atom         = '`' \s^+
 -Key          = '@' [Zs ',']^ [s ',{}()[]']^*
 -Var          = '?' [zZ9 '-_' ]+
--Number       = ['+-']? \9+ ([',_'] \9+)* ('.' \9+)?
+-Number       = ['+-']? \9+ ('_' \9+ | ',' \9\9\9)* ('.' \9+)?
 
 % tags %
 -label        = Verb ':'
@@ -42,8 +42,8 @@
 -T            = '[]' | '{}' | '()' | Self | Atom | Key | T_sum ( . '&' . T_sum)*
 -T_sum        = (. '+' ,)? T_wide (. '+' , T_wide)*
 -T_wide       = T_base dimension* variant?
--T_base       = T_ordinal | T_key   | T_list   | T_set  | T_fn | T_tuple
-              | Wildcard  | T_range | T_scalar | T_many
+-T_base       = T_ordinal | T_key    | T_list  | T_set    | T_fn   | T_tuple
+              | Wildcard  | T_series | T_range | T_scalar | T_many
 -T_many       = '..'
 -T_key        = '@' < T
 -T_ordinal    = '#' < T
@@ -52,8 +52,9 @@
 -T_tuple      = '(' < (, [';,']@X? . label? , T )+          ')'
 -T_fn         = '(' T, Verb?, '->' < (. T, Verb?, '->')*, T ')'
 -T_range      = T_scalar@MIN '..' < T_scalar@MAX
+-T_series     = (T_scalar ',', )+ T_scalar '..' < T_scalar
 -T_scalar     = '*' | Noun | Abbr | literal
--T_length     = T_range | T_scalar
+-T_length     = T_series | T_range | T_scalar
 
 -dimension    = D_subset | D_manual | D_slice | D_channel | D_array
 -D_subset     = '{'  < T_length ('|' < T_length)* '}'
@@ -83,10 +84,9 @@
 
 % Principles (these use ::) %
 -module       = ( . \principle )+ .
--principle    = def | data    | when  | fn | family | sub
-              | op  | concept | fault | on | ratio  | io  | comment
+-principle    = def | data | fn | family | sub | concept
+              | op  | when | on | ratio  | io  | comment
 
--fault        = 'fault'   < ; Noun,        '::' . T !
 -ratio        = 'ratio'   < ; Noun,        '::' . literal,'=' , literal !
 -def          = 'def'     < ; name,        '::' .         '=' . expr !
 -io           = 'io'      < ; Noun,        '::' . T

@@ -32,8 +32,6 @@
 	
 	concept List :: = { cons, size }	
 	
-	fault Div-by-zero! :: Int{0}
-	
 	data Year :: Int & (Digit Digit Digit Digit)
 	
 	data Point 	:: (x: X-,y: Y-) 
@@ -376,6 +374,7 @@ or even source code like
 	family D5 :: *..42
 	family D6 :: 0..D
 	family D7 :: D..D2
+	family S1 :: 1, 3, 5..*
 	
 	family R :: _[<]
 	family W :: _[>]
@@ -390,6 +389,9 @@ or even source code like
 	
 	family E :: _ = Stack, Collection
 	family F :: _ = Stack :&: plus
+
+	family E`ven :: Int{0,2,4..*}
+	family O`dd  :: Int{1,3,5..*}
 	
 	fn contains :: (Char[*] arr -> Char sample -> Bool)
 		= arr index-of (sample, 0 \(eq => equals-ignore-case)) exists?
@@ -411,7 +413,7 @@ or even source code like
 	family E :: _
 	fn stretch :: (E[{*}] slice -> Int{L} length -> E[{L}]) = ?
 	fn slice   :: (E[L..*] array -> Int{L} length -> E[{L}]) = ?
-	fn slice   :: (E[L..*] array -> Int{L} length -> Int start -> E[{L}]) = ?
+	fn slice   :: (E[L..*] array -> Int{L} length -> Int{0..*} start -> E[{L}]) = ?
 	
 	data Time `dimension :: Int{0..*}
 	
@@ -503,12 +505,14 @@ or even source code like
 		c. _   | n at idx
 		
 	fn pairs :: (Point p -> Int) 
+
 		= ? | x == _ | y == _
 		%-----[sample 1]----%
 		1   |   1    |  2
 		%-----[sample 2]----%
 		2   |   0    |  4
 		3   |   _    |  _
+
 	:?: 
 		x = p x
 		y = p y		
@@ -626,4 +630,48 @@ or even source code like
 	fn manual :: (Byte[!1024] mem -> X) = ? 
 	
 	fn map :: ([A] l -> (A -> B) a-a' -> B) = ( {}, [], () )
+
+	% the point of the next example is to show how one could disallow 
+	  specialisation for a nominal type to make sure it is only manipulated via
+      function on that type that do ensure certain consistency constriants. 
+
+		`fresh means not "inherit" function from [E] (but can be used in impl)
+		`sealed means that it is not allowed to specialise to this type
+	%
+	family E :: _
+	data RecentlyUsedList `fresh `sealed :: [E]
+
+	fn add `++ :: (RecentlyUsedList l -> E e -> RecentlyUsedList) 
+		= l remove e insert-at 0 e
 	
+	fn get :: (RecentlyUsedList l -> Index i -> E)
+		= l at (l length - i - 1)
+
+	% It would be nicer to be able to use [E] as type with some attributes 
+	  attachted to it that are consistency constriants.
+	  In general we want to attach properties to types that have been proven
+	  to hold for the value in question. 
+	%
+
+	% the reconception of data conversion errors 
+		a) potential error are indicated by an error type variant: Int => Int!
+		b) a actual problem returns the "virtual constant": Error!
+		c) the caller raises an errorous value to a "exception" or continues 
+		   in some other way
+	%
+
+	family I :: Int
+	sub div `/ :: (I a -> I b -> I!) = (`ast `/ ?a ?b)
+
+	family T :: _
+	sub or-else :: (T! v -> T default -> T) =
+		v == Error! | default
+		_           | v
+
+	sub or-raise :: (T! v -> T) =
+		v == Error! | raise Out-Of-Type-Range!
+		_           | v
+
+	fn useage-example1 :: (Int a -> Int) = 10 / a or-else 0
+	fn useage-example2 :: (Int a -> Int) = 10 / a or-raise
+
