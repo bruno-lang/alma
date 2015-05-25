@@ -87,19 +87,20 @@
 	family E :: _
 
 	data Elements :: (
-	    length: Length,
-	    elements: E[*]*,
-	    tail: [E])
+	    length    : Length
+	    elements  : E[*]*
+	    tail      : [E]
+	)
 	
 	fn at :: (Elements list -> Index i -> E?) =
-	    list at i | i < list length 
-		list tail at (i - list length)
+	    i < list length | list at i
+		_               | list tail at (i - list length)
 	
 	fn insert :: (Elements list -> Index i -> T e -> [E]) =
-	    list prepand e                        | i == 0 
-	    list take 1 append e ++ (list drop 1) | i == 1 
-	    (list length + 1, elements, newtail)  | i >= list length 
-	    (list take i) ++ (drop i prepand e)
+	    i == 0           | list prepand e                        
+	    i == 1           | list take 1 append e ++ (list drop 1) 
+	    i >= list length | (list length + 1, elements, newtail)
+	    _                | (list take i) ++ (drop i prepand e)
 	:?:
 		newtail = tail insert at (i - list length)
 	    
@@ -109,8 +110,7 @@
 	family B :: _
 
 	fn lazy :: ((A -> P -> B) f -> A v -> P p -> () -> B)
-	    = () -> (a f p)
-        
+	    = () -> (a f p)    
         
 	data Hour :: Milliseconds = 1h
 	data Xyz :: Seconds = 2h + 42min
@@ -440,7 +440,7 @@ or even source code like
 	
 	data Exp :: Int = 2^27 - 1
 	
-	data Bit   :: () { ^0 | ^1 }
+	data Bit   :: ()  { ^0 | ^1 }
 	data S-Bit :: Bit { ^+ | ^- }
 	data M-Bit :: Bit
 
@@ -640,10 +640,10 @@ or even source code like
 		`fresh means not "inherit" function from [E] (but can be used in impl)
 		`sealed means that it is not allowed to specialise to this type
 	%
-	family E :: _
+	family E :: _ :&: eq
 	data RecentlyUsedList `fresh `sealed :: [E]
 
-	fn add `++ :: (RecentlyUsedList l -> E e -> RecentlyUsedList) 
+	fn add :: (RecentlyUsedList l -> E e -> RecentlyUsedList) 
 		= l remove e insert-at 0 e
 	
 	fn get :: (RecentlyUsedList l -> Index i -> E)
@@ -655,7 +655,19 @@ or even source code like
 	  to hold for the value in question. 
 	%
 
-	% the reconception of data conversion errors 
+	% but by just using a family for the list type it gets more readable %
+	family L :: RecentlyUsedList
+
+	fn add :: (L l -> E e -> L) 
+		= l remove e insert-at 0 e
+	
+	fn get :: (L l -> Index i -> E)
+		= l at (l length - i - 1)
+
+	% _________________________________________________________________________
+
+					the reconception of data conversion errors 
+
 		a) potential error are indicated by an error type variant: Int => Int!
 		b) a actual problem returns the "virtual constant": Error!
 		c) the caller raises an errorous value to a "exception" or continues 
@@ -671,9 +683,21 @@ or even source code like
 		_           | v
 
 	sub or-raise :: (T! v -> T) =
-		v == Error! | raise Out-Of-Type-Range!
+		v == Error! | Out-Of-Type-Range!
 		_           | v
 
-	fn useage-example1 :: (Int a -> Int) = 10 / a or-else 0
-	fn useage-example2 :: (Int a -> Int) = 10 / a or-raise
+	fn example1 :: (Int a -> Int) = 10 / a or-else 0
+	fn example2 :: (Int a -> Int) = 10 / a or-raise
+
+	% make it a bit nicer ...%
+	sub is-error? :: (T! v -> Bool) = v == Error!
+	sub or-raise  :: (T! v -> T) = 
+		v is-error? | Out-Of-Type-Range!
+		_           | v
+
+	% note that "raising" an error is simply done by returning it instead of
+	  an actual value. No need for special synatx - the compiler will understand
+	  this.
+	%
+
 

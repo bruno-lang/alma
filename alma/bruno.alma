@@ -21,8 +21,8 @@
 -Number       = ['+-']? \9+ ('_' \9+ | ',' \9\9\9)* ('.' \9+)?
 
 % tags %
--label        = Verb ':'
--step         = Noun ':'
+-label        = Verb, ':'
+-step         = Noun, ':'
 -name         = Noun | Key
 -abstraction  = Noun (; Abbr)*
 
@@ -49,7 +49,7 @@
 -T_ordinal    = '#' < T
 -T_list       = '[' < T ']'
 -T_set        = '{' < T '}'
--T_tuple      = '(' < (, [';,']@X? . label? , T )+          ')'
+-T_tuple      = '(' < (, [';,']@X? . label? , T )+      .   ')'
 -T_fn         = '(' T, Verb?, '->' < (. T, Verb?, '->')*, T ')'
 -T_range      = T_scalar@MIN '..' < T_scalar@MAX
 -T_series     = (T_scalar ',', )+ T_scalar '..' < T_scalar
