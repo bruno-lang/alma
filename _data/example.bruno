@@ -700,4 +700,21 @@ or even source code like
 	  this.
 	%
 
+	data FizzBuzzed :: #() { Fizz | Buzz | FizzBuzz | Number }
+
+	fn fizz-buzz :: (Int n -> FizzBuzzed) = 
+		n mod 15 | FizzBuzz
+		n mod 3  | Fizz
+		n mod 5  | Buzz
+		_        | Number
+
+	fn fizz-buzz :: (Int n -> FizzBuzzed) =
+		n mod _  | ?
+		%-------------------%
+		15       | FizzBuzz
+		3		 | Fizz
+		5		 | Buzz
+		_        | Number
+
+
 
