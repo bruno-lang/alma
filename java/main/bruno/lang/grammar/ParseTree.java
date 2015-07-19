@@ -10,14 +10,16 @@ import bruno.lang.grammar.Grammar.Rule;
  * A parse tree as a sequence of tokens for a particular {@link Grammar} a.k.a.
  * index overlay parse tree.
  * 
+ * TODO make a spec for the binary format of a tree, namely a sequence of 4x32bit records (rule, level, start[incl], end[excl])
+ * 
  * @author jan
  */
 public final class ParseTree {
 
 	private final Rule[] rules;
+	private final int[] levels;
 	private final int[] starts;
 	private final int[] ends;
-	private final int[] levels;
 	
 	private final int[] indexStack = new int[50];
 	

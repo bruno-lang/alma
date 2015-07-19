@@ -25,7 +25,7 @@ public class TestParser {
 		String input = "% this is the comments text\n% this is another one\n";
 		Grammar grammar = COMMENTS;
 		ParseTree tree = new ParseTree(50); 
-		Parser.parse(ByteBuffer.wrap(UTF8.bytes(input)), grammar.rule("grammar".intern()), tree);
+		Parser.parse(grammar.rule("grammar".intern()), tree, ByteBuffer.wrap(UTF8.bytes(input)));
 		assertEquals(5, tree.count());
 		assertEquals(" this is the comments text", input.substring(tree.start(2), tree.end(2)));
 		assertEquals(" this is another one", input.substring(tree.start(4), tree.end(4)));

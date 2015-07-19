@@ -32,7 +32,7 @@
 
 % Literals %
 -literal      = textual | numerical
--textual      = '"""' <       ~@TEXT '"""'
+-textual      = '"""' <       ~      '"""'
               | '"'   < ['"']^*@TEXT '"' 
               | \a    <    \a^*@TEXT \a
 -numerical    = Number (Number | [s'^%+-*!?#=~&|<>()[]{}.,;\"`'a]^)*

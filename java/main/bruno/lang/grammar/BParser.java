@@ -54,6 +54,9 @@ public class BParser {
 				case '<': // decision
 					decided = true; 
 					break;
+				case '>': // look-ahead
+					pL = p; // the end of the previous rule is the result
+					break;
 				case '~': // fill
 					int rF = rN + 2;
 					while (p < pE && read(p, data, rF, lang, tree) < 0) { p++; }
@@ -63,9 +66,6 @@ public class BParser {
 					} else {
 						return mismatch(pE);
 					}
-				case '>': // look-ahead
-					pL = p; // the end of the previous rule is the result
-					break;
 				default:
 					int pN = read(p, data, rN, lang, tree);
 					if (pN < 0) {

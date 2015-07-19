@@ -29,7 +29,7 @@ public final class IndexOverlayedFile {
 		ParseTree tree = new ParseTree(Math.max(512, buffer.capacity()));
 		try {
 			buffer.load();
-			Parser.parse(buffer, grammar.rule(start.intern()), tree);
+			Parser.parse(grammar.rule(start.intern()), tree, buffer);
 			if (tree.end() < in.size()) {
 				throw new ParseException(buffer, tree.end(), tree.end(), tree);
 			}

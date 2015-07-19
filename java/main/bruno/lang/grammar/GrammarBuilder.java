@@ -117,7 +117,7 @@ public final class GrammarBuilder {
 			return rule;
 		}
 		followed.add(rule);
-		if ((rule.type == RuleType.SEQUENCE || rule.type == RuleType.ALTERNATIVES) && rule.elements.length == 1) {
+		if ((rule.type == RuleType.SEQUENCE || rule.type == RuleType.CASCADE) && rule.elements.length == 1) {
 			return rule.elements[0];
 		}
 		if (rule.type == RuleType.SEQUENCE) { // inline nested sequences
@@ -161,7 +161,7 @@ public final class GrammarBuilder {
 			return rule;
 		}
 		followed.add(rule);
-		if (rule.type == RuleType.ALTERNATIVES) {
+		if (rule.type == RuleType.CASCADE) {
 			int ts = 0;
 			int ls = 0;
 			for (Rule e : rule.elements) {

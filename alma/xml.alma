@@ -4,8 +4,8 @@
 -element    = '<' name attributes? . '>' . nodes? . '</' name '>'
 -nodes      = node (. node)*
 -attributes = (: attribute)+
--attribute  = name '=' '"' ~@value '"'
+-attribute  = name '=' '"' ~ '"'
 -text       = ['<']^*
--cdata      = '<![CDATA[' ~@data ']]>'
--comment    = '<!--' ~@info '-->'
+-cdata      = '<![CDATA[' ~ ']]>'
+-comment    = '<!--' ~ '-->'
 -name       = [zZ]+

@@ -1,10 +1,10 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_INDENT;
-import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_WS;
-import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_INDENT;
-import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WRAP;
-import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WS;
+import static bruno.lang.grammar.Grammar.Whitespace.MAY_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Whitespace.MAY_BE_WS;
+import static bruno.lang.grammar.Grammar.Whitespace.MUST_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Whitespace.MUST_BE_WRAP;
+import static bruno.lang.grammar.Grammar.Whitespace.MUST_BE_WS;
 import static bruno.lang.grammar.Grammar.Rule.charset;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static java.util.Arrays.copyOf;

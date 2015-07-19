@@ -1,10 +1,10 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_INDENT;
-import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_WS;
-import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_INDENT;
-import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WRAP;
-import static bruno.lang.grammar.Grammar.Pattern.MUST_BE_WS;
+import static bruno.lang.grammar.Grammar.Whitespace.MAY_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Whitespace.MAY_BE_WS;
+import static bruno.lang.grammar.Grammar.Whitespace.MUST_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Whitespace.MUST_BE_WRAP;
+import static bruno.lang.grammar.Grammar.Whitespace.MUST_BE_WS;
 import static bruno.lang.grammar.Grammar.Rule.charset;
 import static bruno.lang.grammar.Grammar.Rule.pattern;
 import static java.lang.System.arraycopy;
@@ -336,7 +336,7 @@ final class Alma {
 	private static void pushToIdx(String name, Registers reg) {
 		appendToAlt(reg);
 		Rule r = Rule.alt(copyOf(reg.alt, reg.alt_len));
-		if (r.elements.length == 1 && r.type == RuleType.ALTERNATIVES) { // unfold alternative of length 1
+		if (r.elements.length == 1 && r.type == RuleType.CASCADE) { // unfold alternative of length 1
 			r = r.elements[0];
 		}
 		if (r.elements.length == 1 && r.type == RuleType.SEQUENCE) { // unfold sequence of length 1

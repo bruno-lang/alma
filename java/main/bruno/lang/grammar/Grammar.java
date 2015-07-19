@@ -13,12 +13,12 @@ import java.util.NoSuchElementException;
 public final class Grammar implements Iterable<Grammar.Rule> {
 
 	public static enum RuleType {
-		LITERAL, CHARACTER_SET, PATTERN, REPETITION, SEQUENCE, ALTERNATIVES, FILL, LOOKAHEAD, CAPTURE, DECISION,
+		LITERAL, CHARACTER_SET, WHITESPACE, REPETITION, SEQUENCE, CASCADE, FILL, LOOKAHEAD, CAPTURE, DECISION,
 		// Initialization only...
 		INCLUDE;
 	}
 	
-	public static enum Pattern {
+	public static enum Whitespace {
 		MAY_BE_WS, MUST_BE_WS,
 		MAY_BE_INDENT, MUST_BE_INDENT,
 		MUST_BE_WRAP
@@ -55,7 +55,7 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 				Rule e = r.elements[0];
 				String s = e.toString(e, rules);
 				RuleType type = e.type;
-				if (type == RuleType.SEQUENCE || e.type == RuleType.ALTERNATIVES) {
+				if (type == RuleType.SEQUENCE || e.type == RuleType.CASCADE) {
 					s = s.substring(1, s.length()-1);
 				}
 				b.append(s);
@@ -92,7 +92,7 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		}
 
 		public static Rule alt(Rule...elements) {
-			return new Rule(RuleType.ALTERNATIVES, false, "", elements, Occur.ONCE, NO_LITERAL, null, null);
+			return new Rule(RuleType.CASCADE, false, "", elements, Occur.ONCE, NO_LITERAL, null, null);
 		}
 
 		public static Rule seq(Rule...elements) {
@@ -103,8 +103,8 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 			return new Rule(RuleType.LITERAL, false, "", NO_ELEMENTS, Occur.ONCE, l, null, null);
 		}
 		
-		public static Rule pattern(Pattern p) {
-			return new Rule(RuleType.PATTERN, false, "", NO_ELEMENTS, Occur.ONCE, NO_LITERAL, null, p);
+		public static Rule pattern(Whitespace ws) {
+			return new Rule(RuleType.WHITESPACE, false, "", NO_ELEMENTS, Occur.ONCE, NO_LITERAL, null, ws);
 		}
 
 		public static Rule charset(CharacterSet t) {
@@ -118,9 +118,9 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		public final Occur occur;
 		public final byte[] literal;
 		public final CharacterSet charset;
-		public final Pattern pattern;
+		public final Whitespace ws;
 
-		private Rule(RuleType type, boolean substitute, String name, Rule[] elements, Occur occur, byte[] literal, CharacterSet charset, Pattern pattern) {
+		private Rule(RuleType type, boolean substitute, String name, Rule[] elements, Occur occur, byte[] literal, CharacterSet charset, Whitespace ws) {
 			super();
 			this.type = type;
 			this.substitute = substitute;
@@ -129,7 +129,7 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 			this.occur = occur;
 			this.literal = literal;
 			this.charset = charset;
-			this.pattern = pattern;
+			this.ws = ws;
 		}
 
 		public Rule is(String name) {
@@ -146,12 +146,12 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 		}
 		
 		public Rule subst() {
-			return new Rule(type, true, name, elements, occur, literal, charset, pattern);
+			return new Rule(type, true, name, elements, occur, literal, charset, ws);
 		}
 
 		public Rule occurs(Occur occur) {
 			if (type == RuleType.REPETITION) {
-				return occur == Occur.ONCE ? elements[0] : new Rule(RuleType.REPETITION, false, name, elements, occur, literal, charset, pattern);
+				return occur == Occur.ONCE ? elements[0] : new Rule(RuleType.REPETITION, false, name, elements, occur, literal, charset, ws);
 			}
 			if (occur == Occur.ONCE)
 				return this;
@@ -184,8 +184,8 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 					}
 				}
 				return charset.toString();
-			case PATTERN:
-				switch (pattern) {
+			case WHITESPACE:
+				switch (ws) {
 				case MAY_BE_INDENT: return ",";
 				case MUST_BE_INDENT: return ";";
 				case MAY_BE_WS: return ".";
@@ -203,7 +203,7 @@ public final class Grammar implements Iterable<Grammar.Rule> {
 				return "~";
 			case LOOKAHEAD:
 				return ">";
-			case ALTERNATIVES: {
+			case CASCADE: {
 				StringBuilder b = new StringBuilder();
 				for (int i = 0; i<  elements.length; i++) {
 					String alt = elements[i].toString(root, rules);

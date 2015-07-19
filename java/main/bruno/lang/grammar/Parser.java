@@ -1,44 +1,68 @@
 package bruno.lang.grammar;
 
-import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_INDENT;
-import static bruno.lang.grammar.Grammar.Pattern.MAY_BE_WS;
+import static bruno.lang.grammar.Grammar.Whitespace.MAY_BE_INDENT;
+import static bruno.lang.grammar.Grammar.Whitespace.MAY_BE_WS;
 import static java.lang.Character.isWhitespace;
 import static java.lang.Math.min;
 
 import java.nio.ByteBuffer;
 
 import bruno.lang.grammar.Grammar.Rule;
-import bruno.lang.grammar.Grammar.RuleType;
 
 /**
  * A universal parser that can parse any language given a starting {@link Rule}.
+ * 
+ * <pre>
+ * p  = current position (in input)
+ * p0 = starting position
+ * pN = position after rule evaluation
+ * pE = maximum position (end of input)
+ * </pre>
  * 
  * @author jan
  */
 public final class Parser {
 
-	public static int parse(ByteBuffer input, Rule start, ParseTree target) {
-		return parseRule(start, input, 0, target);
+	public static int parse(Rule start, ParseTree target, ByteBuffer input) {
+		return parseRule(start, target, input, 0);
 	}
 	
-	private static int parseRule(Rule rule, ByteBuffer input, int position, ParseTree tree) {
+	/**
+	 * In contrast to {@link #parseRule(Rule, ParseTree, ByteBuffer, int)} (that
+	 * has to match at the current position) this method searches forward in the
+	 * input to match the rule.
+	 */
+	public static int scan(Rule rule, ParseTree tree, ByteBuffer input, int p0) {
+		final int pE = input.limit();
+		int p = p0;
+		while (true) { 
+			if (p >= pE)
+				return mismatch(pE);
+			int pN = parseRule(rule, tree, input, p);
+			if (pN > 0)
+				return p;
+			p++;
+		}
+	}
+	
+	private static int parseRule(Rule rule, ParseTree tree, ByteBuffer input, int p0) {
 		switch (rule.type) {
 		case LITERAL:
-			return parseLiteral(rule, input, position);
+			return parseLiteral(rule, input, p0);
 		case CHARACTER_SET:
-			return parseCharacterSet(rule, input, position);
-		case PATTERN:
-			return parsePattern(rule, input, position);
+			return parseCharacterSet(rule, input, p0);
+		case WHITESPACE:
+			return parseWhitespace(rule, input, p0);
 		case REPETITION:
-			return parseRepetition(rule, input, position, tree);
+			return parseRepetition(rule, tree, input, p0);
 		case SEQUENCE:
-			return parseSequence(rule, input, position, tree);
-		case ALTERNATIVES:
-			return parseAlternatives(rule, input, position, tree);
+			return parseSequence(rule, tree, input, p0);
+		case CASCADE:
+			return parseCascade(rule, tree, input, p0);
 		case CAPTURE:
-			return parseCapture(rule, input, position, tree);
+			return parseCapture(rule, tree, input, p0);
 		default:
-			throw new IllegalArgumentException("`"+rule+"` has uses non-runtime type: "+rule.type);
+			throw new IllegalArgumentException("`"+rule+"` has non-runtime type: "+rule.type);
 		}
 	}
 	
@@ -46,63 +70,47 @@ public final class Parser {
 		return -position-1;
 	}
 
-	private static int parseFill(Rule rule, ByteBuffer input, int position, ParseTree tree) {
-		final int l = input.limit();
-		while (position < l) {
-			int end = parseRule(rule.elements[0], input, position, tree);
-			if (end < 0) {
-				position++;
-			} else {
-				tree.erase(position);
-				return position;
-			}
-		}
-		tree.erase(position);
-		return mismatch(l);
-	}
-
-	private static int parseLiteral(Rule rule, ByteBuffer input, int position) {
+	private static int parseLiteral(Rule rule, ByteBuffer input, int p0) {
 		final byte[] literal = rule.literal;
-		final int limit = input.limit();
+		final int pE = input.limit();
 		for (int i = 0; i < literal.length; i++) {
-			if (position >= limit)
-				return mismatch(limit);
-			if (input.get(position) != literal[i])
-				return mismatch(position);
-			position++;
+			if (p0 >= pE)
+				return mismatch(pE);
+			if (input.get(p0) != literal[i])
+				return mismatch(p0);
+			p0++;
 		}
-		return position;
+		return p0;
 	}
 
-	private static int parseCapture(Rule rule, ByteBuffer input, int position, ParseTree tree) {
-		tree.push(rule, position);
-		int end = parseRule(rule.elements[0], input, position, tree);
-		if (end > position) {
-			tree.done(end);
+	private static int parseCapture(Rule rule, ParseTree tree, ByteBuffer input, int p0) {
+		tree.push(rule, p0);
+		int pN = parseRule(rule.elements[0], tree, input, p0);
+		if (pN > p0) {
+			tree.done(pN);
 		} else {
 			tree.pop();
 		}
-		return end;
+		return pN;
 	}
 
-	private static int parseAlternatives(Rule rule, ByteBuffer input, int position, ParseTree tree) {
-		int end = mismatch(position);
+	private static int parseCascade(Rule rule, ParseTree tree, ByteBuffer input, int p0) {
+		int p = mismatch(p0);
 		for (Rule r : rule.elements) {
-			int endPosition = parseRule(r, input, position, tree);
-			if (endPosition >= 0) {
-				return endPosition;
+			int pN = parseRule(r, tree, input, p0);
+			if (pN >= 0) {
+				return pN;
 			}
-			end = Math.min(end, endPosition);
+			p = Math.min(p, pN);
 		}
-		tree.erase(position);
-		return end;
+		tree.erase(p0);
+		return p;
 	}
 
-	private static int parseSequence(Rule rule, ByteBuffer input, int p0, ParseTree tree) {
+	private static int parseSequence(Rule rule, ParseTree tree, ByteBuffer input, int p0) {
 		final int elems = rule.elements.length;
-		int p = p0;
-		final int pE = input.limit(); 
 		boolean decided = false;
+		int p = p0;
 		int pL = Integer.MAX_VALUE;
 		for (int i = 0; i < elems; i++) {
 			Rule r = rule.elements[i];
@@ -111,30 +119,10 @@ public final class Parser {
 				decided = true; break;
 			case LOOKAHEAD:
 				pL = p; break; // the end of the previous rule is the result
-			case CAPTURE:
 			case FILL:
-				boolean capture = r.type == RuleType.CAPTURE;
-				if (r.type == RuleType.FILL || (capture && r.elements[0].type == RuleType.FILL)) {
-					if (capture) {
-						tree.push(r, p);
-					}
-					Rule rF = rule.elements[i+1];
-					while (p < pE && parseRule(rF, input, p, tree) < 0) { p++; }
-					if (p >= pE) {
-						if (capture) {
-							tree.pop();
-						}
-						return mismatch(pE);
-					}
-					if (capture) {
-						tree.done(p);
-					} else {
-						tree.erase(p);
-					}
-					break;
-				} // fall through from capture that does not wrap fill
+				p = scan(rule.elements[i+1], tree, input, p); break;
 			default:
-				int pN = parseRule(r, input, p, tree);
+				int pN = p < 0 ? p : parseRule(r, tree, input, p);
 				if (pN < 0) {
 					if (decided) {
 						tree.erase(p);
@@ -149,58 +137,58 @@ public final class Parser {
 		return min(p, pL);
 	}
 
-	private static int parseRepetition(Rule rule, ByteBuffer input, int position, ParseTree tree) {
-		int end = position;
+	private static int parseRepetition(Rule rule, ParseTree tree, ByteBuffer input, int p0) {
+		int p = p0;
 		int c = 0;
 		while (c < rule.occur.max) {
-			int endPosition = parseRule(rule.elements[0], input, end, tree);
-			if (endPosition < 0) {
-				tree.erase(end);
+			int pN = parseRule(rule.elements[0], tree, input, p);
+			if (pN < 0) {
+				tree.erase(p);
 				if (c < rule.occur.min) {
-					return endPosition;
+					return pN;
 				}
-				return end;
+				return p;
 			} else {
-				end = endPosition;
+				p = pN;
 				c++;
 			}
 		}
-		return end;
+		return p;
 	}
 
-	private static int parseCharacterSet(Rule rule, ByteBuffer input, int position) {
-		if (position >= input.limit())
-			return mismatch(position);
-		if (rule.charset.contains(input, position)) {
-			return position + UTF8.byteCount(input, position);
+	private static int parseCharacterSet(Rule rule, ByteBuffer input, int p0) {
+		if (p0 >= input.limit())
+			return mismatch(p0);
+		if (rule.charset.contains(input, p0)) {
+			return p0 + UTF8.byteCount(input, p0);
 		}
-		return mismatch(position);
+		return mismatch(p0);
 	}
 	
-	private static int parsePattern(Rule rule, ByteBuffer input, int position) {
-		final int l = input.limit();
-		int p = position;
-		switch (rule.pattern) {
+	private static int parseWhitespace(Rule rule, ByteBuffer input, int p0) {
+		final int pE = input.limit();
+		int p = p0;
+		switch (rule.ws) {
 		default:
 		case MAY_BE_INDENT:
 		case MUST_BE_INDENT:
-			while (p < l && isIndent(input.get(p))) { p++; }
-			return p > position || rule.pattern == MAY_BE_INDENT ? p : mismatch(position);
+			while (p < pE && isIndent(input.get(p))) { p++; }
+			return p > p0 || rule.ws == MAY_BE_INDENT ? p : mismatch(p0);
 		case MAY_BE_WS:
 		case MUST_BE_WS:
-			while (p < l &&	isWhitespace(input.get(p))) { p++; }
-			return p > position || rule.pattern == MAY_BE_WS ? p : mismatch(position);
+			while (p < pE &&	isWhitespace(input.get(p))) { p++; }
+			return p > p0 || rule.ws == MAY_BE_WS ? p : mismatch(p0);
 		case MUST_BE_WRAP:
-			while (p  < l && isIndent(input.get(p))) { p++; }
-			if (p >= l) {
+			while (p  < pE && isIndent(input.get(p))) { p++; }
+			if (p >= pE) {
 				return p; // end of input is also treated as wrap
 			}
 			final int w = p;
-			while (p < l && isWrap(input.get(p))) { p++; }
+			while (p < pE && isWrap(input.get(p))) { p++; }
 			if (w == p) {
-				return mismatch(position);
+				return mismatch(p0);
 			}
-			while (p < l && isIndent(input.get(p))) { p++; }
+			while (p < pE && isIndent(input.get(p))) { p++; }
 			return p;
 		}
 	}
