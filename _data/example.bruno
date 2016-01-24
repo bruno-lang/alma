@@ -64,7 +64,7 @@
 
 	family K :: _
 	family V :: _
-	fn assoc `=>` :: (K key -> V value -> (K, V)) = (key, value)
+	fn assoc `=> :: (K key -> V value -> (K, V)) = (key, value)
 		
 	fn clojure :: ([T] e -> (T, T))
 		= ((a b),
@@ -440,23 +440,27 @@ or even source code like
 	
 	data Exp :: Int = 2^27 - 1
 	
+	% bootstrapping the basic types %
+
 	data Bit   :: ()  { ^0 | ^1 }
 	data S-Bit :: Bit { ^+ | ^- }
 	data M-Bit :: Bit
 
-	data Byte  :: M-Bit[8]
+	data Word  :: Bit[1..64] % that means a Word is 64 bit on low level %
 
-	data Word  :: Bit[1..64]
+	data Byte  :: Word & M-Bit[8]
 	
-	data Int   :: Word & Bit[1..32]
+	data Num   :: Word
+	data Int   :: Num  & (S-Bit Bit[1..31])
+	data Long  :: Num  & (S-Bit Bit[32..63])
 
-	data Coefficient :: Int  & Bit[56] & (S-Bit M-Bit[55])
+	data Coefficient :: Long & Bit[56] & (S-Bit M-Bit[55])
 	data Exponent    :: Int  & Byte
-	data Dec         :: Word & (Coefficient Exponent)
+	data Dec         :: Num & (Coefficient Exponent)
 
 	data Numerator   :: Int  & Bit[32] & (S-Bit M-Bit[31])
 	data Denominator :: Int  & M-Bit[32]
-	data Frac        :: Word & (Numerator Denominator)
+	data Frac        :: Num & (Numerator Denominator)
 	
 	data Next        :: Byte & (^1 MBit[7])
 	data Null        :: Byte & (^0 MBit[7])
@@ -718,4 +722,36 @@ or even source code like
 		_        | Number
 
 
+
+	%______________________________________________________________________
+
+							How to do "classes"
+	%
+
+	data Object  :: (Type, ..)
+	data Integer :: Object & ($Int, Int)
+
+	% or more complex with boxing as a general concept %
+	family U   :: Word
+	data Boxed :: Object & (type: $U, value: U)
+	family B   :: Boxed
+	fn box     :: (U val -> B) = (U, val)
+	fn unbox   :: (B obj -> U) = obj value
+
+	data Integer :: Boxed{Int}	
+	% note that Int is one of the possible values of the type variable U used in
+	  Boxed declaration, like a primitive the set of all Boxed types is reduced
+	  to just the one where U is Int %
+
+
+	%______________________________________________________________________
+
+							What is a "Type"?
+		a data structure...
+	%
+
+	data Type :: (Kind, Name, components: [Type], [Dimensions], <Variant)
+	data Kind :: #() { ProductType | SumType | OrdinalType | ArrayType | ListType | SetType 
+			   | TupleType | FnType | RangeType | ScalarType | KeyOf | TypeOf 
+			   | Self | AnyType | LiteralShape | AtomShape | KeyShape }
 

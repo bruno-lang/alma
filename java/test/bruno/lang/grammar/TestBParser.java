@@ -10,6 +10,8 @@ import org.junit.Test;
 
 public class TestBParser {
 
+	//TODO the next step: make the old Rule based model convert into the new binary one and use that to parse the examples, than create the builder from alma
+	
 	@Test
 	public void justOneLiteral() {
 		String data = "aabbcc";
