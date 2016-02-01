@@ -73,6 +73,15 @@ public class TestParser {
 	}
 
 	@Test
+	public void simpleWildcardMatch() {
+		Program prog = Program.compile("_");
+		assertEquals(1, prog.parse("a"));
+		assertEquals(1, prog.parse(" "));
+		assertEquals(1, prog.parse(":"));
+		assertEquals(1, prog.parse("^"));
+	}
+
+	@Test
 	public void simpleLinebreakMismatch() {
 		Program prog = Program.compile("!");
 		assertEquals(-3, prog.parse("\t X"));
@@ -158,14 +167,16 @@ public class TestParser {
 		assertEquals(2, prog.parse("aa"));
 		assertEquals(1, prog.parse("b"));
 		assertEquals(3, prog.parse("ccc"));
+		// but also
+		assertEquals(1, prog.parse("bb"));
 	}
 
 	@Test
 	public void mixedStaircaseLoopingMismatch() {
 		Program prog = Program.compile("[2`a|1`b|3`c]");
-		assertEquals(-1, prog.parse( "a")); // too little
-		assertEquals(-1, prog.parse("")); 	// nothing?
-		assertEquals(-2, prog.parse("bb")); // too much
+		assertEquals(-1, prog.parse(""));
+		assertEquals(-1, prog.parse("a"));
+		assertEquals(-3, prog.parse("cc"));
 	}
 
 	@Test
