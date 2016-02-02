@@ -3,16 +3,18 @@ package alma.lang;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.min;
 
-public class Parser {
+final class Parser {
 
-	public Parser(byte[] prog, byte[] data) {
+	Parser(byte[] prog, byte[] data, ParseTree tree) {
 		super();
 		this.prog = prog;
 		this.data = data;
+		this.tree = tree;
 	}
 
 	private final byte[] prog;
 	private final byte[] data;
+	private final ParseTree tree;
 
 	private int pc;
 
@@ -29,9 +31,10 @@ public class Parser {
 		int il = MAX_VALUE; // data index for look-ahead
 		int min = 1;
 		int max = 1;
+		int nodes = 0; // capture: 0 = no; > 0 amount of opened nodes
 		int c = 0;   // repetition count
 		boolean decided = false;
-		while (pc < prog.length) {
+		while (pc < prog.length) { //TODO always append an ) to the end of "main" so it will terminate by )
 			byte op = prog[pc++];
 
 			switch(op) {
@@ -42,11 +45,11 @@ public class Parser {
 			case ':': i = whitespaceAt(i, false); break;
 			case '!': i = linebreakAt(i); break;
 			// literals and sets
+			case '_': i++; break;
 			case '`': i = charAt(i); break;
 			case '\'':i = literalAt(i); break;
 			case '$': i = memberAt(i); break;
-			case '_': i++; break;
-			// seq mod
+			// sequences
 			case '~': break; // fill TODO
 			case '>': il = i; break; // look-ahead
 			case '<': decided = true; break; // decision
@@ -64,19 +67,25 @@ public class Parser {
 			case '7': min = 7; max=7; break;
 			case '8': min = 8; max=8; break;
 			case '9': min = 9; max=9; break;
+			// capture
+			case '=': tree.push(prog[pc++], i); nodes++; break; //TODO this just supports single char names
 			// ref
-			case '\\':
-			case '&': pcr = pc+2; pc = uint2(); eval(i, false); pc = pcr; break;
+			case '@': pcr = pc+2; pc = uint2(); eval(i, false); pc = pcr; break;
 			// nest-return
-			case '(': i = recur(i, false); break;
-			case '[': i = recur(i, true); break;
+			case '(': i = block(i, false); break;
+			case '[': i = block(i, true); break;
 			case ']': // this is the same as )
 			case '|': // this is also a return but not found when scanning for closing ] or )
 			case ')':
-				if (++c == max)
+				++c;
+				if (c == max) {
+					if (nodes > 0) { tree.done(nodes, i); }
 					return min(i, il);
-				if (c > max)
+				}
+				if (c > max) {
+					if (nodes > 0) { tree.pop(nodes); }
 					return mismatch(i);
+				}
 				ic = min(i, il); // remember last successful repetition
 				pc = pc0;
 				break;
@@ -94,7 +103,8 @@ public class Parser {
 					pcc = prog[pc] == '|' ? pc+1 : -1;
 				}
 				if (pcc < 0) { // no alternatives
-					return c < min ? i : ic;
+					tree.pop(nodes);
+					return c < min ? i : ic; // OBS! i is a mismatch already!
 				}
 				// there is an alternative
 				pc = pcc;
@@ -106,7 +116,7 @@ public class Parser {
 		return min(i, il);
 	}
 
-	private int recur(int i, boolean recover) {
+	private int block(int i, boolean recover) {
 		int pcr = afterNext(prog, pc, ')', '(');
 		i = eval(i, recover);
 		pc = pcr;

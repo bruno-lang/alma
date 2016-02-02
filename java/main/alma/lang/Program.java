@@ -22,6 +22,12 @@ public class Program {
 	}
 
 	public int parse(byte[] data) {
-		return new Parser(prog, data).parse();
+		return parse(data, new ParseTree(data.length/2));
+	}
+
+	public int parse(byte[] data, ParseTree tree) {
+		Parser parser = new Parser(prog, data, tree);
+		int end = parser.parse();
+		return end;
 	}
 }

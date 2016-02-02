@@ -4,6 +4,13 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+/**
+ * Tests all the basic elements of the parser.
+ * The test do not use "surface syntax".
+ * The rewriting is tested as part of the {@link Program}.
+ *
+ * @author jan
+ */
 public class TestParser {
 
 	@Test
@@ -112,6 +119,94 @@ public class TestParser {
 	}
 
 	@Test
+	public void simpleCaptureMatch() {
+		Program prog = Program.compile("=x'abc')");
+		ParseTree tree = new ParseTree(4);
+		assertEquals(3, prog.parse("abc".getBytes(), tree));
+		assertEquals(3, tree.end());
+		assertEquals('x', tree.rule(0));
+		assertEquals(0, tree.start(0));
+	}
+
+	@Test
+	public void simpleCaptureMismatch() {
+		Program prog = Program.compile("=x'aBc')");
+		ParseTree tree = new ParseTree(4);
+		assertEquals(-2, prog.parse("abc".getBytes(), tree));
+		assertEquals(0, tree.count());
+	}
+
+	@Test
+	public void simpleFixedLoopingMatch() {
+		Program prog = Program.compile("2'aBc')");
+		assertEquals(6, prog.parse("aBcaBc"));
+	}
+
+	@Test
+	public void simpleStarLoopingMatch() {
+		Program prog = Program.compile("*'aBc')");
+		assertEquals(3, prog.parse("aBc"));
+		assertEquals(6, prog.parse("aBcaBc"));
+		assertEquals(0, prog.parse(""));
+	}
+
+	@Test
+	public void simplePlusLoopingMatch() {
+		Program prog = Program.compile("+'aBc')");
+		assertEquals(3, prog.parse("aBc"));
+		assertEquals(6, prog.parse("aBcaBc"));
+	}
+
+	@Test
+	public void simplePlusLoopingMismatch() {
+		Program prog = Program.compile("+'aBc')");
+		assertEquals(-1, prog.parse(""));
+	}
+
+	@Test
+	public void simpleOptionLoopingMatch() {
+		Program prog = Program.compile("?'aBc')");
+		assertEquals(3, prog.parse("aBc"));
+		assertEquals(3, prog.parse("aBcaBc"));
+		assertEquals(0, prog.parse(""));
+	}
+
+	@Test
+	public void simpleRangeLoopingMatch() {
+		Program prog = Program.compile("2+'aBc')");
+		assertEquals(6, prog.parse("aBcaBc"));
+		assertEquals(9, prog.parse("aBcaBcaBc"));
+	}
+
+	@Test
+	public void simpleRangeLoopingMismatch() {
+		Program prog = Program.compile("2+'aBc')");
+		assertEquals(-4, prog.parse("aBc"));
+		assertEquals(-1, prog.parse(""));
+	}
+
+	@Test
+	public void basicMultiCaptureMatch() {
+		Program prog = Program.compile("=x'abc'=y'de')");
+		ParseTree tree = new ParseTree(4);
+		assertEquals(5, prog.parse("abcde".getBytes(), tree));
+		assertEquals(5, tree.end());
+		assertEquals(2, tree.count());
+		assertEquals('x', tree.rule(0));
+		assertEquals(0, tree.start(0));
+		assertEquals('y', tree.rule(1));
+		assertEquals(3, tree.start(1));
+	}
+
+	@Test
+	public void basicMultiCaptureMismatch() {
+		Program prog = Program.compile("=x'abc'=y'de')");
+		ParseTree tree = new ParseTree(4);
+		assertEquals(-4, prog.parse("abcDe".getBytes(), tree));
+		assertEquals(0, tree.count());
+	}
+
+	@Test
 	public void basicLiteralSequenceMatch() {
 		Program prog = Program.compile("'abc''def'");
 		assertEquals(6, prog.parse("abcdef"));
@@ -162,7 +257,7 @@ public class TestParser {
 	}
 
 	@Test
-	public void mixedStaircaseLoopingMatch() {
+	public void modestStaircaseLoopingMatch() {
 		Program prog = Program.compile("[2`a|1`b|3`c]");
 		assertEquals(2, prog.parse("aa"));
 		assertEquals(1, prog.parse("b"));
@@ -172,7 +267,7 @@ public class TestParser {
 	}
 
 	@Test
-	public void mixedStaircaseLoopingMismatch() {
+	public void modestStaircaseLoopingMismatch() {
 		Program prog = Program.compile("[2`a|1`b|3`c]");
 		assertEquals(-1, prog.parse(""));
 		assertEquals(-1, prog.parse("a"));
