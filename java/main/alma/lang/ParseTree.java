@@ -63,7 +63,7 @@ public final class ParseTree {
 		return levels[index];
 	}
 
-	public int rule(int index) {
+	public int id(int index) {
 		return rules[index];
 	}
 
@@ -71,7 +71,7 @@ public final class ParseTree {
 		return ends[0];
 	}
 
-	public int count() {
+	public int nodes() {
 		return top+1;
 	}
 
@@ -149,7 +149,7 @@ public final class ParseTree {
 
 	public int next(int index) {
 		final int l = level(index);
-		final int c = count();
+		final int c = nodes();
 		while (index < c) {
 			if (level(++index) <= l) {
 				return index;
@@ -181,24 +181,24 @@ public final class ParseTree {
 		int i = index;
 		final int level = level(i);
 		final int nextLevel = level+1; // the level we are looking for
-		final int count = count();
+		final int count = nodes();
 		i++;
 		if (i >= count || level(i) <= level) {
-			dest.sequentialPush(rule(index), level, start(index), end(index));
+			dest.sequentialPush(id(index), level, start(index), end(index));
 			return i;
 		}
 		int start = start(index);
 		while (i < count && level(i) == nextLevel) {
 			int s = start(i);
 			if (s > start) {
-				dest.sequentialPush(rule(index), -level(index), start, s);
+				dest.sequentialPush(id(index), -level(index), start, s);
 			}
 			i = sequential(dest, i);
 			start = dest.ends[dest.top];
 		}
 		int end = end(index);
 		if (end > start) {
-			dest.sequentialPush(rule(index), -level, start, end);
+			dest.sequentialPush(id(index), -level, start, end);
 		}
 		return i;
 	}

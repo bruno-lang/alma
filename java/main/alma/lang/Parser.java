@@ -78,13 +78,13 @@ final class Parser {
 			case '|': // this is also a return but not found when scanning for closing ] or )
 			case ')':
 				++c;
-				if (c == max) {
-					if (nodes > 0) { tree.done(nodes, i); }
-					return min(i, il);
-				}
 				if (c > max) {
-					if (nodes > 0) { tree.pop(nodes); }
+					if (nodes > 0) { tree.pop(nodes); } //OPEN most likely this will not work as soon as nested blocks add to the tree -> keep rewind index here?
 					return mismatch(i);
+				}
+				if (nodes > 0) { tree.done(nodes, i); nodes = 0; }
+				if (c == max) {
+					return min(i, il);
 				}
 				ic = min(i, il); // remember last successful repetition
 				pc = pc0;
