@@ -1,6 +1,7 @@
 package alma.lang;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -104,6 +105,18 @@ public class TestParser {
 	public void simpleLookAheadMismatch() {
 		Program prog = Program.compile("'abc'>'def'");
 		assertEquals(-5, prog.parse("abcdEf"));
+	}
+
+	@Test
+	public void simpleLockMatch() {
+		Program prog = Program.compile("['a'<'b'|'c*]");
+		assertEquals(2, prog.parse("abc"));
+	}
+
+	@Test
+	public void simpleLockMismatch() {
+		Program prog = Program.compile("['a'<'b'|'c*]");
+		assertNoMatch(prog, -2, "ac");
 	}
 
 	@Test
@@ -333,6 +346,15 @@ public class TestParser {
 	public void basicOptionNoMatch() {
 		Program prog = Program.compile("`a(?'bc')`d");
 		assertEquals(2, prog.parse("ad"));
+	}
+
+	private static void assertNoMatch(Program prog, int iError, String data) {
+		try {
+			prog.parse(data);
+			fail("Not a parse error:"+prog);
+		} catch (NoMatch e) {
+			assertEquals(iError, e.iError);
+		}
 	}
 
 	private static void assertNode(int id, int level, int start, int end, ParseTree tree, int index) {

@@ -33,7 +33,7 @@ final class Parser {
 		int max = 1;
 		int nodes = 0; // capture: 0 = no; > 0 amount of opened nodes
 		int c = 0;   // repetition count
-		boolean decided = false;
+		boolean locked = false;
 		while (pc < prog.length) { //TODO always append an ) to the end of "main" so it will terminate by )
 			byte op = prog[pc++];
 
@@ -48,11 +48,11 @@ final class Parser {
 			case '_': i++; break;
 			case '`': i = charAt(i); break;
 			case '\'':i = literalAt(i); break;
-			case '$': i = memberAt(i); break;
+			case '"': i = memberAt(i); break;
 			// sequences
 			case '~': break; // fill TODO
 			case '>': il = i; break; // look-ahead
-			case '<': decided = true; break; // decision
+			case '<': locked = true; break; // lock
 			// repetition
 			case '+': max = MAX_VALUE; break;
 			case '?': min = 0; break;
@@ -70,7 +70,7 @@ final class Parser {
 			// capture
 			case '=': tree.push(prog[pc++], i); nodes++; break; //TODO this just supports single char names
 			// ref
-			case '@': pcr = pc+2; pc = uint2(); eval(i, false); pc = pcr; break;
+			case '@': pcr = pc+2; pc = uint2(); eval(i, prog[pc++]=='['); pc = pcr; break;
 			// nest-return
 			case '(': i = block(i, false); break;
 			case '[': i = block(i, true); break;
@@ -93,8 +93,8 @@ final class Parser {
 				throw new RuntimeException("No such op: "+(char)op);
 			}
 			if (i < 0) { // mismatch
-				if (decided) {
-					throw new RuntimeException("Parse error: "+i);
+				if (locked) {
+					throw new NoMatch(data, i, i, tree);
 				}
 				if (recover) {
 					while (pc < prog.length && prog[pc] != '|' && prog[pc] != ']') {
