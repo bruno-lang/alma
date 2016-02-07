@@ -38,6 +38,8 @@ final class Parser {
 			byte op = prog[pc++];
 
 			switch(op) {
+			// noop
+			case ' ': break;
 			// whitespace
 			case ',': i = indentAt(i, true); break;
 			case ';': i = indentAt(i, false); break;
