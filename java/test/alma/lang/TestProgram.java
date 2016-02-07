@@ -52,25 +52,24 @@ public class TestProgram {
 
 	@Test
 	public void recordingAssignmentWithoutBlockToBlock() {
-		assertDesugars("foo = 'xzy'", "(=foo'xzy')");
+		assertDesugars("foo = 'xzy' ", "(=foo'xzy')");
 		assertDesugars("foo = 'xzy'\n", "(=foo'xzy')");
 	}
 
 	@Test
 	public void recordingAssignmentsWithoutBlockToBlock() {
-		assertDesugars("foo = 'xzy'\nbar = 'abc'", "(=foo'xzy')(=bar'abc')");
+		assertDesugars("foo = 'xzy'\nbar = 'abc'\n", "(=foo'xzy')(=bar'abc')");
 	}
 	
 	@Test
-	public void recordingBlockAsToBlock() {
-		assertDesugars("('xzy')=foo ", "(=foo'xzy')");
-		assertDesugars(" ('xzy')=foo ", "(=foo'xzy')");
+	public void recordingBlockAsNotToBlock() {
+		assertDesugars("('xzy')=foo", "('xzy')=foo");
+		assertDesugars(" ('xzy')=foo'a'", "('xzy')=foo'a'");
 	}
-
+	
 	@Test
-	public void recordingRecoveryBlockAsToBlock() {
-		assertDesugars("['xzy']=foo ", "[=foo'xzy']");
-		assertDesugars("('a') ['xzy']=x ", "('a')[=x'xzy']");
+	public void moderateExample() {
+		assertDesugars("expr = form (, form)* ", "(=exprform(*,form))");
 	}
 
 	private static void assertDesugars(String before, String after) {

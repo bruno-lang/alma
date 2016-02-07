@@ -43,24 +43,26 @@ Instructions
 
 Syntactic Sugar
 ---------------
-` ...? `    => `(?...)`
-` ...* `    => `(*...)`
-` ...+ `    => `(+...)`
-` ...*n-m ` => `(#nm...)`
-` ...5 `    => `(5...)`
-` ...5+ `   => `(5+...)`
+␣...?␣             ⇢ (?...)
+␣...*␣          ⇢ (*...)
+␣...+␣             ⇢ (+...)
+␣...*n-m␣       ⇢ (#nm...)
+␣ ...5␣            ⇢ (5...)
+␣...5+␣           ⇢ (5+...)
+(...)?       ⇢ (?...)
+[...]*       ⇢ (*...)
 
-`(...)=name `   => `(=name...)`
-`[...]=name `   => `[=name...]`
-`name = (...)`  => `(=name...)`
-`name = [...]`  => `[=name...]` 
-`name = ... \n` => `(=name...)`
+name␣=␣...\n ⇢ (=name...)
+name␣=␣(...) ⇢ (=name...)
+name␣=␣[...] ⇢ [=name...] 
+
+(␣  = any white-space)
 
 Files
 -----
-```
+
 alma/
 +-- _data/        example input files parsed in tests
 +-- alma/         several grammars specified in alma language
 +-- java/         java implementation
-```
+
