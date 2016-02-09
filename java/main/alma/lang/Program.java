@@ -1,7 +1,6 @@
 package alma.lang;
 
 import static java.lang.System.arraycopy;
-import static java.util.Arrays.copyOf;
 
 public final class Program {
 
@@ -19,7 +18,7 @@ public final class Program {
 		super();
 		this.prog = desugar(prog);
 	}
-	
+
 	/**
 	 * Assignments of type "name = ..." are desugared by rewriting the src
 	 * program first as just a short section has to be moved/changed that is
@@ -60,43 +59,15 @@ public final class Program {
 	 * is encountered. This mostly depends on WS.
 	 */
 	public static byte[] desugar(byte[] src) {
-		//TODO resolve names first so that letters do no longer appear except for recordings
 		desugarAssignments(src);
-		byte[] dest = new byte[src.length*2]; //TODO use shared long array to desugar that is copied to new dest array at the end
-		int iS = 0; // index src
-		int iD = 0; // index dest
-		int iND = -1; // index after last noop in dest
-		while (iS < src.length) {
-			byte op = src[iS++];
-			dest[iD++] = op;
-			if (isNoop(op)) {
-				iD--; // will override noop with next
-				iND = iD;
-			} else if (isLooping(op)) {
-				if (iS < src.length && isNoop(src[iS]) && iND >= 0) { // sugar
-					// are there loopings to the left?
-					int ll = 1;
-					while (isLooping(src[iS-ll])) ll++; //FIXME iS is after FIRST looping!
-					if (isBlockEnd(src[iS-2])) {
-						int iBD = afterPrevious('(', ')', dest, iD-3);
-						arraycopy(dest, iBD, dest, iBD+ll, iD-iBD);
-						arraycopy(src, iS, dest, iBD, ll);
-					} else {
-						arraycopy(dest, iND, dest, iND+1+ll, iD-iND-ll+2); // move
-						dest[iND] = '(';
-						dest[iND+1] = ' '; //NOOP for now, later: (byte) (iD-iND);
-						arraycopy(src, iS-ll+1, dest, iND+2, ll-1); //FIXME most likely this is wrong as iS still points after FIRST looping
-						iD+=2;
-						dest[iD++] = ')';
-					}
-					//TODO detect range and replace properly?
-				}
-			}
-			//TODO make room for block length
-		}
-		return copyOf(dest, iD);
+		desugarLoops(src);
+		return src;
 	}
-	
+
+	private static void desugarLoops(byte[] src) {
+		//FIXME one NOOP can become )( so it cannot be done just in the src array
+	}
+
 	private static int afterPrevious(char target, char inverse, byte[] prog, int pc) {
 		int c = 1;
 		while (c > 0 && pc > 0) {
@@ -105,7 +76,7 @@ public final class Program {
 			else if (prog[pc] == inverse) c++;
 		}
 		return pc+1;
-	}	
+	}
 
 	private static boolean isRec(byte op) {
 		return op == '=';
@@ -114,7 +85,7 @@ public final class Program {
 	private static boolean isBlockEnd(byte op) {
 		return op == ')' || op == ']';
 	}
-	
+
 	private static boolean isBlockStart(byte op) {
 		return op == '(' || op == '[';
 	}
@@ -124,7 +95,7 @@ public final class Program {
 	}
 
 	private static boolean isNoop(byte op) {
-		return op == ' ' || op == '\t' || op == '\n';
+		return op == ' ' || op == '\t';
 	}
 
 	private static boolean isName(byte op) {
