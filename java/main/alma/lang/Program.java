@@ -1,6 +1,9 @@
 package alma.lang;
 
+import static java.lang.Math.max;
 import static java.lang.System.arraycopy;
+
+import java.util.Arrays;
 
 public final class Program {
 
@@ -60,22 +63,89 @@ public final class Program {
 	 */
 	public static byte[] desugar(byte[] src) {
 		desugarAssignments(src);
-		desugarLoops(src);
+		src = desugarLoops(src);
 		return src;
 	}
 
-	private static void desugarLoops(byte[] src) {
-		//FIXME one NOOP can become )( so it cannot be done just in the src array
+	private static byte[] cleanup(byte[] src) {
+		byte[] dest = new byte[src.length];
+		int si = 0;
+		int di = 0;
+		while (si < src.length) {
+			byte op = src[si++];
+			dest[di++] = op;
+			if (isNoop(op)) {
+				di--;
+			}
+		}
+		return Arrays.copyOf(dest, di);
 	}
 
-	private static int afterPrevious(char target, char inverse, byte[] prog, int pc) {
+	private static byte[] desugarLoops(byte[] src) {
+		byte[] dest = new byte[src.length+max(16, src.length/5)];
+		int di = 0;
+		int si = 0;
+		while (si < src.length) {
+			byte op = src[si];
+			if (isComment(op)) {
+				si++;
+				while (!isComment(src[si]))
+				op = src[si];
+			}
+			dest[di] = op;
+			if (di > 0 && isNoop(op) && isLooping(dest[di-1])) {
+				int n = 1;
+				while (n < di && isLooping(dest[di-1-n])) n++;
+				if (isBlockEnd(dest[di-1-n])) {
+					int d0 = dest[di-1-n] == ')'
+							? previous('(', ')', dest, di-1-n)
+							: previous('[', ']', dest, di-1-n);
+					if (d0 > 0 && isNoop(dest[d0-1])) {
+						dest[d0-1] = dest[d0];
+						if (n == 1) { // just move the ( to space and loop to (
+							dest[d0] = dest[di-1];
+						} else {
+							moveRegion(dest, d0+1, di-n, n-1);
+							arraycopy(src, si-n, dest, d0, n);
+						}
+						dest[--di] = ' ';
+					}
+				} else {
+					int d0 = di-1;
+					while (d0 >= 0 && !isNoop(dest[d0])) d0--;
+					if (d0 >= 0) {
+						dest[d0] = '('; // space becomes (
+						moveRegion(dest, d0+1, di, n);
+						arraycopy(src, si-n, dest, d0+1, n);
+						dest[di] = ')';
+						dest[++di] = ' '; // have to keep the space for later loopings
+					}
+				}
+			}
+			if (di == 0 || !isNoop(dest[di]) || !isNoop(dest[di-1])) { // remove double NOOPs
+				di++;
+			}
+			si++;
+		}
+		return Arrays.copyOf(dest, di);
+	}
+
+	private static boolean isComment(byte op) {
+		return op == '%';
+	}
+
+	private static void moveRegion(byte[] arr, int start, int end, int by) {
+		arraycopy(arr, start, arr, start+by, end-start);
+	}
+
+	private static int previous(char target, char inverse, byte[] prog, int pc) {
 		int c = 1;
 		while (c > 0 && pc > 0) {
 			pc--;
 			if (prog[pc] == target) { c--; }
 			else if (prog[pc] == inverse) c++;
 		}
-		return pc+1;
+		return pc;
 	}
 
 	private static boolean isRec(byte op) {
