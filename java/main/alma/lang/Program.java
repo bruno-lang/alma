@@ -40,14 +40,16 @@ public final class Program {
 				while (j >= 0 && isNoop(src[j])) j--;
 				while (j >= 0 && isName(src[j])) j--;
 				j++;
-				arraycopy(src, j, src, j+2, i-j-1);
 				int k = i+2;
 				while (k < src.length && isNoop(src[k])) k++;
-				if (isBlockStart(src[k])) {
-					src[j]   = src[k];
-					src[j+1] = '=';
+				if (isBlockStart(src[k])) { // name_=_(...) => _(=name_ 
+					arraycopy(src, j, src, j+3, i-j-1);
+					src[j]   = ' ';
+					src[j+1] = src[k];
+					src[j+2] = '=';
 					src[k]   = ' ';
-				} else { // to end of line
+				} else { // name_=_...\n => (=name_...)
+					arraycopy(src, j, src, j+2, i-j-1);
 					while (k < src.length-1 && src[k] != '\n') k++;
 					src[j]   = '(';
 					src[j+1] = '=';
@@ -97,9 +99,7 @@ public final class Program {
 				int n = 1;
 				while (n < di && isLooping(dest[di-1-n])) n++;
 				if (isBlockEnd(dest[di-1-n])) {
-					int d0 = dest[di-1-n] == ')'
-							? previous('(', ')', dest, di-1-n)
-							: previous('[', ']', dest, di-1-n);
+					int d0 = openingBracket( dest, di-1-n);
 					if (d0 > 0 && isNoop(dest[d0-1])) {
 						dest[d0-1] = dest[d0];
 						if (n == 1) { // just move the ( to space and loop to (
@@ -138,7 +138,10 @@ public final class Program {
 		arraycopy(arr, start, arr, start+by, end-start);
 	}
 
-	private static int previous(char target, char inverse, byte[] prog, int pc) {
+	private static int openingBracket(byte[] prog, int closingIndex) {
+		int pc = closingIndex;
+		byte inverse = prog[pc];
+		byte target = (byte) (inverse == ')' ? '(' : '[');
 		int c = 1;
 		while (c > 0 && pc > 0) {
 			pc--;

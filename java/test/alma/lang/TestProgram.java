@@ -46,14 +46,14 @@ public class TestProgram {
 
 	@Test
 	public void recordingAssignmentWithBlockToBlock() {
-		assertDesugars("foo = ( 'xzy')", "(=foo 'xzy')");
-		assertDesugars("foo = \t( 'xzy')", "(=foo 'xzy')");
+		assertDesugars("foo = ( 'xzy')", " (=foo 'xzy')");
+		assertDesugars("foo = \t( 'xzy')", " (=foo\t'xzy')");
 	}
 
 	@Test
 	public void recordingAssignmentWithRecoveryBlockToBlock() {
-		assertDesugars("foo = ['xzy']", "[=foo 'xzy']");
-		assertDesugars("foo = \t['xzy']", "[=foo 'xzy']");
+		assertDesugars("foo = ['xzy']", " [=foo 'xzy']");
+		assertDesugars("foo = \t['xzy']", " [=foo\t'xzy']");
 	}
 
 	@Test
@@ -75,7 +75,7 @@ public class TestProgram {
 
 	@Test
 	public void nestedExample() {
-		assertDesugars("expr =  ( (form,)+ x)*  ", "");
+		assertDesugars("expr = 'x' ( (form,)+ x)* \n", "(=expr 'x'(*(+form,) x) )");
 	}
 
 	private static void assertDesugars(String before, String after) {
