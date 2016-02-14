@@ -124,6 +124,8 @@ public final class Program {
 			}
 			if (di == 0 || !isNoop(dest[di]) || !isNoop(dest[di-1])) { // remove double NOOPs
 				di++;
+			} else {
+				dest[di-1] = ' '; // unify to space NOOPs
 			}
 			si++;
 		}

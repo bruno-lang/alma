@@ -47,13 +47,13 @@ public class TestProgram {
 	@Test
 	public void recordingAssignmentWithBlockToBlock() {
 		assertDesugars("foo = ( 'xzy')", " (=foo 'xzy')");
-		assertDesugars("foo = \t( 'xzy')", " (=foo\t'xzy')");
+		assertDesugars("foo = \t( 'xzy')", " (=foo 'xzy')");
 	}
 
 	@Test
 	public void recordingAssignmentWithRecoveryBlockToBlock() {
 		assertDesugars("foo = ['xzy']", " [=foo 'xzy']");
-		assertDesugars("foo = \t['xzy']", " [=foo\t'xzy']");
+		assertDesugars("foo = \t['xzy']", " [=foo 'xzy']");
 	}
 
 	@Test

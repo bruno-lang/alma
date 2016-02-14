@@ -19,6 +19,12 @@ public class TestParser {
 		Program prog = Program.compile("'abc'");
 		assertEquals(3, prog.parse("abc"));
 	}
+	
+	@Test
+	public void simpleAlternativeLiteralMatch() {
+		Program prog = Program.compile("\"'\"");
+		assertEquals(1, prog.parse("'"));
+	}
 
 	@Test
 	public void simpleLiteralMismatch() {

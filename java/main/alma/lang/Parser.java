@@ -22,6 +22,8 @@ final class Parser {
 		return eval(0, false);
 	}
 
+	//TODO idea: add a space (noop) after ( and [ so that the length can be encoded there. do this on encounter, if there is a noop than the parser can fill with length, but how does the parser know that this is the length? => must be for all
+	
 	private int eval(int i0, boolean recover) {
 		int pc0 = pc;
 		int pcc = -1; // PC for next stair-case
@@ -49,8 +51,10 @@ final class Parser {
 			// literals and sets
 			case '_': i++; break;
 			case '`': i = charAt(i); break;
+			case '"':
 			case '\'':i = literalAt(i); break;
-			case '"': i = memberAt(i); break;
+			case '&': i = memberAt(i); break;
+			case '/': i = matchAt(i); break; 
 			// sequences
 			case '~': break; // fill TODO
 			case '>': il = i; break; // look-ahead
@@ -192,9 +196,27 @@ final class Parser {
 	}
 
 	private int literalAt(int i0) {
+		final int end = prog[pc-1];
 		int i = i0;
 		while (i < data.length && pc < prog.length && prog[pc] == data[i]) { pc++; i++; }
-		return prog[pc++] == '\'' ? i : mismatch(i);
+		return prog[pc++] == end ? i : mismatch(i);
+	}
+	
+	private int matchAt(int i0) { // /,x,y,z,, (double separator means end)
+		int sep = prog[pc++];
+		int i = i0;
+		byte p = prog[pc];
+		while (true) {
+			while (p != sep && pc < prog.length && i < data.length && p == data[i]) { i++; p=prog[pc++]; }
+			if (p == sep) {
+				//FIXME forward PC to after the match
+				return i;
+			}
+			while (pc < prog.length && prog[pc] != sep) pc++;
+			pc++;
+			if (pc >= prog.length || prog[pc] == sep)
+				return mismatch(i0);
+		}
 	}
 
 	private int uint2() {

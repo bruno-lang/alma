@@ -52,9 +52,9 @@ Syntactic Sugar
 ␣(...)?␣     ⇢ (?...)
 ␣[...]*␣     ⇢ (*...)
 
-name␣=␣...\n ⇢ (=name...)
-name␣=␣(...) ⇢ (=name...)
-name␣=␣[...] ⇢ [=name...] 
+name␣=␣...\n ⇢  (=name...)
+name␣=␣(...) ⇢ ␣(=name...)
+name␣=␣[...] ⇢ ␣[=name...] 
 
 (␣  = any white-space)
 
