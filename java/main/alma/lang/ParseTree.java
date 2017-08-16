@@ -24,12 +24,12 @@ public final class ParseTree {
 	private int level = -1;
 	private int top = -1;
 
-	public ParseTree(int nodes) {
+	public ParseTree(int maxNodes) {
 		super();
-		this.rules = new int[nodes];
-		this.starts = new int[nodes];
-		this.ends = new int[nodes];
-		this.levels = new int[nodes];
+		this.rules = new int[maxNodes];
+		this.starts = new int[maxNodes];
+		this.ends = new int[maxNodes];
+		this.levels = new int[maxNodes];
 	}
 
 	private ParseTree(int[] rules, int[] starts, int[] ends, int[] levels,	int level, int top) {
@@ -75,27 +75,26 @@ public final class ParseTree {
 		return top+1;
 	}
 
+	public void pop(int levels) {
+		for (int i = 0; i < levels; i++)
+			pop();
+	}
+	
 	public void pop() {
 		top = indexStack[level]-1;
 		level--;
-	}
-
-	public void pop(int levels) {
-		top = indexStack[level-levels+1]-1;
-		level-=levels;
 	}
 
 	public void done(int end) {
 		ends[indexStack[level]] = end;
 		level--;
 	}
-
-	public void done(int levels, int end) {
-		for (int i = 0; i < levels; i++) {
+	
+	public void done(int end, int levels) {
+		for (int i = 0; i < levels; i++)
 			done(end);
-		}
 	}
-
+ 
 	public void erase(int position) {
 		// TODO couldn't this also work on levels? remember that there might be junk on the stack from escaping a nested block
 		while (top >= 0 && ends[top] > position) {

@@ -2,8 +2,13 @@ package alma.lang;
 
 import static java.lang.Math.max;
 import static java.lang.System.arraycopy;
+import static java.util.Arrays.copyOfRange;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class Program {
 
@@ -22,159 +27,110 @@ public final class Program {
 		this.prog = desugar(prog);
 	}
 
-	/**
-	 * Assignments of type "name = ..." are desugared by rewriting the src
-	 * program first as just a short section has to be moved/changed that is
-	 * guaranteed to fit into same space.
-	 */
-	private static void desugarAssignments(byte[] src) {
-		// name = (
-		// j      k
-		// name = ....\n
-		// j          k
-		int i = 0;
-		while (i+1 < src.length) {
-			i++;
-			if (isRec(src[i]) && isNoop(src[i-1]) && isNoop(src[i+1])) {
-				int j = i-1;
-				while (j >= 0 && isNoop(src[j])) j--;
-				while (j >= 0 && isName(src[j])) j--;
-				j++;
-				int k = i+2;
-				while (k < src.length && isNoop(src[k])) k++;
-				if (isBlockStart(src[k])) { // name_=_(...) => _(=name_ 
-					arraycopy(src, j, src, j+3, i-j-1);
-					src[j]   = ' ';
-					src[j+1] = src[k];
-					src[j+2] = '=';
-					src[k]   = ' ';
-				} else { // name_=_...\n => (=name_...)
-					arraycopy(src, j, src, j+2, i-j-1);
-					while (k < src.length-1 && src[k] != '\n') k++;
-					src[j]   = '(';
-					src[j+1] = '=';
-					src[k]   = ')';
-				}
-			}
-		}
+	static byte[] desugar(byte[] prog) {
+		byte[] dest = new byte[prog.length+prog.length/3];
+		return copyOfRange(dest, 0, desugar(prog, 0, prog.length, dest, 0));
+		
+		// 0. step: strip comments
+		
+		// 1. step: split into a list of blocks and their names (must be 1. to be able to resolve backwards refs later)
+		// the single outer most block is always at index zero (named or not)
+//		List<byte[]> blocks = new ArrayList<byte[]>();
+//		Map<String, Integer> names = new LinkedHashMap<String, Integer>();
+		//FIXME names can be used anywhere within a block blocks 
+		// 
+
+		// for each named block
+		// 2. step: de-sugar repetition including [ => (?
+		// keep all WS, insert new ( )
+		
+		// 3. step: (in-place) replace multi digit reps with ^c (use WS as filler)
+		
+		// 3.5 : index names (blocks starting with a name would be considered "global" and thereby referable)
+		
+		// 4. step: replace references (calls) with internal refs
+		
+		// 5. step: strip unneeded no-ops (some are needed as name delimiters unless names are replaced with internal instructions)
+		
 	}
 
-	/**
-	 * Basic strategy: scan left to right, identify and move sections when sugar
-	 * is encountered. This mostly depends on WS.
-	 */
-	public static byte[] desugar(byte[] src) {
-		desugarAssignments(src);
-		src = desugarLoops(src);
-		return src;
-	}
-
-	private static byte[] cleanup(byte[] src) {
-		byte[] dest = new byte[src.length];
-		int si = 0;
-		int di = 0;
-		while (si < src.length) {
-			byte op = src[si++];
-			dest[di++] = op;
-			if (isNoop(op)) {
-				di--;
-			}
-		}
-		return Arrays.copyOf(dest, di);
-	}
-
-	private static byte[] desugarLoops(byte[] src) {
-		byte[] dest = new byte[src.length+max(16, src.length/5)];
-		int di = 0;
-		int si = 0;
-		while (si < src.length) {
-			byte op = src[si];
-			if (isComment(op)) {
-				si++;
-				while (!isComment(src[si]))
-				op = src[si];
-			}
-			dest[di] = op;
-			if (di > 0 && isNoop(op) && isLooping(dest[di-1])) {
-				int n = 1;
-				while (n < di && isLooping(dest[di-1-n])) n++;
-				if (isBlockEnd(dest[di-1-n])) {
-					int d0 = openingBracket( dest, di-1-n);
-					if (d0 > 0 && isNoop(dest[d0-1])) {
-						dest[d0-1] = dest[d0];
-						if (n == 1) { // just move the ( to space and loop to (
-							dest[d0] = dest[di-1];
-						} else {
-							moveRegion(dest, d0+1, di-n, n-1);
-							arraycopy(src, si-n, dest, d0, n);
+	static int desugar(byte[] src, int ri, int re, byte[] dest, int wi) {
+		while (ri < re) {
+			byte op = src[ri++];
+			if (op == '%') { // comments
+				while (!isEndOfComment(src[ri])) ri++;
+			} else if (isNoop(op)) {
+				int nextNoop = ri;
+				while (nextNoop < re && !isNoop(src[nextNoop])) nextNoop++;
+				int beforeRep = nextNoop-1;
+				if (isRep(src[beforeRep])) {
+					while (isRep(src[--beforeRep]));
+					if (beforeRep >= 0 && src[beforeRep] != ')') { // if its a block don't touch it
+						dest[wi++] = '(';
+						for (int i = beforeRep+1; i < nextNoop; i++) {
+							byte rep = src[i];
+							if (rep !=  '{' && rep != '}') {
+								dest[wi++] = rep;
+							}
 						}
-						dest[--di] = ' ';
+						for (int i = ri; i <= beforeRep; i++) {
+							dest[wi++] = src[i];
+						}
+						dest[wi++] = ')';
+						ri = nextNoop; // this way this NOOP is evaluated also as next start of sugar
+					} else {
+						dest[wi++] = op;
 					}
 				} else {
-					int d0 = di-1;
-					while (d0 >= 0 && !isNoop(dest[d0])) d0--;
-					if (d0 >= 0) {
-						dest[d0] = '('; // space becomes (
-						moveRegion(dest, d0+1, di, n);
-						arraycopy(src, si-n, dest, d0+1, n);
-						dest[di] = ')';
-						dest[++di] = ' '; // have to keep the space for later loopings
-					}
+					dest[wi++] = op;
 				}
-			}
-			if (di == 0 || !isNoop(dest[di]) || !isNoop(dest[di-1])) { // remove double NOOPs
-				di++;
+			} else if (op == '(') { 
+				int closingBracket = end(src, ri);
+				int afterRep = closingBracket+1;
+				if (afterRep < re && isRep(src[afterRep])) {
+					while (++afterRep < re && isRep(src[afterRep]));
+					if (afterRep < re && isNoop(src[afterRep])) {
+						dest[wi++] = op;
+						for (int i = closingBracket+1; i < afterRep; i++) {
+							int rep = src[i];
+							if (rep !=  '{' && rep != '}') {
+								dest[wi++] = src[i];
+							}
+						}
+						wi = desugar(src, ri, closingBracket, dest, wi);
+						dest[wi++] = ')';
+						ri = afterRep; // NOOP could start of sugar again
+					} else {
+						dest[wi++] = op;
+					}
+				} else {
+					dest[wi++] = op;
+				}
 			} else {
-				dest[di-1] = ' '; // unify to space NOOPs
+				dest[wi++] = op;
 			}
-			si++;
 		}
-		return Arrays.copyOf(dest, di);
+		return wi;
 	}
-
-	private static boolean isComment(byte op) {
-		return op == '%';
+	
+	private static boolean isEndOfComment(byte op) {
+		return op == '%' || op == '\n';
 	}
-
-	private static void moveRegion(byte[] arr, int start, int end, int by) {
-		arraycopy(arr, start, arr, start+by, end-start);
-	}
-
-	private static int openingBracket(byte[] prog, int closingIndex) {
-		int pc = closingIndex;
-		byte inverse = prog[pc];
-		byte target = (byte) (inverse == ')' ? '(' : '[');
-		int c = 1;
-		while (c > 0 && pc > 0) {
-			pc--;
-			if (prog[pc] == target) { c--; }
-			else if (prog[pc] == inverse) c++;
-		}
-		return pc;
-	}
-
-	private static boolean isRec(byte op) {
-		return op == '=';
-	}
-
-	private static boolean isBlockEnd(byte op) {
-		return op == ')' || op == ']';
-	}
-
-	private static boolean isBlockStart(byte op) {
-		return op == '(' || op == '[';
-	}
-
-	private static boolean isLooping(byte op) {
-		return op == '*' || op == '+' || op == '?' || op >= '1' && op <= '9' || op == '-';
+	
+	private static boolean isRep(byte op) {
+		return op == '*' || op == '+' || op == '?' || op >= '1' && op <= '9' || op == '-' || op == '{' || op == '}'; 
 	}
 
 	private static boolean isNoop(byte op) {
-		return op == ' ' || op == '\t';
+		return op == ' ' || op == '\t' || op == '\r' || op == '\n';
 	}
 
+	private static boolean isMidName(byte op) {
+		return isName(op) || op == '-' || op == '_';
+	}
+	
 	private static boolean isName(byte op) {
-		return op >= 'a' && op <= 'z' || op >= 'A' && op <= 'Z' || op == '-';
+		return op >= 'a' && op <= 'z' || op >= 'A' && op <= 'Z' || op == '#' || op == '$';
 	}
 
 	public int parse(String data) {
@@ -194,5 +150,24 @@ public final class Program {
 	@Override
 	public String toString() {
 		return new String(prog);
+	}
+
+	static int end(byte[] prog, int pc0) {
+		int pcEnd = pc0;
+		int level = 1;
+		while (pcEnd < prog.length) {
+			byte op = prog[pcEnd];
+			if (op == ')') {
+				level--;
+				if (level == 0)
+					return pcEnd;
+			} else if (op == '(') {
+				level++;
+			} else if (op == '\'') {
+				while (prog[++pcEnd] != '\'');
+			}
+			pcEnd++;
+		}
+		return pcEnd-1;
 	}
 }

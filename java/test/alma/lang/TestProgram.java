@@ -1,7 +1,9 @@
 package alma.lang;
 
-import static alma.lang.Program.desugar;
 import static org.junit.Assert.assertEquals;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
@@ -9,76 +11,80 @@ public class TestProgram {
 
 
 	@Test
-	public void loopingSuffixToBlock() {
-		assertDesugars(" 'xy'? ", "(?'xy') ");
+	public void desugarsBareSingleRepSuffixToBlock() {
+		assertDesugars(" 'xy'? ",  "(?'xy') ");
 		assertDesugars(" 'xyz'* ", "(*'xyz') ");
 		assertDesugars(" <'xy'+ ", "(+<'xy') ");
 		assertDesugars(" 'xy'>5 ", "(5'xy'>) ");
 	}
 
 	@Test
-	public void loopingDoubleSuffixToBlock() {
-		assertDesugars(" 'xy'5+ ", "(5+'xy') ");
+	public void desugarsBareMultiSuffixToBlock() {
+		assertDesugars(" 'xy'5+ ",  "(5+'xy') ");
 		assertDesugars(" 'xyz'5* ", "(5*'xyz') ");
 	}
-
+	
 	@Test
-	public void noLoopingDoubleSuffixNotToBlock() {
-		assertDesugars("'xy'5+ ", "'xy'5+ ");
-		assertDesugars(" 'xyz'5*", " 'xyz'5*");
+	public void desugarsBareEndSuffixToBlock() {
+		assertDesugars(" 'xyz'5*", "(5*'xyz')");
 	}
 
 	@Test
-	public void loopingRangeSuffixToBlock() {
+	public void desugarsBareRangeSuffixToBlock() {
 		assertDesugars(" 'xy'*1-4 ", "(*1-4'xy') ");
 	}
 
 	@Test
-	public void twiceLoopingSuffixToBlock() {
+	public void desugarsBareFancyRangeSuffixToBlock() {
+		assertDesugars(" 'xy'{1-4} ", "(1-4'xy') ");
+	}
+	
+	@Test
+	public void doesNotDesugarRepWithoutLeadingWS() {
+		assertDesugars("'xy'5+ ",  "'xy'5+ ");
+	}
+
+	@Test
+	public void desugarsMultipleBareSuffixesToBlocks() {
 		assertDesugars(" 'x'+ 'y'* ", "(+'x')(*'y') ");
 	}
 
 	@Test
-	public void doubleLoopingSuffixOnBlockIntoBlock() {
-		assertDesugars(" ('x')1+ ", "(1+'x') ");
-		assertDesugars(" ['x']1+ ", "[1+'x'] ");
+	public void movesBlockRepSuffixIntoBlock() {
+		assertDesugars("('x')1+ ", "(1+'x') ");
+		assertDesugars("('x')1+ ('y')? ", "(1+'x') (?'y') ");
+	}
+	
+	@Test
+	public void movesNestedRepSuffixIntoBlock() {
+		assertDesugars("(('x')? 'y')+ ", "(+(?'x') 'y') ");
+		assertDesugars("(('x' (.foo){2-5} )? 'y')+ ", "(+(?'x' (2-5.foo) ) 'y') ");
 	}
 
 	@Test
-	public void recordingAssignmentWithBlockToBlock() {
-		assertDesugars("foo = ( 'xzy')", " (=foo 'xzy')");
-		assertDesugars("foo = \t( 'xzy')", " (=foo 'xzy')");
-	}
-
-	@Test
-	public void recordingAssignmentWithRecoveryBlockToBlock() {
-		assertDesugars("foo = ['xzy']", " [=foo 'xzy']");
-		assertDesugars("foo = \t['xzy']", " [=foo 'xzy']");
-	}
-
-	@Test
-	public void recordingAssignmentWithoutBlockToBlock() {
+	public void desugarsBareAssignmentIntoBlock() {
 		assertDesugars("foo = 'xzy' ", "(=foo 'xzy')");
 		assertDesugars("foo = 'xzy'\n", "(=foo 'xzy')");
-	}
-
-	@Test
-	public void recordingAssignmentsWithoutBlockToBlock() {
 		assertDesugars("foo = 'xzy'\nbar = 'abc'\n", "(=foo 'xzy')(=bar 'abc')");
 	}
-
+	
 	@Test
-	public void moderateExample() {
-		assertDesugars("expr = form (, form)*  ", "(=expr form(*, form) )");
-		assertDesugars("expr = form [, form]*  ", "(=expr form[*, form] )");
+	public void desugarsAssignmentWithBracketsIntoBlock() {
+		assertDesugars("foo = { 'xzy'}",   " (=foo 'xzy')");
+		assertDesugars("foo = \t{ 'xzy'}", " (=foo 'xzy')");
 	}
 
 	@Test
-	public void nestedExample() {
+	public void exampleListOfTerms() {
+		assertDesugars("expr = form (, form)*  ", "(=expr form(*, form) )");
+	}
+
+	@Test
+	public void exampleNestedReps() {
 		assertDesugars("expr = 'x' ( (form,)+ x)* \n", "(=expr 'x'(*(+form,) x) )");
 	}
 
 	private static void assertDesugars(String before, String after) {
-		assertEquals(after, new String(desugar(before.getBytes())));
+		assertEquals(after, new String(Program.desugar(before.getBytes()), StandardCharsets.US_ASCII));
 	}
 }

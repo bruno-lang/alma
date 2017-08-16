@@ -1,0 +1,26 @@
+OUTDATED! only one language that is directly interpreted 
+
+I1
+==
+(aka the instructions used to describe grammars)
+I1 generates I2 that controls the parser so it parses a source file written in syntax described by I1.
+
+Improvements:
+- have instructions with just one byte
+- have instruction-blocks for patters (blocks start and end with same byte, everything in-between is the pattern)
+- patterns: 
+  literals 'xyz', 
+  charsets "xyz" 
+  ranges [9], [9-13] (numerical ascii value)
+- find a way to not requiring -Name syntax, should be name=... (use line break as instruction)
+- union of sets using | ("or") that is later optimized to a single set
+- no \names any more, all types of rules are "on one level" 
+- _ should be a valid name used for "any" by prelude
+- otherwise use UPPER CASE for sets in prelude, TAB, CR, LF, WS, A_Z, a_z, BIN, OCT, DEC, HEX
+- ' is done as "'" or [39] (which will be optimized to a literal
+- ranges, sets and length-1 literals are merged to sets internally
+
+
+I2
+==
+(aka the instruction used to parse source files)

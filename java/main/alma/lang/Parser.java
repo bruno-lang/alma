@@ -12,87 +12,94 @@ final class Parser {
 		this.tree = tree;
 	}
 
-	private final byte[] prog;
+	private final byte[] prog; //TODO split in list of named blocks and names during compile step, refs use indexes to list
 	private final byte[] data;
 	private final ParseTree tree;
 
 	private int pc;
 
 	public int parse() {
-		return eval(0, false);
+		return eval(0);
 	}
 
 	//TODO idea: add a space (noop) after ( and [ so that the length can be encoded there. do this on encounter, if there is a noop than the parser can fill with length, but how does the parser know that this is the length? => must be for all
 	
-	private int eval(int i0, boolean recover) {
+	//IDEA do internal length encoding for cases | and names = directly following the code
+	// a block without further cases (the last case) has length -length
+	
+	private int eval(final int i0) {
 		int pc0 = pc;
-		int pcc = -1; // PC for next stair-case
 		int pcr = -1; // index to return to from recursive call
 		int i = i0;  // current data index
 		int ic = i0; // data index at the end of last successful repetition
 		int il = MAX_VALUE; // data index for look-ahead
+		int c = 0;   // repetition count
 		int min = 1;
 		int max = 1;
-		int nodes = 0; // capture: 0 = no; > 0 amount of opened nodes
-		int c = 0;   // repetition count
+		boolean setMin = true;
 		boolean locked = false;
-		while (pc < prog.length) { //TODO always append an ) to the end of "main" so it will terminate by )
+		boolean hasCases = false;
+		int pce = pc0;
+		while (!hasCases && pce < prog.length)
+			hasCases = prog[pce++] == '|';
+		int pushed = 0;
+		while (pc < prog.length) { //TODO idea: always append an ) to the end of "main" so it will terminate by ) then no check will be needed
 			byte op = prog[pc++];
 
 			switch(op) {
 			// noop
 			case ' ': break;
 			// whitespace
-			case ',': i = indentAt(i, true); break;
-			case ';': i = indentAt(i, false); break;
+			case ',': i = gapAt(i, true); break;
+			case ';': i = gapAt(i, false); break;
 			case '.': i = whitespaceAt(i, true); break;
 			case ':': i = whitespaceAt(i, false); break;
-			case '!': i = linebreakAt(i); break;
-			// literals and sets
-			case '_': i++; break;
-			case '`': i = charAt(i); break;
-			case '"':
+			case '!': i = wrapAt(i); break;
+			case '\\': i = linebreakAt(i); break;
+			// other character sets
+			case '_': i++; break; // any
+			case '"': i = memberAt(i); break;
+			// literals 
 			case '\'':i = literalAt(i); break;
-			case '&': i = memberAt(i); break;
-			case '/': i = matchAt(i); break; 
 			// sequences
-			case '~': break; // fill TODO
+			case '~': i = fillAt(i); break; // fill
 			case '>': il = i; break; // look-ahead
 			case '<': locked = true; break; // lock
 			// repetition
-			case '+': max = MAX_VALUE; break;
+			case '-': setMin = false; break;
 			case '?': min = 0; break;
-			case '*': min = 0; max = MAX_VALUE; break;
-			case '#': min = uint1(); max = uint1(); break;
-			case '1': min = 1; max=1; break;
-			case '2': min = 2; max=2; break;
-			case '3': min = 3; max=3; break;
-			case '4': min = 4; max=4; break;
-			case '5': min = 5; max=5; break;
-			case '6': min = 6; max=6; break;
-			case '7': min = 7; max=7; break;
-			case '8': min = 8; max=8; break;
-			case '9': min = 9; max=9; break;
+			case '*': min = 0; // intentional fall-through 
+			case '+': max = MAX_VALUE; break;
+			case '0': max=0; if (setMin) { min=0; } break;
+			case '1': max=1; if (setMin) { min=1; } break;
+			case '2': max=2; if (setMin) { min=2; } break;
+			case '3': max=3; if (setMin) { min=3; } break;
+			case '4': max=4; if (setMin) { min=4; } break;
+			case '5': max=5; if (setMin) { min=5; } break;
+			case '6': max=6; if (setMin) { min=6; } break;
+			case '7': max=7; if (setMin) { min=7; } break;
+			case '8': max=8; if (setMin) { min=8; } break;
+			case '9': max=9; if (setMin) { min=9; } break;
+			case '^': max=uint1(); if (setMin) { min=max; } break;
 			// capture
-			case '=': tree.push(prog[pc++], i); nodes++; break; //TODO this just supports single char names
+			case '=': tree.push(prog[pc++], i); pushed++; break; //TODO this just supports single char names
 			// ref
-			case '@': pcr = pc+2; pc = uint2(); eval(i, prog[pc++]=='['); pc = pcr; break;
-			// nest-return
-			case '(': i = block(i, false); break;
-			case '[': i = block(i, true); break;
-			case ']': // this is the same as )
-			case '|': // this is also a return but not found when scanning for closing ] or )
-			case ')':
+			case '@': pcr = pc+2; pc = uint2(); eval(i); pc = pcr; break;
+			// blocks
+			case '(': i = blockAt(i); break;
+			case '|': // end of case; intentional fall-through 
+			case ')': // end of block
 				++c;
 				if (c > max) {
-					if (nodes > 0) { tree.pop(nodes); } //OPEN most likely this will not work as soon as nested blocks add to the tree -> keep rewind index here?
+					tree.pop(pushed);
 					return mismatch(i);
 				}
-				if (nodes > 0) { tree.done(nodes, i); nodes = 0; }
-				if (c == max) {
-					return min(i, il);
-				}
 				ic = min(i, il); // remember last successful repetition
+				tree.done(ic, pushed);
+				if (c == max) {
+					return ic;
+				}
+				pushed = 0;
 				pc = pc0;
 				break;
 			default :
@@ -102,72 +109,87 @@ final class Parser {
 				if (locked) {
 					throw new NoMatch(data, i, i, tree);
 				}
-				if (recover) {
-					while (pc < prog.length && prog[pc] != '|' && prog[pc] != ']') {
+				int pcc = -1; // PC for next case
+				if (hasCases) {
+					// jump to next case
+					while (pc < prog.length && prog[pc] != '|' && prog[pc] != ')') {
 						pc++;
 					}
-					pcc = prog[pc] == '|' ? pc+1 : -1;
+					pcc = pc < prog.length && prog[pc] == '|' ? pc+1 : -1;
 				}
-				if (pcc < 0) { // no alternatives
-					tree.pop(nodes);
+				if (pcc < 0) { // no more cases
+					tree.pop(pushed);
 					return c < min ? i : ic; // OBS! i is a mismatch already!
 				}
-				// there is an alternative
+				// there is another case
 				pc = pcc;
 				pc0 = pc;
 				i = i0;
 				ic = i0;
+				il = MAX_VALUE; // each case has its own look-ahead
+				setMin=true; min=1;	max=1;
 			}
 		}
 		return min(i, il);
 	}
 
-	private int block(int i, boolean recover) {
-		int pcr = afterNext(prog, pc, ')', '(');
-		i = eval(i, recover);
-		pc = pcr;
+	private int blockAt(int i0) {
+		final int pc0 = pc;
+		final int i = eval(i0);
+		pc = end(pc0)+1;
 		return i;
 	}
-
-	private static int afterNext(byte[] arr, int i0, char close, char open) {
+	
+	public int fillAt(int i0) {
+		final int iE = data.length;
+		final int pc0 = pc;
 		int i = i0;
-		int c = 1;
-		while (c > 0 && i < arr.length) {
-			if (arr[i] == close) {
-				c--;
-			} else if (arr[i] == open) {
-				c++;
-			}
+		while (true) { 
+			if (i >= iE)
+				return mismatch(iE);
+			int iN = eval(i);
+			pc = pc0;
+			if (iN > 0)
+				return i;
 			i++;
 		}
-		return i;
+	}
+	
+	private int end(int pc0) {
+		return Program.end(prog, pc0);
 	}
 
 	private int memberAt(int i0) {
-		int n = data[i0];
-		int bn = n / 8;
-		int sn = n % 8;
-		byte b = prog[pc+bn];
-		pc+=32;
-		return ((1 << sn) & b) > 0 ? i0+1 : mismatch(i0);
+		int x = data[i0];
+		int m = prog[pc];
+		while (m != x && m != '"') { m = prog[++pc]; }
+		if (m != x) {
+			return mismatch(i0);
+		}
+		while (prog[pc] != '"') pc++;
+		return i0+1;
 	}
-
-	private int linebreakAt(int i0) {
-		final int ie = data.length;
+	
+	private int linebreakAt(final int i0) {
 		int i = i0;
-		i = indentAt(i, true);
-		if (i >= ie) {
-			return i; // end of input is also treated as wrap
-		}
-		final int w = i;
-		while (i < ie && isLinebreak(data[i])) { i++; }
-		if (w == i) {
-			return mismatch(i);
-		}
-		return indentAt(i, true);
+		if (i < data.length && data[i] == '\r') // mac, win
+			i++;
+		if (i < data.length && data[i] == '\n') // linux, win
+			i++;
+		return i == i0 ? mismatch(i) : i;
 	}
 
-	private int indentAt(int i0, boolean optional) {
+	private int wrapAt(int i0) {
+		int i = i0;
+		i = gapAt(i, true);
+		if (i >= data.length)
+			return i; // end of input is also treated as wrap
+		if (!isWrap(data[i])) 
+			return mismatch(i);
+		return whitespaceAt(i, true);
+	}
+
+	private int gapAt(int i0, boolean optional) {
 		int i = i0;
 		while (i < data.length && isIndent(data[i])) { i++; }
 		return i > i0 || optional ? i : mismatch(i0);
@@ -183,7 +205,7 @@ final class Parser {
 		return b == ' ' || b == '\t';
 	}
 
-	private static boolean isLinebreak(int b) {
+	private static boolean isWrap(int b) {
 		return b == '\n' || b == '\r';
 	}
 
@@ -191,34 +213,13 @@ final class Parser {
 		return b >= 9 && b <=13 || b == 32;
 	}
 
-	private int charAt(int i0) {
-		return i0 < data.length && prog[pc++] == data[i0] ? i0+1 : mismatch(i0);
-	}
-
 	private int literalAt(int i0) {
 		final int end = prog[pc-1];
 		int i = i0;
 		while (i < data.length && pc < prog.length && prog[pc] == data[i]) { pc++; i++; }
-		return prog[pc++] == end ? i : mismatch(i);
+		return pc < prog.length && prog[pc++] == end ? i : mismatch(i);
 	}
 	
-	private int matchAt(int i0) { // /,x,y,z,, (double separator means end)
-		int sep = prog[pc++];
-		int i = i0;
-		byte p = prog[pc];
-		while (true) {
-			while (p != sep && pc < prog.length && i < data.length && p == data[i]) { i++; p=prog[pc++]; }
-			if (p == sep) {
-				//FIXME forward PC to after the match
-				return i;
-			}
-			while (pc < prog.length && prog[pc] != sep) pc++;
-			pc++;
-			if (pc >= prog.length || prog[pc] == sep)
-				return mismatch(i0);
-		}
-	}
-
 	private int uint2() {
 		return (uint1() << 8) | uint1();
 	}
