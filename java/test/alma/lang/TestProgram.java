@@ -48,6 +48,12 @@ public class TestProgram {
 	public void desugarsMultipleBareSuffixesToBlocks() {
 		assertDesugars(" 'x'+ 'y'* ", "(+'x')(*'y') ");
 	}
+	
+	@Test
+	public void desugarsOptionalBracketsToBlock() {
+		assertDesugars("['x']", "(?'x')");
+		assertDesugars("['x'['y']]", "(?'x'(?'y'))");
+	}
 
 	@Test
 	public void movesBlockRepSuffixIntoBlock() {

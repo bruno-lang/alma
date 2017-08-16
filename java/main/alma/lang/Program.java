@@ -67,15 +67,8 @@ public final class Program {
 					while (isRep(src[--beforeRep]));
 					if (beforeRep >= 0 && src[beforeRep] != ')') { // if its a block don't touch it
 						dest[wi++] = '(';
-						for (int i = beforeRep+1; i < nextNoop; i++) {
-							byte rep = src[i];
-							if (rep !=  '{' && rep != '}') {
-								dest[wi++] = rep;
-							}
-						}
-						for (int i = ri; i <= beforeRep; i++) {
-							dest[wi++] = src[i];
-						}
+						wi = copyRange(src, beforeRep+1, nextNoop, dest, wi);
+						wi = desugar(src, ri, beforeRep+1, dest, wi);
 						dest[wi++] = ')';
 						ri = nextNoop; // this way this NOOP is evaluated also as next start of sugar
 					} else {
@@ -91,12 +84,7 @@ public final class Program {
 					while (++afterRep < re && isRep(src[afterRep]));
 					if (afterRep < re && isNoop(src[afterRep])) {
 						dest[wi++] = op;
-						for (int i = closingBracket+1; i < afterRep; i++) {
-							int rep = src[i];
-							if (rep !=  '{' && rep != '}') {
-								dest[wi++] = src[i];
-							}
-						}
+						wi = copyRange(src, closingBracket+1, afterRep, dest, wi);
 						wi = desugar(src, ri, closingBracket, dest, wi);
 						dest[wi++] = ')';
 						ri = afterRep; // NOOP could start of sugar again
@@ -106,7 +94,24 @@ public final class Program {
 				} else {
 					dest[wi++] = op;
 				}
+			} else if (op == '[') {
+				int closingBracket = end(src, ri, '[', ']');
+				dest[wi++] = '(';
+				dest[wi++] = '?';
+				wi = desugar(src, ri, closingBracket, dest, wi);
+				dest[wi++] = ')';
+				ri = closingBracket+1;
 			} else {
+				dest[wi++] = op;
+			}
+		}
+		return wi;
+	}
+
+	private static int copyRange(byte[] src, int from, int to, byte[] dest,	int wi) {
+		for (int i = from; i < to; i++) {
+			byte op = src[i];
+			if (op !=  '{' && op != '}') {
 				dest[wi++] = op;
 			}
 		}
@@ -153,15 +158,19 @@ public final class Program {
 	}
 
 	static int end(byte[] prog, int pc0) {
+		return end(prog, pc0, '(', ')');
+	}
+	
+	static int end(byte[] prog, int pc0, char begin, char end) {
 		int pcEnd = pc0;
 		int level = 1;
 		while (pcEnd < prog.length) {
 			byte op = prog[pcEnd];
-			if (op == ')') {
+			if (op == end) {
 				level--;
 				if (level == 0)
 					return pcEnd;
-			} else if (op == '(') {
+			} else if (op == begin) {
 				level++;
 			} else if (op == '\'') {
 				while (prog[++pcEnd] != '\'');
