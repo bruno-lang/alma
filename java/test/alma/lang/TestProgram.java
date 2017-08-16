@@ -79,6 +79,14 @@ public class TestProgram {
 		assertDesugars("foo = { 'xzy'}",   " (=foo 'xzy')");
 		assertDesugars("foo = \t{ 'xzy'}", " (=foo 'xzy')");
 	}
+	
+	@Test
+	public void commentsAreRemoved() {
+		assertDesugars("('x')1+ % comment", "(1+'x') ");
+		assertDesugars("%comment%('x')1+ ", "(1+'x') ");
+		assertDesugars("(%comment%'x')1+ ", "(1+'x') ");
+		assertDesugars("('x'%comment%)1+ ", "(1+'x') ");
+	}
 
 	@Test
 	public void exampleListOfTerms() {

@@ -57,8 +57,11 @@ public final class Program {
 	static int desugar(byte[] src, int ri, int re, byte[] dest, int wi) {
 		while (ri < re) {
 			byte op = src[ri++];
+			dest[wi++] = op; // this is the default - we might override it in special cases
 			if (op == '%') { // comments
-				while (!isEndOfComment(src[ri])) ri++;
+				wi--; // take back '%' in dest
+				while (ri < re && !isEndOfComment(src[ri])) ri++;
+				if (ri < re && src[ri] == '%') ri++;
 			} else if (isNoop(op)) {
 				int nextNoop = ri;
 				while (nextNoop < re && !isNoop(src[nextNoop])) nextNoop++;
@@ -66,43 +69,33 @@ public final class Program {
 				if (isRep(src[beforeRep])) {
 					while (isRep(src[--beforeRep]));
 					if (beforeRep >= 0 && src[beforeRep] != ')') { // if its a block don't touch it
-						dest[wi++] = '(';
+						dest[wi-1] = '(';
 						wi = copyRange(src, beforeRep+1, nextNoop, dest, wi);
 						wi = desugar(src, ri, beforeRep+1, dest, wi);
 						dest[wi++] = ')';
 						ri = nextNoop; // this way this NOOP is evaluated also as next start of sugar
-					} else {
-						dest[wi++] = op;
-					}
-				} else {
-					dest[wi++] = op;
-				}
+					} 
+				} 
 			} else if (op == '(') { 
 				int closingBracket = end(src, ri);
 				int afterRep = closingBracket+1;
 				if (afterRep < re && isRep(src[afterRep])) {
 					while (++afterRep < re && isRep(src[afterRep]));
 					if (afterRep < re && isNoop(src[afterRep])) {
-						dest[wi++] = op;
+						dest[wi-1] = op;
 						wi = copyRange(src, closingBracket+1, afterRep, dest, wi);
 						wi = desugar(src, ri, closingBracket, dest, wi);
 						dest[wi++] = ')';
 						ri = afterRep; // NOOP could start of sugar again
-					} else {
-						dest[wi++] = op;
-					}
-				} else {
-					dest[wi++] = op;
-				}
+					} 
+				} 
 			} else if (op == '[') {
 				int closingBracket = end(src, ri, '[', ']');
-				dest[wi++] = '(';
+				dest[wi-1] = '(';
 				dest[wi++] = '?';
 				wi = desugar(src, ri, closingBracket, dest, wi);
 				dest[wi++] = ')';
 				ri = closingBracket+1;
-			} else {
-				dest[wi++] = op;
 			}
 		}
 		return wi;
