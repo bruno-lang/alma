@@ -2,7 +2,6 @@ package alma.lang;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
@@ -69,15 +68,15 @@ public class TestProgram {
 
 	@Test
 	public void desugarsBareAssignmentIntoBlock() {
-		assertDesugars("foo = 'xzy' ", "(=foo 'xzy')");
+		assertDesugars("foo = 'xzy' ", "(=foo 'xzy' )");
 		assertDesugars("foo = 'xzy'\n", "(=foo 'xzy')");
 		assertDesugars("foo = 'xzy'\nbar = 'abc'\n", "(=foo 'xzy')(=bar 'abc')");
 	}
 	
 	@Test
 	public void desugarsAssignmentWithBracketsIntoBlock() {
-		assertDesugars("foo = { 'xzy'}",   " (=foo 'xzy')");
-		assertDesugars("foo = \t{ 'xzy'}", " (=foo 'xzy')");
+		assertDesugars("foo = {'xzy'}",   "(=foo 'xzy')");
+		assertDesugars("foo = \t{'xzy'}", "(=foo 'xzy')");
 	}
 	
 	@Test
@@ -90,12 +89,12 @@ public class TestProgram {
 
 	@Test
 	public void exampleListOfTerms() {
-		assertDesugars("expr = form (, form)*  ", "(=expr form(*, form) )");
+		assertDesugars("expr = form (, form)* ", "(=expr form (*, form) )");
 	}
 
 	@Test
 	public void exampleNestedReps() {
-		assertDesugars("expr = 'x' ( (form,)+ x)* \n", "(=expr 'x'(*(+form,) x) )");
+		assertDesugars("expr = 'x' ( (form,)+ x)* \n", "(=expr 'x' (* (+form,) x) )");
 	}
 
 	private static void assertDesugars(String before, String after) {

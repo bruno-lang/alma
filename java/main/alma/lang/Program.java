@@ -1,14 +1,6 @@
 package alma.lang;
 
-import static java.lang.Math.max;
-import static java.lang.System.arraycopy;
 import static java.util.Arrays.copyOfRange;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 public final class Program {
 
@@ -82,7 +74,7 @@ public final class Program {
 				if (afterRep < re && isRep(src[afterRep])) {
 					while (++afterRep < re && isRep(src[afterRep]));
 					if (afterRep < re && isNoop(src[afterRep])) {
-						dest[wi-1] = op;
+						dest[wi-1] = '(';
 						wi = copyRange(src, closingBracket+1, afterRep, dest, wi);
 						wi = desugar(src, ri, closingBracket, dest, wi);
 						dest[wi++] = ')';
@@ -96,6 +88,32 @@ public final class Program {
 				wi = desugar(src, ri, closingBracket, dest, wi);
 				dest[wi++] = ')';
 				ri = closingBracket+1;
+			} else if (op == '=' && isNoop(src[ri]) && ri > 1 && isNoop(src[ri-2])) {
+				int nameEnd = ri-1;
+				while (nameEnd >= 0 && isNoop(src[--nameEnd]));
+				if (nameEnd >= 0 && isName(src[nameEnd])) {
+					int nameStart = nameEnd;
+					while (nameStart > 0 && isMidName(src[nameStart-1])) nameStart--;
+					int len = nameEnd-nameStart+1;
+					wi -= len+2;
+					dest[wi++] = '(';
+					dest[wi++] = '=';
+					for (int i = nameStart; i <= nameEnd; i++)
+						dest[wi++] = src[i];
+					dest[wi++] = ' ';
+					int ruleStart = ri;
+					while (isNoop(src[++ruleStart]));
+					int ruleEnd = ruleStart;
+					if (src[ruleStart] == '{') {
+						while (ruleEnd < re && src[ruleEnd] != '}') ruleEnd++;
+						wi = desugar(src, ruleStart+1, ruleEnd, dest, wi);
+					} else { // to end of line
+						while (ruleEnd < re && src[ruleEnd] != '\n') ruleEnd++;
+						wi = desugar(src, ruleStart, ruleEnd, dest, wi);
+					}
+					dest[wi++] = ')';
+					ri = ruleEnd+1;
+				}
 			}
 		}
 		return wi;
