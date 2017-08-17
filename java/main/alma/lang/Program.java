@@ -2,9 +2,23 @@ package alma.lang;
 
 import static java.util.Arrays.copyOfRange;
 
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public final class Program {
 
-	private byte[] prog;
+	/**
+	 * the de-sugared original program (mostly for debugging purposes) 
+	 */
+	private final byte[] prog;
+	
+	/**
+	 * The begin index of the named blocks.
+	 */
+	private final int[] begins;
+	
+	private final String[] names;
 
 	public static Program compile(String prog) {
 		return compile(prog.getBytes());
@@ -14,36 +28,42 @@ public final class Program {
 		return new Program(prog);
 	}
 
-	private Program(byte[] prog) {
+	private Program(byte[] uprog) {
 		super();
-		this.prog = desugar(prog);
+		this.prog = uprog[0] == '$' ? uprog : desugar(uprog);
+		Map<String, Integer> names = new LinkedHashMap<>();
+		for (int i = 0; i < prog.length; i++) {
+			byte op = prog[i];
+			if (op == '=') {
+				int s = i+1;
+				int e = s;
+				while (isMidName(prog[++e]));
+				String name = new String(prog,s,e-s, StandardCharsets.US_ASCII);
+				names.put(name, i-1); // pointing to the ( for now
+				prog[s] = (byte) names.size();
+				for (int j = s+1; j < e; j++)
+					prog[j] = ' '; // inserting NOOPs for rest of the name
+				i = e-1;
+			} else if (op == '\'' || op == '"') {
+				while (++i < prog.length && prog[i] != op);
+			}
+		}
+		// TODO (in-place) replace multi digit reps with ^c (use WS as filler)
+		// TODO replace references (calls) with internal refs
+		// TODO strip unneeded no-ops (some are needed as name delimiters unless names are replaced with internal instructions)
+		this.names = names.keySet().toArray(new String[0]);
+		this.begins = new int[names.size()];
+		int i = 0;
+		for (Integer begin : names.values()) {
+			this.begins[i++] = begin;
+		}
+		System.out.println(toString());
+		System.out.println(names);
 	}
 
 	static byte[] desugar(byte[] prog) {
-		byte[] dest = new byte[prog.length+prog.length/3];
+		byte[] dest = new byte[prog.length+Math.max(10,prog.length/3)];
 		return copyOfRange(dest, 0, desugar(prog, 0, prog.length, dest, 0));
-		
-		// 0. step: strip comments
-		
-		// 1. step: split into a list of blocks and their names (must be 1. to be able to resolve backwards refs later)
-		// the single outer most block is always at index zero (named or not)
-//		List<byte[]> blocks = new ArrayList<byte[]>();
-//		Map<String, Integer> names = new LinkedHashMap<String, Integer>();
-		//FIXME names can be used anywhere within a block blocks 
-		// 
-
-		// for each named block
-		// 2. step: de-sugar repetition including [ => (?
-		// keep all WS, insert new ( )
-		
-		// 3. step: (in-place) replace multi digit reps with ^c (use WS as filler)
-		
-		// 3.5 : index names (blocks starting with a name would be considered "global" and thereby referable)
-		
-		// 4. step: replace references (calls) with internal refs
-		
-		// 5. step: strip unneeded no-ops (some are needed as name delimiters unless names are replaced with internal instructions)
-		
 	}
 
 	static int desugar(byte[] src, int ri, int re, byte[] dest, int wi) {
@@ -54,6 +74,10 @@ public final class Program {
 				wi--; // take back '%' in dest
 				while (ri < re && !isEndOfComment(src[ri])) ri++;
 				if (ri < re && src[ri] == '%') ri++;
+			} else if (op == '\'' || op == '"') { // we need to transfer literals and sets "as is"
+				while (ri < re && src[ri] != op) 
+					dest[wi++] = src[ri++]; // skip literal/set
+				dest[wi++] = src[ri++];     // and the " or '
 			} else if (isNoop(op)) {
 				int nextNoop = ri;
 				while (nextNoop < re && !isNoop(src[nextNoop])) nextNoop++;
@@ -113,7 +137,9 @@ public final class Program {
 					}
 					dest[wi++] = ')';
 					ri = ruleEnd+1;
-				}
+				} 
+			} else if (isName(op) && (ri >= re || !isMidName(src[ri])) && (ri <= 1 || !isMidName(src[ri-2]))) {
+				dest[wi++] = ' '; // part of @ internalisation, we make sure all single letter names have a space afterwards so @x has space in dest array 
 			}
 		}
 		return wi;
@@ -149,23 +175,20 @@ public final class Program {
 		return op >= 'a' && op <= 'z' || op >= 'A' && op <= 'Z' || op == '#' || op == '$';
 	}
 
-	public int parse(String data) {
-		return parse(data.getBytes());
+	public ParseTree parse(String data) {
+		return parse(data.getBytes(StandardCharsets.US_ASCII));
 	}
 
-	public int parse(byte[] data) {
-		return parse(data, new ParseTree(data.length/2));
-	}
-
-	public int parse(byte[] data, ParseTree tree) {
+	public ParseTree parse(byte[] data) {
+		ParseTree tree = new ParseTree(128, names);
 		Parser parser = new Parser(prog, data, tree);
-		int end = parser.parse();
-		return end;
+		tree.end = parser.parse();
+		return tree;
 	}
 
 	@Override
 	public String toString() {
-		return new String(prog);
+		return new String(prog, StandardCharsets.US_ASCII);
 	}
 
 	static int end(byte[] prog, int pc0) {
@@ -184,7 +207,7 @@ public final class Program {
 			} else if (op == begin) {
 				level++;
 			} else if (op == '\'') {
-				while (prog[++pcEnd] != '\'');
+				while (pcEnd < end && prog[++pcEnd] != '\'');
 			}
 			pcEnd++;
 		}

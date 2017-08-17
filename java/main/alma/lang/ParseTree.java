@@ -14,26 +14,31 @@ import java.util.Arrays;
  */
 public final class ParseTree {
 
+	private final String[] names;
+	
 	private final int[] rules;
 	private final int[] levels;
 	private final int[] starts;
 	private final int[] ends;
+	int end;
 
 	private final int[] indexStack = new int[50];
 
 	private int level = -1;
 	private int top = -1;
 
-	public ParseTree(int maxNodes) {
+	public ParseTree(int maxNodes, String[] names) {
 		super();
+		this.names = names;
 		this.rules = new int[maxNodes];
 		this.starts = new int[maxNodes];
 		this.ends = new int[maxNodes];
 		this.levels = new int[maxNodes];
 	}
 
-	private ParseTree(int[] rules, int[] starts, int[] ends, int[] levels,	int level, int top) {
+	private ParseTree(String[] names, int[] rules, int[] starts, int[] ends, int[] levels,	int level, int top) {
 		super();
+		this.names = names;
 		this.rules = rules;
 		this.starts = starts;
 		this.ends = ends;
@@ -63,12 +68,16 @@ public final class ParseTree {
 		return levels[index];
 	}
 
-	public int id(int index) {
+	public int ruleId(int index) {
 		return rules[index];
+	}
+	
+	public String rule(int index) {
+		return names[ruleId(index)-1];
 	}
 
 	public int end() {
-		return ends[0];
+		return end;
 	}
 
 	public int nodes() {
@@ -160,7 +169,7 @@ public final class ParseTree {
 	public ParseTree debug() {
 		int t = 0;
 		while (rules[t] > 0) { t++; }
-		return new ParseTree(rules, starts, ends, levels, 0, t-1);
+		return new ParseTree(names, rules, starts, ends, levels, 0, t-1);
 	}
 
 	public boolean isSequential() {
@@ -171,7 +180,7 @@ public final class ParseTree {
 		if (isSequential()) {
 			return this;
 		}
-		ParseTree l = new ParseTree(rules.length);
+		ParseTree l = new ParseTree(rules.length, names);
 		sequential(l, 0);
 		return l;
 	}
@@ -183,21 +192,21 @@ public final class ParseTree {
 		final int count = nodes();
 		i++;
 		if (i >= count || level(i) <= level) {
-			dest.sequentialPush(id(index), level, start(index), end(index));
+			dest.sequentialPush(ruleId(index), level, start(index), end(index));
 			return i;
 		}
 		int start = start(index);
 		while (i < count && level(i) == nextLevel) {
 			int s = start(i);
 			if (s > start) {
-				dest.sequentialPush(id(index), -level(index), start, s);
+				dest.sequentialPush(ruleId(index), -level(index), start, s);
 			}
 			i = sequential(dest, i);
 			start = dest.ends[dest.top];
 		}
 		int end = end(index);
 		if (end > start) {
-			dest.sequentialPush(id(index), -level, start, end);
+			dest.sequentialPush(ruleId(index), -level, start, end);
 		}
 		return i;
 	}

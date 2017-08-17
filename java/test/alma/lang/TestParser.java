@@ -17,93 +17,93 @@ public class TestParser {
 	@Test
 	public void simpleLiteralMatch() {
 		Program prog = Program.compile("'abc'");
-		assertEquals(3, prog.parse("abc"));
+		assertEquals(3, prog.parse("abc").end());
 	}
 	
 	@Test
 	public void simpleLiteralMismatch() {
 		Program prog = Program.compile("'abc'");
-		assertEquals(-3, prog.parse("abX"));
+		assertEquals(-3, prog.parse("abX").end());
 	}
 
 	@Test
 	public void simpleIndentMatch() {
 		Program prog = Program.compile(",");
-		assertEquals(2, prog.parse("\t "));
+		assertEquals(2, prog.parse("\t ").end());
 
 		prog = Program.compile(",");
-		assertEquals(0, prog.parse("X"));
+		assertEquals(0, prog.parse("X").end());
 	}
 
 	@Test
 	public void simpleIndentMismatch() {
 		Program prog = Program.compile(";");
-		assertEquals(-1, prog.parse("X\t "));
+		assertEquals(-1, prog.parse("X\t ").end());
 	}
 
 	@Test
 	public void simpleWhitespaceMatch() {
 		Program prog = Program.compile(".");
-		assertEquals(4, prog.parse("\t \n\r"));
+		assertEquals(4, prog.parse("\t \n\r").end());
 
 		prog = Program.compile(".");
-		assertEquals(0, prog.parse("X"));
+		assertEquals(0, prog.parse("X").end());
 	}
 
 	@Test
 	public void simpleWhitespaceMismatch() {
 		Program prog = Program.compile(":");
-		assertEquals(-1, prog.parse("X\n\t "));
+		assertEquals(-1, prog.parse("X\n\t ").end());
 	}
 
 	@Test
 	public void simpleLinebreakMatch() {
 		Program prog = Program.compile("!");
-		assertEquals(3, prog.parse("\t\n "));
+		assertEquals(3, prog.parse("\t\n ").end());
 
 		prog = Program.compile("!");
-		assertEquals(2, prog.parse("\t "));
+		assertEquals(2, prog.parse("\t ").end());
 	}
 
 	@Test
 	public void simpleWildcardMatch() {
 		Program prog = Program.compile("_");
-		assertEquals(1, prog.parse("a"));
-		assertEquals(1, prog.parse(" "));
-		assertEquals(1, prog.parse(":"));
-		assertEquals(1, prog.parse("^"));
+		assertEquals(1, prog.parse("a").end());
+		assertEquals(1, prog.parse(" ").end());
+		assertEquals(1, prog.parse(":").end());
+		assertEquals(1, prog.parse("^").end());
 	}
 
 	@Test
 	public void simpleLinebreakMismatch() {
 		Program prog = Program.compile("!");
-		assertEquals(-3, prog.parse("\t X"));
+		assertEquals(-3, prog.parse("\t X").end());
 	}
 	
 	@Test
 	public void matchesNewline() {
 		Program prog = Program.compile("\\");
-		assertEquals(2, prog.parse("\r\n"));
-		assertEquals(1, prog.parse("\n"));
-		assertEquals(1, prog.parse("\r"));
+		assertEquals(2, prog.parse("\r\n").end());
+		assertEquals(1, prog.parse("\n").end());
+		assertEquals(1, prog.parse("\r").end());
 	}
 
 	@Test
 	public void simpleLookAheadMatch() {
 		Program prog = Program.compile("'abc'>'def'");
-		assertEquals(3, prog.parse("abcdef"));
+		assertEquals(3, prog.parse("abcdef").end());
 	}
 
 	@Test
 	public void simpleLookAheadMismatch() {
 		Program prog = Program.compile("'abc'>'def'");
-		assertEquals(-5, prog.parse("abcdEf"));
+		assertEquals(-5, prog.parse("abcdEf").end());
 	}
 
 	@Test
 	public void simpleLockMatch() {
 		Program prog = Program.compile("('a'<'b'|'c'*)");
-		assertEquals(2, prog.parse("abc"));
+		assertEquals(2, prog.parse("abc").end());
 	}
 
 	@Test
@@ -115,85 +115,98 @@ public class TestParser {
 	@Test
 	public void simpleOptionMatch() {
 		Program prog = Program.compile("?'abc'");
-		assertEquals(3, prog.parse("abc"));
+		assertEquals(3, prog.parse("abc").end());
 	}
 
 	@Test
 	public void simpleOptionNoMatch() {
 		Program prog = Program.compile("?'abc'");
-		assertEquals(0, prog.parse("aBc"));
+		assertEquals(0, prog.parse("aBc").end());
 	}
 
 	@Test
 	public void simpleCaptureMatch() {
 		Program prog = Program.compile("=x'abc')");
-		ParseTree tree = new ParseTree(4);
-		assertEquals(3, prog.parse("abc".getBytes(), tree));
+		ParseTree tree = prog.parse("abc");
+		assertEquals(3, tree.end());
 		assertNode('x', 0, 0, 3, tree, 0);
 	}
 
 	@Test
 	public void simpleCaptureMismatch() {
 		Program prog = Program.compile("=x'aBc')");
-		ParseTree tree = new ParseTree(4);
-		assertEquals(-2, prog.parse("abc".getBytes(), tree));
+		ParseTree tree = prog.parse("abc");
+		assertEquals(-2, tree.end());
 		assertEquals(0, tree.nodes());
 	}
 
 	@Test
 	public void simpleFixedLoopingMatch() {
 		Program prog = Program.compile("2'aBc')");
-		assertEquals(6, prog.parse("aBcaBc"));
+		assertEquals(6, prog.parse("aBcaBc").end());
 	}
 
 	@Test
 	public void simpleStarLoopingMatch() {
 		Program prog = Program.compile("*'aBc')");
-		assertEquals(3, prog.parse("aBc"));
-		assertEquals(6, prog.parse("aBcaBc"));
-		assertEquals(0, prog.parse(""));
+		assertEquals(3, prog.parse("aBc").end());
+		assertEquals(6, prog.parse("aBcaBc").end());
+		assertEquals(0, prog.parse("").end());
 	}
 
 	@Test
 	public void simplePlusLoopingMatch() {
 		Program prog = Program.compile("+'aBc')");
-		assertEquals(3, prog.parse("aBc"));
-		assertEquals(6, prog.parse("aBcaBc"));
+		assertEquals(3, prog.parse("aBc").end());
+		assertEquals(6, prog.parse("aBcaBc").end());
 	}
 
 	@Test
 	public void simplePlusLoopingMismatch() {
 		Program prog = Program.compile("+'aBc')");
-		assertEquals(-1, prog.parse(""));
+		assertEquals(-1, prog.parse("").end());
 	}
 
 	@Test
 	public void simpleOptionLoopingMatch() {
 		Program prog = Program.compile("?'aBc')");
-		assertEquals(3, prog.parse("aBc"));
-		assertEquals(3, prog.parse("aBcaBc"));
-		assertEquals(0, prog.parse(""));
+		assertEquals(3, prog.parse("aBc").end());
+		assertEquals(3, prog.parse("aBcaBc").end());
+		assertEquals(0, prog.parse("").end());
 	}
 
 	@Test
 	public void simpleRangeLoopingMatch() {
 		Program prog = Program.compile("2+'aBc')");
-		assertEquals(6, prog.parse("aBcaBc"));
-		assertEquals(9, prog.parse("aBcaBcaBc"));
+		assertEquals(6, prog.parse("aBcaBc").end());
+		assertEquals(9, prog.parse("aBcaBcaBc").end());
 	}
 
 	@Test
 	public void simpleRangeLoopingMismatch() {
 		Program prog = Program.compile("2+'aBc')");
-		assertEquals(-4, prog.parse("aBc"));
-		assertEquals(-1, prog.parse(""));
+		assertEquals(-4, prog.parse("aBc").end());
+		assertEquals(-1, prog.parse("").end());
+	}
+	
+	@Test
+	public void simpleDigitMatch() {
+		Program prog = Program.compile("#");
+		assertEquals(1, prog.parse("1").end());
+		assertEquals(1, prog.parse("9").end());
+	}
+	
+	@Test
+	public void simpleDigitMismatch() {
+		Program prog = Program.compile("#");
+		assertEquals(-1, prog.parse("a").end());
 	}
 
 	@Test
 	public void basicMultiCaptureMatch() {
 		Program prog = Program.compile("(=x'abc'=y'de'=z'f')");
-		ParseTree tree = new ParseTree(4);
-		assertEquals(6, prog.parse("abcdef".getBytes(), tree));
+		ParseTree tree = prog.parse("abcdef");
+		assertEquals(6, tree.end());
 		assertNode('x', 0, 0, 6, tree, 0);
 		assertNode('y', 1, 3, 6, tree, 1);
 		assertNode('z', 2, 5, 6, tree, 2);
@@ -202,16 +215,16 @@ public class TestParser {
 	@Test
 	public void basicMultiCaptureMismatch() {
 		Program prog = Program.compile("(=x'abc'=y'de')");
-		ParseTree tree = new ParseTree(4);
-		assertEquals(-4, prog.parse("abcDe".getBytes(), tree));
+		ParseTree tree = prog.parse("abcDe");
+		assertEquals(-4, tree.end());
 		assertEquals(0, tree.nodes());
 	}
 
 	@Test
 	public void basicCaptureLoopMatch() {
 		Program prog = Program.compile("(+=x'ab')");
-		ParseTree tree = new ParseTree(4);
-		assertEquals(6, prog.parse("ababab".getBytes(), tree));
+		ParseTree tree = prog.parse("ababab");
+		assertEquals(6, tree.end());
 		assertEquals(3, tree.nodes());
 		assertNode('x', 0, 0, 2, tree, 0);
 		assertNode('x', 0, 2, 4, tree, 1);
@@ -221,94 +234,94 @@ public class TestParser {
 	@Test
 	public void basicLiteralSequenceMatch() {
 		Program prog = Program.compile("'abc''def'");
-		assertEquals(6, prog.parse("abcdef"));
+		assertEquals(6, prog.parse("abcdef").end());
 	}
 
 	@Test
 	public void basicSpacedLiteralSequenceMatch() {
 		Program prog = Program.compile("'abc','def'");
-		assertEquals(7, prog.parse("abc def"));
+		assertEquals(7, prog.parse("abc def").end());
 	}
 
 	@Test
 	public void basicLiteralSequenceMismatch() {
 		Program prog = Program.compile("'abc''def'");
-		assertEquals(-5, prog.parse("abcdEf"));
+		assertEquals(-5, prog.parse("abcdEf").end());
 	}
 
 	@Test
 	public void basicSpacedLiteralSequenceMismatch() {
 		Program prog = Program.compile("'abc','def'");
-		assertEquals(-6, prog.parse("abc dEf"));
+		assertEquals(-6, prog.parse("abc dEf").end());
 	}
 
 	@Test
 	public void basicSubsequenceMatch() {
 		Program prog = Program.compile("'abc'('def')");
-		assertEquals(6, prog.parse("abcdef"));
+		assertEquals(6, prog.parse("abcdef").end());
 	}
 
 	@Test
 	public void basicSubsequenceMismatch() {
 		Program prog = Program.compile("'abc'('def')");
-		assertEquals(-5, prog.parse("abcdEf"));
+		assertEquals(-5, prog.parse("abcdEf").end());
 	}
 
 	@Test
 	public void basicStaircaseMatch() {
 		Program prog = Program.compile("('a'|'b'|'c')");
-		assertEquals(1, prog.parse("a"));
-		assertEquals(1, prog.parse("b"));
-		assertEquals(1, prog.parse("c"));
+		assertEquals(1, prog.parse("a").end());
+		assertEquals(1, prog.parse("b").end());
+		assertEquals(1, prog.parse("c").end());
 	}
 
 	@Test
 	public void basicStaircaseMismatch() {
 		Program prog = Program.compile("('a'|'b'|'c')");
-		assertEquals(-1, prog.parse("d"));
+		assertEquals(-1, prog.parse("d").end());
 	}
 
 	@Test
 	public void modestStaircaseLoopingMatch() {
 		Program prog = Program.compile("(2'a'|'b'|3'c')");
-		assertEquals(2, prog.parse("aa"));
-		assertEquals(1, prog.parse("b"));
-		assertEquals(3, prog.parse("ccc"));
+		assertEquals(2, prog.parse("aa").end());
+		assertEquals(1, prog.parse("b").end());
+		assertEquals(3, prog.parse("ccc").end());
 		// but also
-		assertEquals(1, prog.parse("bb"));
+		assertEquals(1, prog.parse("bb").end());
 	}
 
 	@Test
 	public void modestStaircaseLoopingMismatch() {
 		Program prog = Program.compile("(2'a'|'b'|3'c')");
-		assertEquals(-1, prog.parse(""));
-		assertEquals(-1, prog.parse("a"));
-		assertEquals(-3, prog.parse("cc"));
+		assertEquals(-1, prog.parse("").end());
+		assertEquals(-1, prog.parse("a").end());
+		assertEquals(-3, prog.parse("cc").end());
 	}
 
 	@Test
 	public void modestNestedLoopingMatch() {
 		Program prog = Program.compile("(+'abc'(*'de'(2'f')))");
-		assertEquals(3, prog.parse("abc"));
-		assertEquals(3, prog.parse("abcde"));
-		assertEquals(7, prog.parse("abcdeff"));
-		assertEquals(9, prog.parse("abcabcabc"));
-		assertEquals(10, prog.parse("abcdeffabc"));
-		assertEquals(14, prog.parse("abcdeffabcdeff"));
+		assertEquals(3, prog.parse("abc").end());
+		assertEquals(3, prog.parse("abcde").end());
+		assertEquals(7, prog.parse("abcdeff").end());
+		assertEquals(9, prog.parse("abcabcabc").end());
+		assertEquals(10, prog.parse("abcdeffabc").end());
+		assertEquals(14, prog.parse("abcdeffabcdeff").end());
 	}
 
 	@Test
 	public void modestNestedLoopingMismatch() {
 		Program prog = Program.compile("(+'abc'(*'de'(2'f')))");
-		assertEquals(-1, prog.parse(""));
-		assertEquals(-3, prog.parse("ab"));
+		assertEquals(-1, prog.parse("").end());
+		assertEquals(-3, prog.parse("ab").end());
 	}
 
 	@Test
 	public void nestedBlocksCaptureMatch() {
 		Program prog = Program.compile("(=a'a'(=b'b'(=c'c')'d')'e')");
-		ParseTree tree = new ParseTree(20);
-		assertEquals(5, prog.parse("abcde".getBytes(), tree));
+		ParseTree tree = prog.parse("abcde");
+		assertEquals(5, tree.end());
 		assertEquals(3, tree.nodes());
 		assertNode('a', 0, 0, 5, tree, 0);
 		assertNode('b', 1, 1, 4, tree, 1);
@@ -318,28 +331,28 @@ public class TestParser {
 	@Test
 	public void nestedBlocksCaptureWithLoopsMatch() {
 		Program prog = Program.compile("(=a'a'(+=b'b'(*=c'c')'d')'e')");
-		ParseTree tree = new ParseTree(20);
-		assertEquals(6, prog.parse("abdbde".getBytes(), tree));
+		ParseTree tree = prog.parse("abdbde");
+		assertEquals(6, tree.end());
 		assertEquals(3, tree.nodes());
 		assertNode('a', 0, 0, 6, tree, 0);
 		assertNode('b', 1, 1, 3, tree, 1);
 		assertNode('b', 1, 3, 5, tree, 2);
 		
-		tree = new ParseTree(20);
-		assertEquals(9, prog.parse("abccdbcde".getBytes(), tree));
+		tree = prog.parse("abccdbcde");
+		assertEquals(9, tree.end());
 		assertEquals(6, tree.nodes());
 	}
 	
 	@Test
 	public void nestedBlocksMultiCaptureWithLoopsMatch() {
 		Program prog = Program.compile("(+=a'a'(*=b'b'(*=c'c')=d'd')'e')");
-		ParseTree tree = new ParseTree(20);
-		assertEquals(2, prog.parse("ae".getBytes(), tree));
+		ParseTree tree = prog.parse("ae");;
+		assertEquals(2, tree.end());
 		assertEquals(1, tree.nodes());
 		assertNode('a', 0, 0, 2, tree, 0);
 		
-		tree = new ParseTree(20);
-		assertEquals(7, prog.parse("abdbcde".getBytes(), tree));
+		tree = prog.parse("abdbcde");
+		assertEquals(7, tree.end());
 		assertEquals(6, tree.nodes());
 		assertNode('a', 0, 0, 7, tree, 0);
 		assertNode('b', 1, 1, 3, tree, 1);
@@ -352,36 +365,42 @@ public class TestParser {
 	@Test
 	public void modestNestedCaptureMismatch() {
 		Program prog = Program.compile("(=a'a'(=b'b'(=c'c')'d')'e')");
-		ParseTree tree = new ParseTree(20);
-		assertEquals(-5, prog.parse("abcd".getBytes(), tree));
+		ParseTree tree = prog.parse("abcd");
+		assertEquals(-5, tree.end());
 		assertEquals(0, tree.nodes());
-		assertEquals(-4, prog.parse("abc".getBytes(), tree));
+		
+		tree = prog.parse("abc");
+		assertEquals(-4, tree.end());
 		assertEquals(0, tree.nodes());
-		assertEquals(-3, prog.parse("ab".getBytes(), tree));
+		
+		tree = prog.parse("ab");
+		assertEquals(-3, tree.end());
 		assertEquals(0, tree.nodes());
-		assertEquals(-2, prog.parse("a".getBytes(), tree));
+		
+		tree = prog.parse("a");
+		assertEquals(-2, tree.end());
 		assertEquals(0, tree.nodes());
 	}
 
 	@Test
 	public void basicOptionMatch() {
 		Program prog = Program.compile("'a'(?'bc')'d'");
-		assertEquals(4, prog.parse("abcd"));
+		assertEquals(4, prog.parse("abcd").end());
 	}
 
 	@Test
 	public void basicOptionNoMatch() {
 		Program prog = Program.compile("'a'(?'bc')'d'");
-		assertEquals(2, prog.parse("ad"));
+		assertEquals(2, prog.parse("ad").end());
 	}
 	
 	@Test
 	public void basicFillMatch() {
 		Program prog = Program.compile("'a'~'d'");
-		assertEquals(2, prog.parse("ad"));
-		assertEquals(3, prog.parse("axd"));
-		assertEquals(4, prog.parse("axxd"));
-		assertEquals(6, prog.parse("axxxxd"));
+		assertEquals(2, prog.parse("ad").end());
+		assertEquals(3, prog.parse("axd").end());
+		assertEquals(4, prog.parse("axxd").end());
+		assertEquals(6, prog.parse("axxxxd").end());
 	}
 	
 	/**
@@ -390,8 +409,8 @@ public class TestParser {
 	@Test
 	public void fillCaptureLookAheadMatch() {
 		Program prog = Program.compile("'<'(=x~>'>')'>'<");
-		ParseTree tree = new ParseTree(20);
-		assertEquals(5, prog.parse("<foo>".getBytes(), tree));
+		ParseTree tree = prog.parse("<foo>");
+		assertEquals(5, tree.end());
 		assertEquals(1, tree.nodes());
 		assertNode('x', 0, 1, 4, tree, 0);
 	}
@@ -399,8 +418,8 @@ public class TestParser {
 	@Test
 	public void anyMatch() {
 		Program prog = Program.compile("_'a'_'b'");
-		assertEquals(4, prog.parse("xaxb"));
-		assertEquals(4, prog.parse("'a*b"));
+		assertEquals(4, prog.parse("xaxb").end());
+		assertEquals(4, prog.parse("'a*b").end());
 	}
 
 	private static void assertNoMatch(Program prog, int iError, String data) {
@@ -412,8 +431,8 @@ public class TestParser {
 		}
 	}
 
-	private static void assertNode(int id, int level, int start, int end, ParseTree tree, int index) {
-		assertEquals("Type ID ", id, tree.id(index));
+	private static void assertNode(char name, int level, int start, int end, ParseTree tree, int index) {
+		assertEquals("Type ID ", name, tree.rule(index).charAt(0));
 		assertEquals("Start ", start, tree.start(index));
 		assertEquals("Level ", level, tree.level(index));
 		assertEquals("End", end, tree.end(index));

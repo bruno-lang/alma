@@ -9,8 +9,9 @@ Principles:
 
 Instructions Overview
 ---------------------
-Surface: ,;.:\!-*+?0-9(|)~<>"/_'
-Names: a-zA-Z$_#
+Marker : $
+Surface: ,;.:\!-*+?0-9(|)~<>"/_'#
+Names: a-zA-Z_
 Sugar: []{}%
 Internal: ^&@
 
@@ -66,6 +67,8 @@ Character Sets
 " set  "...", e.g. "abc" is a set of letters a,b and c
 / rset /min max/, e.g. /10 20/ is a set of ASCII symbols with code 10 to 20
 _ any  (accepts any input byte)
+# digits 0-9 (same as "0123456789")
+TODO any non ascii input byte (binary 1xxxxxxx) or more general masking
 
 Sets can be replaced with the internal instruction & that is followed by
 16 bytes mask having all bits set that are in the set in ASCII range.
@@ -117,21 +120,41 @@ This is important to not change the semantics of the original program.
 name␣=␣...\n ⇢  (=name␣...)
 name␣=␣{...} ⇢  (=name␣...)
 
+$ a marker byte - if 1. byte in file is marker the src is already de-sugared.
+
 Internalisation
 ----------------
+Is the process of replacing some instructions with instructions not available to the user.
+The use instruction codes reserved for internal usage.
+Those are often followed by binary argument bytes (what is why they are not available to users).
+
+Multi-digit counts to binary encoded ones
 ...nm  ⇢ ^c
 ...34 ⇢ ^c
 
+Sets to bitmasks
+"..." ⇢ &xxxxxxxxxxxxxxxx
+/.../ ⇢ &xxxxxxxxxxxxxxxx
+
+Named references to indexed references
+name  ⇢ @n
+
+Argumentation
+-------------
+Is the process of adding argument bytes to some instructions in order to improve execution performance.
+
+Length encoded block cases (l=length 0-255) 
+(...  ⇢ (l...
+here the length is the number of bytes to the closing ) or the following |
+
+Capture by pre-indexed names (equally to references by index)
+=name ⇢ =n
 
 Comments
 --------
 
 % nb   (NB, a comment until the end of the line or next % in same line)
 
-Predefined
-----------
-# "0123456789"
-$ "0123456789abcdefABCDEF"
 
 Design Decisions
 ----------------

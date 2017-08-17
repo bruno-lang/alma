@@ -1,5 +1,6 @@
 package alma.lang;
 
+import static java.lang.Byte.toUnsignedInt;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.min;
 
@@ -59,6 +60,7 @@ final class Parser {
 			// other character sets
 			case '_': i++; break; // any
 			case '"': i = memberAt(i); break;
+			case '#': i = digitAt(i); break;
 			// literals 
 			case '\'':i = literalAt(i); break;
 			// sequences
@@ -82,7 +84,7 @@ final class Parser {
 			case '9': max=9; if (setMin) { min=9; } break;
 			case '^': max=uint1(); if (setMin) { min=max; } break;
 			// capture
-			case '=': tree.push(prog[pc++], i); pushed++; break; //TODO this just supports single char names
+			case '=': tree.push(uint1(), i); pushed++; break;
 			// ref
 			case '@': pcr = pc+2; pc = uint2(); eval(i); pc = pcr; break;
 			// blocks
@@ -170,6 +172,11 @@ final class Parser {
 		return i0+1;
 	}
 	
+	private int digitAt(int i0) {
+		byte d = data[i0];
+		return d >= '0' && d <= '9' ? i0+1 : mismatch(i0);
+	}
+	
 	private int linebreakAt(final int i0) {
 		int i = i0;
 		if (i < data.length && data[i] == '\r') // mac, win
@@ -225,7 +232,7 @@ final class Parser {
 	}
 
 	private int uint1() {
-		return prog[pc++] & 0xFF;
+		return toUnsignedInt(prog[pc++]);
 	}
 
 	private static int mismatch(int pos) {

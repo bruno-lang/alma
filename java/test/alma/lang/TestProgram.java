@@ -86,6 +86,11 @@ public class TestProgram {
 		assertDesugars("(%comment%'x')1+ ", "(1+'x') ");
 		assertDesugars("('x'%comment%)1+ ", "(1+'x') ");
 	}
+	
+	@Test
+	public void singleNamesArePadded() {
+		assertDesugars("a.ab", "a .ab");
+	}
 
 	@Test
 	public void exampleListOfTerms() {
@@ -94,7 +99,7 @@ public class TestProgram {
 
 	@Test
 	public void exampleNestedReps() {
-		assertDesugars("expr = 'x' ( (form,)+ x)* \n", "(=expr 'x' (* (+form,) x) )");
+		assertDesugars("expr = 'x' ( (form,)+ x)* \n", "(=expr 'x' (* (+form,) x ) )");
 	}
 
 	private static void assertDesugars(String before, String after) {
