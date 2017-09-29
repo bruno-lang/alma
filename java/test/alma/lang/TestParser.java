@@ -40,6 +40,48 @@ public class TestParser {
 		Program prog = Program.compile(";");
 		assertEquals(-1, prog.parse("X\t ").end());
 	}
+	
+	@Test
+	public void simpleSetMatch() {
+		Program prog = Program.compile("\"abc\"");
+		assertEquals(1, prog.parse("a").end());
+		assertEquals(1, prog.parse("b").end());
+		assertEquals(1, prog.parse("c").end());
+	}
+	
+	@Test
+	public void simpleExclusiveSetMatch() {
+		Program prog = Program.compile("\"^abc\"");
+		assertEquals(1, prog.parse("d").end());
+		assertEquals(1, prog.parse("-").end());
+		assertEquals(-1, prog.parse("a").end());
+		assertEquals(-1, prog.parse("b").end());
+		assertEquals(-1, prog.parse("c").end());
+	}
+	
+	@Test
+	public void simpleExclusiveQuotesSetMatch() {
+		Program prog = Program.compile("\"^\"");
+		assertEquals(-1, prog.parse("\"").end());
+		assertEquals(1, prog.parse("a").end());
+	}
+	
+	@Test
+	public void simpleBitSetMatch() {
+		Program prog = Program.compile("\"&0011xxxx\""); // 0-9:;<=>?
+		assertEquals(1, prog.parse("?").end());
+		assertEquals(1, prog.parse("0").end());
+		assertEquals(1, prog.parse("9").end());
+		assertEquals(1, prog.parse("<").end());
+		assertEquals(-1, prog.parse("/").end());
+		assertEquals(-1, prog.parse("@").end());
+	}
+	
+	@Test
+	public void simpleSetMismatch() {
+		Program prog = Program.compile("\"abc\"");
+		assertEquals(-1, prog.parse("d").end());
+	}
 
 	@Test
 	public void simpleWhitespaceMatch() {
@@ -141,13 +183,13 @@ public class TestParser {
 	}
 
 	@Test
-	public void simpleFixedLoopingMatch() {
+	public void simpleFixedRepMatch() {
 		Program prog = Program.compile("2'aBc')");
 		assertEquals(6, prog.parse("aBcaBc").end());
 	}
 
 	@Test
-	public void simpleStarLoopingMatch() {
+	public void simpleStarRepMatch() {
 		Program prog = Program.compile("*'aBc')");
 		assertEquals(3, prog.parse("aBc").end());
 		assertEquals(6, prog.parse("aBcaBc").end());
@@ -155,20 +197,20 @@ public class TestParser {
 	}
 
 	@Test
-	public void simplePlusLoopingMatch() {
+	public void simplePlusRepMatch() {
 		Program prog = Program.compile("+'aBc')");
 		assertEquals(3, prog.parse("aBc").end());
 		assertEquals(6, prog.parse("aBcaBc").end());
 	}
 
 	@Test
-	public void simplePlusLoopingMismatch() {
+	public void simplePlusRepMismatch() {
 		Program prog = Program.compile("+'aBc')");
 		assertEquals(-1, prog.parse("").end());
 	}
 
 	@Test
-	public void simpleOptionLoopingMatch() {
+	public void simpleOptionRepMatch() {
 		Program prog = Program.compile("?'aBc')");
 		assertEquals(3, prog.parse("aBc").end());
 		assertEquals(3, prog.parse("aBcaBc").end());
@@ -176,14 +218,14 @@ public class TestParser {
 	}
 
 	@Test
-	public void simpleRangeLoopingMatch() {
+	public void simpleRangeRepMatch() {
 		Program prog = Program.compile("2+'aBc')");
 		assertEquals(6, prog.parse("aBcaBc").end());
 		assertEquals(9, prog.parse("aBcaBcaBc").end());
 	}
 
 	@Test
-	public void simpleRangeLoopingMismatch() {
+	public void simpleRangeRepMismatch() {
 		Program prog = Program.compile("2+'aBc')");
 		assertEquals(-4, prog.parse("aBc").end());
 		assertEquals(-1, prog.parse("").end());
@@ -200,6 +242,13 @@ public class TestParser {
 	public void simpleDigitMismatch() {
 		Program prog = Program.compile("#");
 		assertEquals(-1, prog.parse("a").end());
+	}
+	
+	@Test
+	public void basicDigitsMatch() {
+		Program prog = Program.compile(" #+ '.' ##? ");
+		assertEquals(5, prog.parse("42.05").end());
+		assertEquals(2, prog.parse("7.").end());
 	}
 
 	@Test
@@ -268,22 +317,35 @@ public class TestParser {
 	}
 
 	@Test
-	public void basicStaircaseMatch() {
+	public void basicCasesMatch() {
 		Program prog = Program.compile("('a'|'b'|'c')");
 		assertEquals(1, prog.parse("a").end());
 		assertEquals(1, prog.parse("b").end());
 		assertEquals(1, prog.parse("c").end());
 	}
+	
+	@Test
+	public void basicCasesRepMatch() {
+		Program prog = Program.compile("('a'|'b'|'c')+ ");
+		assertEquals(1, prog.parse("a").end());
+		assertEquals(1, prog.parse("b").end());
+		assertEquals(1, prog.parse("c").end());
+		assertEquals(2, prog.parse("aa").end());
+		assertEquals(2, prog.parse("bb").end());
+		assertEquals(3, prog.parse("ccc").end());
+		assertEquals(-1, prog.parse("").end());
+		assertEquals(1, prog.parse("abc").end());
+	}
 
 	@Test
-	public void basicStaircaseMismatch() {
+	public void basicCasesMismatch() {
 		Program prog = Program.compile("('a'|'b'|'c')");
 		assertEquals(-1, prog.parse("d").end());
 	}
 
 	@Test
-	public void modestStaircaseLoopingMatch() {
-		Program prog = Program.compile("(2'a'|'b'|3'c')");
+	public void modestCasesRepMatch() {
+		Program prog = Program.compile("(2'a'|1'b'|3'c')");
 		assertEquals(2, prog.parse("aa").end());
 		assertEquals(1, prog.parse("b").end());
 		assertEquals(3, prog.parse("ccc").end());
@@ -292,7 +354,7 @@ public class TestParser {
 	}
 
 	@Test
-	public void modestStaircaseLoopingMismatch() {
+	public void modestStaircaseRepMismatch() {
 		Program prog = Program.compile("(2'a'|'b'|3'c')");
 		assertEquals(-1, prog.parse("").end());
 		assertEquals(-1, prog.parse("a").end());
@@ -300,7 +362,7 @@ public class TestParser {
 	}
 
 	@Test
-	public void modestNestedLoopingMatch() {
+	public void modestNestedRepMatch() {
 		Program prog = Program.compile("(+'abc'(*'de'(2'f')))");
 		assertEquals(3, prog.parse("abc").end());
 		assertEquals(3, prog.parse("abcde").end());
@@ -311,7 +373,7 @@ public class TestParser {
 	}
 
 	@Test
-	public void modestNestedLoopingMismatch() {
+	public void modestNestedRepMismatch() {
 		Program prog = Program.compile("(+'abc'(*'de'(2'f')))");
 		assertEquals(-1, prog.parse("").end());
 		assertEquals(-3, prog.parse("ab").end());
@@ -403,6 +465,14 @@ public class TestParser {
 		assertEquals(6, prog.parse("axxxxd").end());
 	}
 	
+	@Test
+	public void basicFillMatchQuotes() {
+		Program prog = Program.compile("'\"' ~ '\"'");
+		assertEquals(2, prog.parse("\"\"").end());
+		assertEquals(3, prog.parse("\"a\"").end());		
+		assertEquals(4, prog.parse("\"ab\"").end());
+	}
+	
 	/**
 	 * Shows how to capture the fill by using a look-ahead for the literal afterwards.
 	 */
@@ -420,6 +490,22 @@ public class TestParser {
 		Program prog = Program.compile("_'a'_'b'");
 		assertEquals(4, prog.parse("xaxb").end());
 		assertEquals(4, prog.parse("'a*b").end());
+	}
+	
+	@Test
+	public void simpleRefMatch() {
+		Program prog = Program.compile("b c) (=b #) (=c .)");
+		ParseTree tree = prog.parse("9 ");
+		assertEquals(2, tree.end());
+		assertNode('b', 0, 0, 1, tree, 0);
+		assertNode('c', 0, 1, 2, tree, 1);
+	}
+	
+	@Test
+	public void exampleQuotedString() {
+		Program prog = Program.compile("'\"' (*('\\'_|\"^\")) '\"'");
+		assertEquals(2, prog.parse("\"\"").end());
+		assertEquals(5, prog.parse("\"abc\"").end());
 	}
 
 	private static void assertNoMatch(Program prog, int iError, String data) {

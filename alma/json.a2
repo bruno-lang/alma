@@ -1,0 +1,11 @@
+json . )
+json    = object | array | bool | null | string | number
+object  = '{'< . members? . '}'
+members = member ( . ',' . member)* 
+member  = name . ':' . json
+name    = '"' ~ '"'
+array   = '['< . [ json ( . ',' . json)* ] . ']'
+string  = '"' (*('\'_ | "^" )) '"'
+bool    = 'true' | 'false'
+null    = 'null'
+number  = ["+-"]  #+ ['.' #* ]

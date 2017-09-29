@@ -75,8 +75,8 @@ public class TestProgram {
 	
 	@Test
 	public void desugarsAssignmentWithBracketsIntoBlock() {
-		assertDesugars("foo = {'xzy'}",   "(=foo 'xzy')");
-		assertDesugars("foo = \t{'xzy'}", "(=foo 'xzy')");
+		assertDesugars("foo = ('xzy')\n",   "(=foo 'xzy')\n");
+		assertDesugars("foo = \t('xzy')\n", "(=foo 'xzy')\n");
 	}
 	
 	@Test
@@ -100,6 +100,14 @@ public class TestProgram {
 	@Test
 	public void exampleNestedReps() {
 		assertDesugars("expr = 'x' ( (form,)+ x)* \n", "(=expr 'x' (* (+form,) x ) )");
+	}
+	
+	@Test
+	public void exampleJsonGrammar() {
+		assertDesugars("array   = '['< . [json ( . ',' . json)*] . ']'", "(=array '['< . (?json (* . ',' . json)) . ']')");
+		assertDesugars("file    = json . \n", "(=file json . )");
+		assertDesugars("Members = member ( . ',' . member)*", "(=Members member (* . ',' . member))");
+		assertDesugars("number  = \"+-\"?  #+ ['.' #* ]", "(=number (?\"+-\") (+#) (?'.'(*#) ))");
 	}
 
 	private static void assertDesugars(String before, String after) {

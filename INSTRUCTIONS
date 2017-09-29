@@ -10,10 +10,11 @@ Principles:
 Instructions Overview
 ---------------------
 Marker : $
-Surface: ,;.:\!-*+?0-9(|)~<>"/_'#
+Surface: ,;.:\!-*+?0-9(|)~<>"_'#
 Names: a-zA-Z_
 Sugar: []{}%
 Internal: ^&@
+Unused: /
 
 ASCII control codes are internal instructions that an implementation might substitute during compile phase for any combination or pattern to optimize special cases.
 A common use is to use all control codes (and the range 128-255) to encode references to the block with the code number within the internal program representation.  
@@ -54,7 +55,7 @@ Higher limits must be enforced beyond a parsing level.
 
 Blocks
 ------
-( call
+( nest
 ) back
 | else
 
@@ -65,10 +66,16 @@ Blocks
 Character Sets
 --------------
 " set  "...", e.g. "abc" is a set of letters a,b and c
-/ rset /min max/, e.g. /10 20/ is a set of ASCII symbols with code 10 to 20
 _ any  (accepts any input byte)
 # digits 0-9 (same as "0123456789")
 TODO any non ascii input byte (binary 1xxxxxxx) or more general masking
+
+Sets starting with ^ are negated.
+Sets can contain ranges using - (a-z).
+If minus should be matched use it as first or last symbol.
+Sets can also be given as binary mask using & as first symbol followed by 8 masking characters, 1 for must be 1, 0 for must be zero and x for 0 or 1.
+To add " to a set use space. Spaces should be matched using whitespace instructions.
+To give ranges by decimal code points use # as first sign, followed by the range #10-20
 
 Sets can be replaced with the internal instruction & that is followed by
 16 bytes mask having all bits set that are in the set in ASCII range.
@@ -81,8 +88,8 @@ Literals
 
 Names and References
 --------------------
-Names can contain letters, digits and the symbols #,$,- and _ 
-but they have to start and end with a letter or # or $.
+Names can contain letters, digits and the symbols - and _ 
+but they have to start and end with a letter.
 
 = name (names a position; names starting with an lower case letter captured in the parse tree.)
 
@@ -117,8 +124,8 @@ This is important to not change the semantics of the original program.
 [...]        ⇢ (?...)
 
 3. move naming into blocks
-name␣=␣...\n ⇢  (=name␣...)
-name␣=␣{...} ⇢  (=name␣...)
+name␣=␣...\n   ⇢  (=name␣...)
+name␣=␣(...)\n ⇢  (=name␣...)
 
 $ a marker byte - if 1. byte in file is marker the src is already de-sugared.
 
@@ -136,7 +143,7 @@ Sets to bitmasks
 "..." ⇢ &xxxxxxxxxxxxxxxx
 /.../ ⇢ &xxxxxxxxxxxxxxxx
 
-Named references to indexed references
+Jumps to named positions (@ jump)
 name  ⇢ @n
 
 Argumentation

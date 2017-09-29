@@ -75,6 +75,10 @@ public final class ParseTree {
 	public String rule(int index) {
 		return names[ruleId(index)-1];
 	}
+	
+	public String name(int id) {
+		return names[id];
+	}
 
 	public int end() {
 		return end;
