@@ -49,6 +49,7 @@ public class TestHiperX {
 		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "a-b");
 		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "aa_b0");
 		assertFullMatch("`{a-z}+[[{-_}]{a-zA-Z0-9}+]+`", "aCamalCase");
+		assertFullMatch("`{a-z}+[[{-_}]{a-zA-Z0-9}+]+`", "a");
 	}
 
 	@Test
@@ -258,6 +259,24 @@ public class TestHiperX {
 		assertFullMatch("`a~(bc)`", "acxbc");
 	}
 
+	@Test
+	public void matchNestedOption() {
+		assertFullMatch("`a[b[c]]d`", "ad");
+		assertFullMatch("`a[b[c]]d`", "abd");
+		assertFullMatch("`a[b[c]]d`", "abcd");
+	}
+
+	@Test
+	public void matchNestedOptionPlus() {
+		assertFullMatch("`a[b+[c]+]d`", "ad");
+		assertFullMatch("`a[b+[c]+]d`", "abd");
+		assertFullMatch("`a[b+[c]+]d`", "abcd");
+		assertFullMatch("`a[b+[c]+]d`", "abbd");
+		assertFullMatch("`a[b+[c]+]d`", "abbcd");
+		assertFullMatch("`a[b+[c]+]d`", "abccd");
+		assertFullMatch("`a[b+[c]+]d`", "abbccd");
+	}
+
 	private static void assertNoMatchAt(String pattern, String data, int pos) {
 		int[] res = match(pattern, data);
 		assertEquals(mismatch(pos), res[1]);
@@ -270,11 +289,15 @@ public class TestHiperX {
 
 
 	private static void assertFullMatch(String pattern, String data) {
+		String mark = "Q"; // we add this to both pattern and data to make sure we have a full match even when data is processed before end of pattern is reached
+		pattern = pattern.substring(0, pattern.length()-1) + mark + pattern.charAt(pattern.length()-1);
+		data += mark;
 		int[] res = match(pattern, data);
 		assertTrue(res[0] > 0);
 		assertEquals(data.length(), res[1]);
-		if (false) // strictly this should be true but not now
-			assertEquals(pattern.length()-1, res[0]);
+		assertEquals(pattern.length()-1, res[0]); // -1 because of the end mark ` that is not processed
+		// if a pattern end with groups or repetitions their positions might not be passed when data is fully processed.
+		// how do we know the full pattern matched? we add a literal at the end to both pattern and data (see Q above)
 	}
 
 	private static int[] match(String pattern, String data) {

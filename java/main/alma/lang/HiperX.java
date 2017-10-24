@@ -66,7 +66,7 @@ public final class HiperX {
 	public static long match(byte[] pattern, int p0, byte[] data, int d0, byte end, boolean rep, int maxOps) {
 		int pn = p0;
 		int dn = d0;
-		int pr = p0;
+		int p1 = p0; // position from where to repeat
 		byte rend = '+';
 		byte c;
 		while (pn < pattern.length && dn < data.length && maxOps-- != 0) {
@@ -88,31 +88,34 @@ public final class HiperX {
 				break;
 			case '(': // group:
 			case '[': // optional group:
-				pr = pn;
+				p1 = pn;
 				rend = (byte)(op == '(' ? ')' : ']');
 				long res = match(pattern, pn, data, dn, rend, false, maxOps == 0 ? -1 : maxOps);
 				if ((int)res < 0) {
 					if (op == '(') {
 						return res; // mismatch for (...)
 					}
-					//TODO skipping fails when a set in the block contains ] or [] is nested within
-					while (pattern[pn++] !=']'); // skip rest of an optional block
+					//TODO skipping fails when a set in the block contains ]
+					int level = 1;
+					while (level > 0 && pn < pattern.length) { if (pattern[pn] == '[') level++; if (pattern[pn++] ==']') level--; } // skip rest of an optional block
 				} else {
 					pn = (int)(res >> 32);
 					dn = (int)res;
 				}
 				break;
 			case '+': // repetition:
-				if (rep) {
-					pn = p0;
-				} else {
-					c = pattern[pn-2];
-					dn = (int)match(pattern, c == '}' || c == ')' || c == ']' ? pr : pn-2, data, dn, rend, true, maxOps);
-					if (dn < 0) dn = -dn-1;
-				}
+				//if (dn < data.length) {
+					if (rep) {
+						pn = p0;
+					} else {
+						c = pattern[pn-2];
+						dn = (int)match(pattern, c == '}' || c == ')' || c == ']' ? p1 : pn-2, data, dn, rend, true, maxOps);
+						if (dn < 0) dn = mismatch(dn); // reverses a mismatch by applying function again
+					}
+				//}
 				break;
 			case '{': // set (of symbols):
-				pr = pn-1;
+				p1 = pn-1;
 				c = data[dn++];
 				boolean done = false;
 				while (!done) {
@@ -129,7 +132,7 @@ public final class HiperX {
 						while (pattern[pn++] != '}'); // jump to end of set when match found
 					}
 				} else {
-					return pos(pr, mismatch(dn-1));
+					return pos(p1, mismatch(dn-1));
 				}
 				break;
 			default: // literals:
@@ -146,5 +149,4 @@ public final class HiperX {
 	private static long pos(int pn, int dn) {
 		return  (long)pn << 32 | dn & 0xFFFFFFFFL;
 	}
-
 }
