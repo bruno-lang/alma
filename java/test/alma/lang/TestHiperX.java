@@ -10,6 +10,48 @@ import org.junit.Test;
 public class TestHiperX {
 
 	@Test
+	public void matchNumberExamples() {
+		// dates
+		assertFullMatch("`####/##/##`", "2017/10/24");
+		assertFullMatch("`####{-/}##{-/}##`", "2017/10/24");
+		assertFullMatch("`####{-/}##{-/}##`", "2017-10-24");
+
+		// time
+		assertFullMatch("`##:##:##`", "12:35:45");
+		assertFullMatch("`##{.:}##{.:}##`", "12:35:45");
+		assertFullMatch("`##{.:}##{.:}##`", "12.35.45");
+
+		// integers
+		assertFullMatch("`#+`", "1");
+		assertFullMatch("`#+`", "12");
+		assertFullMatch("`#+`", "12345678900543");
+		// with dividers
+		assertFullMatch("`#+[,###]+`", "12");
+		assertFullMatch("`#+[,###]+`", "12000");
+		assertFullMatch("`#+[,###]+`", "12,000");
+		assertFullMatch("`#+[,###]+`", "12,345,456");
+
+		// floating point
+		assertFullMatch("`#+[.#+]`", "1");
+		assertFullMatch("`#+[.#+]`", "1.0");
+		assertFullMatch("`#+[.#+]`", "13.45");
+	}
+
+	@Test
+	public void matchQuotedStrings() {
+		assertFullMatch("`\"~\"`", "\"abcd\"");
+		assertFullMatch("`\"\"\"~(\"\"\")`", "\"\"\"ab\"c\"d\"\"\"");
+	}
+
+	@Test
+	public void matchIdentifiers() {
+		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "a");
+		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "a-b");
+		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "aa_b0");
+		assertFullMatch("`{a-z}+[[{-_}]{a-zA-Z0-9}+]+`", "aCamalCase");
+	}
+
+	@Test
 	public void matchLiteral() {
 		assertFullMatch("`abcdef`", "abcdef");
 	}
