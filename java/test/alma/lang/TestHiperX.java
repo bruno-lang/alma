@@ -48,13 +48,13 @@ public class TestHiperX {
 		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "a");
 		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "a-b");
 		assertFullMatch("`{a-z}+[{-_}{a-zA-Z0-9}+]+`", "aa_b0");
-		assertFullMatch("`{a-z}+[[{-_}]{a-zA-Z0-9}+]+`", "aCamalCase");
 		assertFullMatch("`{a-z}+[[{-_}]{a-zA-Z0-9}+]+`", "a");
+		assertFullMatch("`{a-z}+[[{-_}]{a-zA-Z0-9}+]+`", "aCamalCase");
 	}
 
 	@Test
 	public void matchLiteral() {
-		assertFullMatch("`abcdef`", "abcdef");
+		assertFullMatch("`abcdefäöå`", "abcdefäöå");
 	}
 
 	@Test
@@ -149,7 +149,7 @@ public class TestHiperX {
 		assertFullMatch("`{A-Za-z}+`", "zA");
 		assertFullMatch("`{A-Za-z0-9}+`", "bD7aZ");
 		assertFullMatch("`{A-Za-z<0-9>}+`", "<bD7aZ>");
-		assertFullMatch("`{a-zA-Z }+`", "The quick brown fox jumps over the lazy dog");
+		assertFullMatch("`{a-zA-Z }+.`", "The quick brown fox jumps over the lazy dog.");
 	}
 
 	@Test
@@ -277,6 +277,29 @@ public class TestHiperX {
 		assertFullMatch("`a[b+[c]+]d`", "abbccd");
 	}
 
+	@Test
+	public void matchNonWhitespaceSetPlus() {
+		assertFullMatch("`^+`", "azAZ:-,;*()[]{}?!<>|&%@");
+	}
+
+	@Test
+	public void mismatchNonWhitespaceSet() {
+		assertNoMatchAt("`^`", " ", 0);
+		assertNoMatchAt("`^`", "\n", 0);
+		assertNoMatchAt("`^`", "\t", 0);
+		assertNoMatchAt("`^`", "\r", 0);
+	}
+
+	@Test
+	public void matchAnyByteSet() {
+		assertFullMatch("`______`", "aAzZ09");
+		assertFullMatch("`______`", "<>[]{}");
+		assertFullMatch("`______`", "!?-:.,");
+		assertFullMatch("`______`", "+-*/^=");
+		assertFullMatch("`______`", "&|%#@~");
+		assertFullMatch("`____`",   " \t\n\r");
+	}
+
 	private static void assertNoMatchAt(String pattern, String data, int pos) {
 		int[] res = match(pattern, data);
 		assertEquals(mismatch(pos), res[1]);
@@ -289,15 +312,15 @@ public class TestHiperX {
 
 
 	private static void assertFullMatch(String pattern, String data) {
-		String mark = "Q"; // we add this to both pattern and data to make sure we have a full match even when data is processed before end of pattern is reached
+		String mark = " "; // we add this to both pattern and data to make sure we have a full match even when data is processed before end of pattern is reached
 		pattern = pattern.substring(0, pattern.length()-1) + mark + pattern.charAt(pattern.length()-1);
 		data += mark;
 		int[] res = match(pattern, data);
 		assertTrue(res[0] > 0);
-		assertEquals(data.length(), res[1]);
-		assertEquals(pattern.length()-1, res[0]); // -1 because of the end mark ` that is not processed
+		assertEquals(data.getBytes(UTF_8).length, res[1]);
+		assertEquals(pattern+data, pattern.getBytes(UTF_8).length-1, res[0]); // -1 because of the end mark ` that is not processed
 		// if a pattern end with groups or repetitions their positions might not be passed when data is fully processed.
-		// how do we know the full pattern matched? we add a literal at the end to both pattern and data (see Q above)
+		// how do we know the full pattern matched? we add a literal at the end to both pattern and data (see mark above)
 	}
 
 	private static int[] match(String pattern, String data) {
