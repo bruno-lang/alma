@@ -15,6 +15,8 @@ public class TestProgram {
 		assertDesugars(" 'xyz'* ", "(*'xyz') ");
 		assertDesugars(" <'xy'+ ", "(+<'xy') ");
 		assertDesugars(" 'xy'>5 ", "(5'xy'>) ");
+		assertDesugars(" \"xy\"? ", "(?\"xy\") ");
+		assertDesugars(" \"+-\"? ", "(?\"+-\") ");
 	}
 
 	@Test
@@ -104,10 +106,10 @@ public class TestProgram {
 
 	@Test
 	public void exampleJsonGrammar() {
-		assertDesugars("array   = '['< . [json ( . ',' . json)* ] . ']'", "(=array '['< . (?json (* . ',' . json) ) . ']')");
+		assertDesugars("array   = '['< . [json ( . ',' . json)* ] . ']'\n", "(=array '['< . (?json (* . ',' . json) ) . ']')");
 		assertDesugars("file    = json . \n", "(=file json . )");
-		assertDesugars("Members = member ( . ',' . member)*", "(=Members member (* . ',' . member))");
-		assertDesugars("number  = \"+-\"?  #+ ['.' #* ]", "(=number (?\"+-\") (+#) (?'.'(*#) ))");
+		assertDesugars("Members = member ( . ',' . member)* \n", "(=Members member (* . ',' . member) )");
+		assertDesugars("number  = \"+-\"? #+ ['.' #* ]", "(=number (?\"+-\") (+#) (?'.'(*#) ))");
 	}
 
 	private static void assertDesugars(String before, String after) {

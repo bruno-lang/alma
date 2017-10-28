@@ -116,23 +116,29 @@ public final class HiperX {
 				break;
 			case '{': // set (of symbols):
 				p1 = pn-1;
+				boolean exclusive = pattern[pn] == '^';
+				if (exclusive) pn++;
 				c = data[dn++];
+				int pa = pn;
 				boolean done = false;
 				while (!done) {
 					final byte m = pattern[pn++];
-					done =     m == c   // match
+					// order of tests is important so that pn advances after end of a set
+					done =     m == '-' && pn-1 > pa && c <= pattern[pn++] && c > pattern[pn-3] // range
 							|| m == '}' // end of set
-							|| m == '-' && pattern[pn-2] != '{' && c <= pattern[pn++] && c > pattern[pn-3]; // range
-							// order of tests is important so that pn advances after end of a set
+							|| m == c && (c != '-' || pn-1 == pa);  // match
 				}
-				if (pattern[pn-1] !='}') { // match (since we did net reach the end of the set)
+				if (pattern[pn-1] !='}') { // match (since we did not reach the end of the set)
+					if (exclusive)
+						return pos(p1, mismatch(dn-1));
 					if (rep) { // only jump to end if we don't know yet if there is a +
 						pn = p0; // performance optimization: to directly go to start of set instead of skipping to the end and letting + do it
 					} else {
 						while (pattern[pn++] != '}'); // jump to end of set when match found
 					}
 				} else {
-					return pos(p1, mismatch(dn-1));
+					if (!exclusive)
+						return pos(p1, mismatch(dn-1));
 				}
 				break;
 			default: // literals:

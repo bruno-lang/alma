@@ -41,6 +41,11 @@ public class TestHiperX {
 	public void matchQuotedStrings() {
 		assertFullMatch("`\"~\"`", "\"abcd\"");
 		assertFullMatch("`\"\"\"~(\"\"\")`", "\"\"\"ab\"c\"d\"\"\"");
+		// or single quoted for better readability of the example
+		assertFullMatch("`'~'`", "'abcd'");
+		assertFullMatch("`'''~(''')`", "'''ab'c'd'''");
+		// also by using exclusive sets
+		assertFullMatch("`'{^'}+'`", "'abcd and d'");
 	}
 
 	@Test
@@ -84,6 +89,62 @@ public class TestHiperX {
 		assertFullMatch("`ab{cd}+`", "abcd");
 		assertFullMatch("`ab{cde}+`", "abedc");
 		assertFullMatch("`ab{cd}+e`", "abde");
+	}
+
+	@Test
+	public void matchExclusiveSet() {
+		assertFullMatch("`{^cd}`", "a");
+		assertFullMatch("`{^cd}`", "b");
+		assertFullMatch("`{^cd}`", "e");
+		assertFullMatch("`{^c}`", "e");
+		assertFullMatch("`{^-}`", "x");
+	}
+
+	@Test
+	public void matchExclusiveSetRange() {
+		assertFullMatch("`{^b-fgx-y}`", "-");
+		assertFullMatch("`{^b-fgx-y}`", "a");
+		assertFullMatch("`{^b-fgx-y}`", "h");
+		assertFullMatch("`{^b-fgx-y}`", "i");
+		assertFullMatch("`{^b-fgx-y}`", "z");
+		assertFullMatch("`{^b-fgx-y}`", "w");
+		assertFullMatch("`{^b-fgx-y}`", "*");
+		assertFullMatch("`{^b-fgx-y}`", "^");
+		assertFullMatch("`{^b-fgx-y}`", "'");
+	}
+
+	@Test
+	public void matchExclusiveSetRangePlus() {
+		assertFullMatch("`{^b-fgx-y }+`", "ahijklmnopqrstuvwz");
+		assertFullMatch("`{^b-fgx-y }+`", "1234567890");
+		assertFullMatch("`{^b-fgx-y }+`", "+-*/~^'&|@#$");
+		assertFullMatch("`{^b-fgx-y }+`", "<>[]{}");
+	}
+
+	@Test
+	public void matchSetRangeSquareBrackets() {
+		assertFullMatch("`{[}{^]}+{]}`", "[foo]");
+		assertFullMatch("`{[}{^]}+{]}`", "[1]");
+		assertFullMatch("`{[}{^]}+{]}`", "[x++]");
+	}
+
+	@Test
+	public void mismatchExclusiveSetRange() {
+		assertNoMatchAt("`{^b-fgx-y}`", "b", 0);
+		assertNoMatchAt("`{^b-fgx-y}`", "c", 0);
+		assertNoMatchAt("`{^b-fgx-y}`", "f", 0);
+		assertNoMatchAt("`{^b-fgx-y}`", "g", 0);
+		assertNoMatchAt("`{^b-fgx-y}`", "x", 0);
+		assertNoMatchAt("`{^b-fgx-y}`", "y", 0);
+	}
+
+	@Test
+	public void mismatchExclusiveSet() {
+		assertNoMatchAt("`{^cde}`", "c", 0);
+		assertNoMatchAt("`{^cde}`", "d", 0);
+		assertNoMatchAt("`{^cde}`", "e", 0);
+		assertNoMatchAt("`{^c}`", "c", 0);
+		assertNoMatchAt("`{^-}`", "-", 0);
 	}
 
 	@Test
