@@ -35,6 +35,11 @@ public class TestHiperX {
 		assertFullMatch("#+[.#+]", "1");
 		assertFullMatch("#+[.#+]", "1.0");
 		assertFullMatch("#+[.#+]", "13.45");
+		// java style
+		assertFullMatch("[#+][{_,}###]+.#+", "13.45");
+		assertFullMatch("[#+][{_,}###]+.#+", ".01");
+		assertFullMatch("[#+][{_,}###]+.#+", "0.0");
+		assertFullMatch("[#+][{_,}###]+.#+", "12_345.9");
 	}
 
 	@Test
@@ -55,6 +60,12 @@ public class TestHiperX {
 		assertFullMatch("{a-z}+[{-_}{a-zA-Z0-9}+]+", "aa_b0");
 		assertFullMatch("{a-z}+[[{-_}]{a-zA-Z0-9}+]+", "a");
 		assertFullMatch("{a-z}+[[{-_}]{a-zA-Z0-9}+]+", "aCamalCase");
+
+		// only camel case - java style
+		assertFullMatch("{a-z}[{a-z0-9_}+][{A-Za-z0-9_}+]+", "aVariable");
+		assertFullMatch("{a-z}[{a-z0-9_}+][{A-Za-z0-9_}+]+", "a");
+		assertFullMatch("{a-z}[{a-z0-9_}+][{A-Za-z0-9_}+]+", "a9");
+		assertFullMatch("{a-z}[{a-z0-9_}+][{A-Za-z0-9_}+]+", "usingCamelCase");
 	}
 
 	@Test

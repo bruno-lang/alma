@@ -104,15 +104,13 @@ public final class HiperX {
 				}
 				break;
 			case '+': // repetition:
-				//if (dn < data.length) {
-					if (rep) {
-						pn = p0;
-					} else {
-						c = pattern[pn-2];
-						dn = (int)match(pattern, c == '}' || c == ')' || c == ']' ? p1 : pn-2, data, dn, rend, true, maxOps);
-						if (dn < 0) dn = mismatch(dn); // reverses a mismatch by applying function again
-					}
-				//}
+				if (rep) {
+					pn = p0;
+				} else {
+					c = pattern[pn-2];
+					dn = (int)match(pattern, c == '}' || c == ')' || c == ']' ? p1 : pn-2, data, dn, rend, true, maxOps);
+					if (dn < 0) dn = mismatch(dn); // reverses a mismatch by applying function again
+				}
 				break;
 			case '{': // set (of symbols):
 				p1 = pn-1;
@@ -136,9 +134,8 @@ public final class HiperX {
 					} else {
 						while (pattern[pn++] != '}'); // jump to end of set when match found
 					}
-				} else {
-					if (!exclusive)
-						return pos(p1, mismatch(dn-1));
+				} else if (!exclusive) {
+					return pos(p1, mismatch(dn-1));
 				}
 				break;
 			default: // literals:
