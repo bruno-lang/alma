@@ -1,14 +1,54 @@
 package alma.lang;
 
+import static alma.lang.Lex.isLiteral;
 import static alma.lang.Parser.mismatch;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 import org.junit.Test;
 
-public class TestHiperX {
+public class TestLex {
 
+	@Test
+	public void literalMasking() {
+		for (byte b : bytes("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ<> ")) {
+			assertTrue(isLiteral(b));
+		}
+		for (byte b : bytes("#$()+@[]^_")) {
+			assertFalse(isLiteral(b));
+		}
+		assertFalse(isLiteral((byte)0));
+		assertFalse(isLiteral((byte)31));
+		assertFalse(isLiteral((byte)-1));
+	}
+	
+	@Test
+	public void searchText() {
+		int[] res = match("`~(Twain)~(Huck)`", "The author is Mark Twain. The book is titled Huckleberry Finn.");
+		assertEquals(49, res[1]);
+	}
+	
+	@Test
+	public void searchTextInFile() throws IOException {
+		File f = new File("libraries.htm");
+		byte[] data = Files.readAllBytes(f.toPath());
+		int d0 = 0;
+		int[] res;
+		int c = 0;
+		while (d0 >= 0 && d0 < data.length) {
+			res = match(bytes("`~(<p>)~(</p>)`"), data, d0);
+			d0 = res[1];
+			c++;
+		}
+		assertEquals(7, c);
+	}
+	
 	@Test
 	public void matchNumberExamples() {
 		// dates
@@ -40,6 +80,21 @@ public class TestHiperX {
 		assertFullMatch("[#+][{_,}###]+.#+", ".01");
 		assertFullMatch("[#+][{_,}###]+.#+", "0.0");
 		assertFullMatch("[#+][{_,}###]+.#+", "12_345.9");
+		
+		String anyNumber = "{.0-9}[{.xb0-9}[{0-9A-Fa-f_}+][.#+]][{dDfFlL}]";
+		assertFullMatch(anyNumber, "12");
+		assertFullMatch(anyNumber, "13L");
+		assertFullMatch(anyNumber, "14l");
+		assertFullMatch(anyNumber, "12.0");
+		assertFullMatch(anyNumber, "0.0");
+		assertFullMatch(anyNumber, ".42f");
+		assertFullMatch(anyNumber, "42d");
+		assertFullMatch(anyNumber, "0xCAFE_BABE");
+		assertFullMatch(anyNumber, "0b0000_1101");
+		// but also:
+		assertFullMatch(anyNumber, ".");
+		assertFullMatch(anyNumber, "..");
+		assertFullMatch(anyNumber, "..0.0");
 	}
 
 	@Test
@@ -51,6 +106,9 @@ public class TestHiperX {
 		assertFullMatch("'''~(''')", "'''ab'c'd'''");
 		// also by using exclusive sets
 		assertFullMatch("'{^'}+'", "'abcd and d'");
+		// with escaping
+		assertFullMatch("\"~({^\\}\")", "\"ab\"");
+		assertFullMatch("\"~({^\\}\")", "\"ab\\\"c\"");
 	}
 
 	@Test
@@ -93,6 +151,7 @@ public class TestHiperX {
 	public void matchLiteralAndSet() {
 		assertFullMatch("ab{cd}", "abc");
 		assertFullMatch("ab{cd}", "abd");
+		assertFullMatch("a{^}", "a^");
 	}
 
 	@Test
@@ -109,6 +168,8 @@ public class TestHiperX {
 		assertFullMatch("{^cd}", "e");
 		assertFullMatch("{^c}", "e");
 		assertFullMatch("{^-}", "x");
+		assertFullMatch("{^^}", "x");
+		assertFullMatch("{^^}", "#");
 	}
 
 	@Test
@@ -156,6 +217,7 @@ public class TestHiperX {
 		assertNoMatchAt("{^cde}", "e", 0);
 		assertNoMatchAt("{^c}", "c", 0);
 		assertNoMatchAt("{^-}", "-", 0);
+		assertNoMatchAt("{^^}", "^", 0);
 	}
 
 	@Test
@@ -213,6 +275,12 @@ public class TestHiperX {
 		assertFullMatch("{a-z}", "g");
 		assertFullMatch("{a-z}", "a");
 		assertFullMatch("{a-z}", "z");
+	}
+	
+	@Test
+	public void matchSetInclusingNonASCII() {
+		assertFullMatch("}a{+b", "aab");
+		assertFullMatch("}a{+b", "aäöaü²€b");
 	}
 
 	@Test
@@ -382,7 +450,6 @@ public class TestHiperX {
 		assertEquals(pos, res[1]);
 	}
 
-
 	private static void assertFullMatch(String pattern, String data) {
 		String mark = " "; // we add this to both pattern and data to make sure we have a full match even when data is processed before end of pattern is reached
 		pattern = "`"+pattern+mark+"`";
@@ -390,13 +457,21 @@ public class TestHiperX {
 		int[] res = match(pattern, data);
 		assertTrue(res[0] > 0);
 		assertEquals(data.getBytes(UTF_8).length, res[1]);
-		assertEquals(pattern+data, pattern.getBytes(UTF_8).length-1, res[0]); // -1 because of the end mark ` that is not processed
+		assertEquals(pattern+data, bytes(pattern).length-1, res[0]); // -1 because of the end mark ` that is not processed
 		// if a pattern end with groups or repetitions their positions might not be passed when data is fully processed.
 		// how do we know the full pattern matched? we add a literal at the end to both pattern and data (see mark above)
 	}
 
 	private static int[] match(String pattern, String data) {
-		long res = HiperX.match(pattern.getBytes(UTF_8), 0, data.getBytes(UTF_8), 0);
+		return match(bytes(pattern), bytes(data), 0);
+	}
+
+	private static int[] match(byte[] pattern, byte[] input, int d0) {
+		long res = Lex.match(pattern, 0, input, d0);
 		return new int[] { (int)(res >> 32), (int)res };
+	}
+	
+	private static byte[] bytes(String s) {
+		return s.getBytes(UTF_8);
 	}
 }

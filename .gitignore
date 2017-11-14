@@ -11,6 +11,8 @@
 
 bin/
 target/
+build/
 .project
 .classpath
 .settings
+libraries.htm
